@@ -8,7 +8,7 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 
 ### 下载 Windows 便携版
 
-**[下载 Windows x64 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.0-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [预览版说明](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.0-preview)
+**[下载 Windows x64 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.1-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [预览版说明](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.1-preview)
 
 1. 把整个 ZIP 解压到可写的个人文件夹，例如 `文档\MahjongStudio`。
 2. 双击 `MahjongOverlayStudio.exe`。保留同目录的 `_internal` 文件夹。包内附有 `START-HERE.txt`。

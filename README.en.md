@@ -8,7 +8,7 @@ A Windows desktop app for riichi mahjong broadcasts and OBS overlays, built with
 
 ### Download the portable Windows build
 
-**[Download Windows x64 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.0-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [Preview release notes](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.0-preview)
+**[Download Windows x64 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.1-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [Preview release notes](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.1-preview)
 
 1. Extract the whole ZIP to a folder you can write to, such as `Documents\MahjongStudio`.
 2. Double-click `MahjongOverlayStudio.exe`. Keep `_internal` beside it and see `START-HERE.txt` for the first steps.
