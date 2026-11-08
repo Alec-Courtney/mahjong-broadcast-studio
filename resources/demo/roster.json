@@ -1,0 +1,407 @@
+{
+  "source": "https://m-league.jp/teams/",
+  "retrieved": "2026-10-26",
+  "note": "Player names, club affiliations, and portraits follow the source pages. Match results and statistics are simulated.",
+  "players": [
+    {
+      "id": "ml-jets-1",
+      "name": "石井一馬",
+      "team": "EARTH JETS",
+      "team_id": "ml-jets",
+      "source_page": "https://m-league.jp/teams/jets",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2025/08/profle_ishi_kazuma-1.png",
+      "photo": "demo://portraits/mleague/jets-1.png",
+      "color": "#bc2366"
+    },
+    {
+      "id": "ml-jets-2",
+      "name": "三浦智博",
+      "team": "EARTH JETS",
+      "team_id": "ml-jets",
+      "source_page": "https://m-league.jp/teams/jets",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2025/08/profile_miura_tomohiro-1.png",
+      "photo": "demo://portraits/mleague/jets-2.png",
+      "color": "#bc2366"
+    },
+    {
+      "id": "ml-jets-3",
+      "name": "逢川恵夢",
+      "team": "EARTH JETS",
+      "team_id": "ml-jets",
+      "source_page": "https://m-league.jp/teams/jets",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2025/08/profile_aikawa_megumu-1.png",
+      "photo": "demo://portraits/mleague/jets-3.png",
+      "color": "#bc2366"
+    },
+    {
+      "id": "ml-jets-4",
+      "name": "HIRO柴田",
+      "team": "EARTH JETS",
+      "team_id": "ml-jets",
+      "source_page": "https://m-league.jp/teams/jets",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2025/08/profile_hiro_shibata-1.png",
+      "photo": "demo://portraits/mleague/jets-4.png",
+      "color": "#bc2366"
+    },
+    {
+      "id": "ml-drivens-1",
+      "name": "園田賢",
+      "team": "赤坂ドリブンズ",
+      "team_id": "ml-drivens",
+      "source_page": "https://m-league.jp/teams/drivens",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_sonoda_ken-3.png",
+      "photo": "demo://portraits/mleague/drivens-1.png",
+      "color": "#008c6b"
+    },
+    {
+      "id": "ml-drivens-2",
+      "name": "鈴木たろう",
+      "team": "赤坂ドリブンズ",
+      "team_id": "ml-drivens",
+      "source_page": "https://m-league.jp/teams/drivens",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_suzuki_taro-3.png",
+      "photo": "demo://portraits/mleague/drivens-2.png",
+      "color": "#008c6b"
+    },
+    {
+      "id": "ml-drivens-3",
+      "name": "浅見真紀",
+      "team": "赤坂ドリブンズ",
+      "team_id": "ml-drivens",
+      "source_page": "https://m-league.jp/teams/drivens",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2017/07/profile_asami_maki-2.png",
+      "photo": "demo://portraits/mleague/drivens-3.png",
+      "color": "#008c6b"
+    },
+    {
+      "id": "ml-drivens-4",
+      "name": "渡辺太",
+      "team": "赤坂ドリブンズ",
+      "team_id": "ml-drivens",
+      "source_page": "https://m-league.jp/teams/drivens",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2016/07/profile_watanabe_futoshi-2.png",
+      "photo": "demo://portraits/mleague/drivens-4.png",
+      "color": "#008c6b"
+    },
+    {
+      "id": "ml-furinkazan-1",
+      "name": "二階堂亜樹",
+      "team": "EX風林火山",
+      "team_id": "ml-furinkazan",
+      "source_page": "https://m-league.jp/teams/furinkazan",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_nikaido_aki-3.png",
+      "photo": "demo://portraits/mleague/furinkazan-1.png",
+      "color": "#b71c30"
+    },
+    {
+      "id": "ml-furinkazan-2",
+      "name": "勝又健志",
+      "team": "EX風林火山",
+      "team_id": "ml-furinkazan",
+      "source_page": "https://m-league.jp/teams/furinkazan",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_katsumata_kenji-3.png",
+      "photo": "demo://portraits/mleague/furinkazan-2.png",
+      "color": "#b71c30"
+    },
+    {
+      "id": "ml-furinkazan-3",
+      "name": "永井孝典",
+      "team": "EX風林火山",
+      "team_id": "ml-furinkazan",
+      "source_page": "https://m-league.jp/teams/furinkazan",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_nagai_kosuke-1.png",
+      "photo": "demo://portraits/mleague/furinkazan-3.png",
+      "color": "#b71c30"
+    },
+    {
+      "id": "ml-furinkazan-4",
+      "name": "内川幸太郎",
+      "team": "EX風林火山",
+      "team_id": "ml-furinkazan",
+      "source_page": "https://m-league.jp/teams/furinkazan",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_uchikawa_kotaro-1.png",
+      "photo": "demo://portraits/mleague/furinkazan-4.png",
+      "color": "#b71c30"
+    },
+    {
+      "id": "ml-sakuraknights-1",
+      "name": "岡田紗佳",
+      "team": "KADOKAWAサクラナイツ",
+      "team_id": "ml-sakuraknights",
+      "source_page": "https://m-league.jp/teams/sakuraknights",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2019/09/profile_okada_sayaka-3.png",
+      "photo": "demo://portraits/mleague/sakuraknights-1.png",
+      "color": "#e1789f"
+    },
+    {
+      "id": "ml-sakuraknights-2",
+      "name": "堀慎吾",
+      "team": "KADOKAWAサクラナイツ",
+      "team_id": "ml-sakuraknights",
+      "source_page": "https://m-league.jp/teams/sakuraknights",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/09/profile_hori_shingo-3.png",
+      "photo": "demo://portraits/mleague/sakuraknights-2.png",
+      "color": "#e1789f"
+    },
+    {
+      "id": "ml-sakuraknights-3",
+      "name": "阿久津翔太",
+      "team": "KADOKAWAサクラナイツ",
+      "team_id": "ml-sakuraknights",
+      "source_page": "https://m-league.jp/teams/sakuraknights",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2017/08/profile_akutsu_shota-1.png",
+      "photo": "demo://portraits/mleague/sakuraknights-3.png",
+      "color": "#e1789f"
+    },
+    {
+      "id": "ml-sakuraknights-4",
+      "name": "尻無濱航",
+      "team": "KADOKAWAサクラナイツ",
+      "team_id": "ml-sakuraknights",
+      "source_page": "https://m-league.jp/teams/sakuraknights",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2017/08/profle_shirinashihama_wataru.png",
+      "photo": "demo://portraits/mleague/sakuraknights-4.png",
+      "color": "#e1789f"
+    },
+    {
+      "id": "ml-fightclub-1",
+      "name": "佐々木寿人",
+      "team": "KONAMI麻雀格闘倶楽部",
+      "team_id": "ml-fightclub",
+      "source_page": "https://m-league.jp/teams/fightclub",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_sasaki_hisato-3.png",
+      "photo": "demo://portraits/mleague/fightclub-1.png",
+      "color": "#c40c38"
+    },
+    {
+      "id": "ml-fightclub-2",
+      "name": "高宮まり",
+      "team": "KONAMI麻雀格闘倶楽部",
+      "team_id": "ml-fightclub",
+      "source_page": "https://m-league.jp/teams/fightclub",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_takamiya_mari-3.png",
+      "photo": "demo://portraits/mleague/fightclub-2.png",
+      "color": "#c40c38"
+    },
+    {
+      "id": "ml-fightclub-3",
+      "name": "伊達朱里紗",
+      "team": "KONAMI麻雀格闘倶楽部",
+      "team_id": "ml-fightclub",
+      "source_page": "https://m-league.jp/teams/fightclub",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_date_arisa-3.png",
+      "photo": "demo://portraits/mleague/fightclub-3.png",
+      "color": "#c40c38"
+    },
+    {
+      "id": "ml-fightclub-4",
+      "name": "滝沢和典",
+      "team": "KONAMI麻雀格闘倶楽部",
+      "team_id": "ml-fightclub",
+      "source_page": "https://m-league.jp/teams/fightclub",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_takizawa_kazunori-3.png",
+      "photo": "demo://portraits/mleague/fightclub-4.png",
+      "color": "#c40c38"
+    },
+    {
+      "id": "ml-abemas-1",
+      "name": "多井隆晴",
+      "team": "渋谷ABEMAS",
+      "team_id": "ml-abemas",
+      "source_page": "https://m-league.jp/teams/abemas",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_oi_takaharu-3.png",
+      "photo": "demo://portraits/mleague/abemas-1.png",
+      "color": "#c49836"
+    },
+    {
+      "id": "ml-abemas-2",
+      "name": "白鳥翔",
+      "team": "渋谷ABEMAS",
+      "team_id": "ml-abemas",
+      "source_page": "https://m-league.jp/teams/abemas",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_shiratori_sho-3.png",
+      "photo": "demo://portraits/mleague/abemas-2.png",
+      "color": "#c49836"
+    },
+    {
+      "id": "ml-abemas-3",
+      "name": "松本吉弘",
+      "team": "渋谷ABEMAS",
+      "team_id": "ml-abemas",
+      "source_page": "https://m-league.jp/teams/abemas",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_matsumoto_yoshihiro-3.png",
+      "photo": "demo://portraits/mleague/abemas-3.png",
+      "color": "#c49836"
+    },
+    {
+      "id": "ml-abemas-4",
+      "name": "日向藍子",
+      "team": "渋谷ABEMAS",
+      "team_id": "ml-abemas",
+      "source_page": "https://m-league.jp/teams/abemas",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/09/profile_hinata_aiko-3.png",
+      "photo": "demo://portraits/mleague/abemas-4.png",
+      "color": "#c49836"
+    },
+    {
+      "id": "ml-phoenix-1",
+      "name": "茅森早香",
+      "team": "セガサミーフェニックス",
+      "team_id": "ml-phoenix",
+      "source_page": "https://m-league.jp/teams/phoenix",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_kayamori_sayaka-3.png",
+      "photo": "demo://portraits/mleague/phoenix-1.png",
+      "color": "#df6c22"
+    },
+    {
+      "id": "ml-phoenix-2",
+      "name": "醍醐大",
+      "team": "セガサミーフェニックス",
+      "team_id": "ml-phoenix",
+      "source_page": "https://m-league.jp/teams/phoenix",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2017/07/profile_daigo_hiroshi-2.png",
+      "photo": "demo://portraits/mleague/phoenix-2.png",
+      "color": "#df6c22"
+    },
+    {
+      "id": "ml-phoenix-3",
+      "name": "竹内元太",
+      "team": "セガサミーフェニックス",
+      "team_id": "ml-phoenix",
+      "source_page": "https://m-league.jp/teams/phoenix",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2016/08/profile_takeuchi_genta-2.png",
+      "photo": "demo://portraits/mleague/phoenix-3.png",
+      "color": "#df6c22"
+    },
+    {
+      "id": "ml-phoenix-4",
+      "name": "佐野ひなこ",
+      "team": "セガサミーフェニックス",
+      "team_id": "ml-phoenix",
+      "source_page": "https://m-league.jp/teams/phoenix",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2015/08/profile_sano_hinako.png",
+      "photo": "demo://portraits/mleague/phoenix-4.png",
+      "color": "#df6c22"
+    },
+    {
+      "id": "ml-raiden-1",
+      "name": "萩原聖人",
+      "team": "TEAM RAIDEN / 雷電",
+      "team_id": "ml-raiden",
+      "source_page": "https://m-league.jp/teams/raiden",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_hagiwara_masato-3.png",
+      "photo": "demo://portraits/mleague/raiden-1.png",
+      "color": "#d5a72c"
+    },
+    {
+      "id": "ml-raiden-2",
+      "name": "瀬戸熊直樹",
+      "team": "TEAM RAIDEN / 雷電",
+      "team_id": "ml-raiden",
+      "source_page": "https://m-league.jp/teams/raiden",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_setokuma_naoki-3.png",
+      "photo": "demo://portraits/mleague/raiden-2.png",
+      "color": "#d5a72c"
+    },
+    {
+      "id": "ml-raiden-3",
+      "name": "黒沢咲",
+      "team": "TEAM RAIDEN / 雷電",
+      "team_id": "ml-raiden",
+      "source_page": "https://m-league.jp/teams/raiden",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_kurosawa_saki-3.png",
+      "photo": "demo://portraits/mleague/raiden-3.png",
+      "color": "#d5a72c"
+    },
+    {
+      "id": "ml-raiden-4",
+      "name": "本田朋広",
+      "team": "TEAM RAIDEN / 雷電",
+      "team_id": "ml-raiden",
+      "source_page": "https://m-league.jp/teams/raiden",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/08/profile_honda_tomohiro-3.png",
+      "photo": "demo://portraits/mleague/raiden-4.png",
+      "color": "#d5a72c"
+    },
+    {
+      "id": "ml-beast-1",
+      "name": "鈴木大介",
+      "team": "BEAST X",
+      "team_id": "ml-beast",
+      "source_page": "https://m-league.jp/teams/beast",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2023/07/profile_suzuki_daisuke-2.png",
+      "photo": "demo://portraits/mleague/beast-1.png",
+      "color": "#277c72"
+    },
+    {
+      "id": "ml-beast-2",
+      "name": "中田花奈",
+      "team": "BEAST X",
+      "team_id": "ml-beast",
+      "source_page": "https://m-league.jp/teams/beast",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2023/07/profile_nakada_kana-2.png",
+      "photo": "demo://portraits/mleague/beast-2.png",
+      "color": "#277c72"
+    },
+    {
+      "id": "ml-beast-3",
+      "name": "下石戟",
+      "team": "BEAST X",
+      "team_id": "ml-beast",
+      "source_page": "https://m-league.jp/teams/beast",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2023/07/profile_shimoishi_geki-1.png",
+      "photo": "demo://portraits/mleague/beast-3.png",
+      "color": "#277c72"
+    },
+    {
+      "id": "ml-beast-4",
+      "name": "東城りお",
+      "team": "BEAST X",
+      "team_id": "ml-beast",
+      "source_page": "https://m-league.jp/teams/beast",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_tojyo_rio-1.png",
+      "photo": "demo://portraits/mleague/beast-4.png",
+      "color": "#277c72"
+    },
+    {
+      "id": "ml-pirates-1",
+      "name": "瑞原明奈",
+      "team": "U-NEXT Pirates",
+      "team_id": "ml-pirates",
+      "source_page": "https://m-league.jp/teams/pirates",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/09/profile_mizuhara_akina-3.png",
+      "photo": "demo://portraits/mleague/pirates-1.png",
+      "color": "#248abe"
+    },
+    {
+      "id": "ml-pirates-2",
+      "name": "鈴木優",
+      "team": "U-NEXT Pirates",
+      "team_id": "ml-pirates",
+      "source_page": "https://m-league.jp/teams/pirates",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2017/08/profile_suzuki_yu-3.png",
+      "photo": "demo://portraits/mleague/pirates-2.png",
+      "color": "#248abe"
+    },
+    {
+      "id": "ml-pirates-3",
+      "name": "仲林圭",
+      "team": "U-NEXT Pirates",
+      "team_id": "ml-pirates",
+      "source_page": "https://m-league.jp/teams/pirates",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2017/08/profile_nakabayashi_kei-3.png",
+      "photo": "demo://portraits/mleague/pirates-3.png",
+      "color": "#248abe"
+    },
+    {
+      "id": "ml-pirates-4",
+      "name": "朝倉康心",
+      "team": "U-NEXT Pirates",
+      "team_id": "ml-pirates",
+      "source_page": "https://m-league.jp/teams/pirates",
+      "source_image": "https://m-league.jp/wp/wp-content/uploads/2018/10/profile_asakura_koshin.png",
+      "photo": "demo://portraits/mleague/pirates-4.png",
+      "color": "#248abe"
+    }
+  ]
+}

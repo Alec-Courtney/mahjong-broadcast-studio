@@ -1,0 +1,21 @@
+{
+  "annotation_method": "Initial labels and boxes were manually recorded from original ABEMA images and nearest-neighbour magnified crops before inference. Red fives are separate classes. Human visual review after overlays corrected one normal five-sou label and one too-narrow West tile bounding box; details in annotation_revisions. Predictions were not used as labels.",
+  "annotation_revisions": ["10059940 GT14 West bounding box initially omitted the oblique left edge; expanded to the full visible face after reviewing the original pixels.", "10163230 GT4 originally mislabeled red five-sou: original pixels show one red center bamboo and four green corners, which is normal 5s. Red 0s has all red bamboo. Corrected by visual review, not treated as a model error."],
+  "training_overlap": "Unknown: upstream training membership cannot be verified. These four images were not in the project's previous recognition samples.",
+  "video_attempt": {"url": "https://www.youtube.com/watch?v=6ff45Y12kac", "result": "Official YouTube highlight extraction required sign-in/bot verification; no cookies or authentication bypass used. Official broadcaster stills used instead."},
+  "frames": [
+    {"id":"10059940", "file":"10059940.jpg", "match_date":"2022-12-16", "condition":"Clear upright 14-tile opening hand, oblique camera", "roi":[350,205,620,255], "full_hand_visible":true,
+     "tiles":["3z","3z","3z","1p","4p","5p","6p","6p","8p","8p","3m","3s","9s","3z"],
+     "boxes":[[373,366,430,449],[430,350,480,433],[480,337,529,416],[530,322,575,401],[575,307,619,390],[619,294,660,373],[662,281,704,361],[705,269,745,347],[746,256,785,335],[786,244,824,322],[825,234,863,309],[864,223,898,298],[899,211,931,288],[920,210,962,282]]},
+    {"id":"10175913", "file":"10175913.jpg", "match_date":"2025-04-28", "condition":"13 upright tiles, red five pin, small 724px broadcast still", "roi":[245,105,365,170], "full_hand_visible":true,
+     "tiles":["2s","2s","4m","5m","6m","4p","0p","6p","7p","8p","7s","8s","9s"],
+     "boxes":[[264,215,291,268],[292,205,319,258],[320,197,346,247],[346,187,373,238],[373,178,399,229],[399,169,425,219],[425,159,448,211],[449,151,473,202],[473,143,496,194],[497,136,518,185],[519,128,541,177],[542,122,563,167],[575,117,600,161]]},
+    {"id":"10163230", "file":"10163230.jpg", "match_date":"2025-02-07", "condition":"13 upright tiles including normal five sou, 724px broadcast still", "roi":[230,125,355,180], "full_hand_visible":true,
+     "tiles":["3s","3s","4s","5s","6s","7p","7p","8p","8p","9p","7m","8m","9m"],
+     "boxes":[[245,245,279,292],[280,233,310,281],[311,223,339,271],[340,214,365,260],[366,204,392,251],[393,194,418,241],[419,185,444,230],[445,176,467,220],[468,168,491,211],[492,159,512,202],[513,152,533,193],[534,143,554,185],[555,137,574,176]]},
+    {"id":"10067968", "file":"10067968.jpg", "match_date":"2023-02-17", "condition":"Partial hand during tsumo; finger occludes red five pin; 9 sou held at an angle", "roi":[495,330,590,270], "full_hand_visible":false,
+     "exclusions":"Only the nine visually identifiable faces inside this ROI are scored. Fully hidden hand tiles and melds outside the ROI are not inferred. Not included in complete-hand success denominator.",
+     "tiles":["2m","3m","4m","6s","8s","3p","3p","0p","9s"],
+     "boxes":[[520,480,593,572],[592,457,655,554],[654,436,717,530],[717,418,772,509],[772,398,824,490],[824,381,877,470],[877,364,925,454],[925,350,970,436],[970,355,1055,482]]}
+  ]
+}

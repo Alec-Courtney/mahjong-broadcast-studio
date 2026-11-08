@@ -1,0 +1,511 @@
+{
+  "version": 1,
+  "seed": 20261027,
+  "synthetic_results": true,
+  "scenarios": [
+    {
+      "key": "team_live",
+      "id": "6d46a14b383355f697048ffdfd170b47",
+      "name": "01 【演示】团队联赛・40人完整数据",
+      "kind": "team_league",
+      "description": "十队40人、60个完整半庄，所有人都有逐局统计；直播四队红色高亮。",
+      "features": [
+        "team",
+        "all_statistics",
+        "team_sidebar",
+        "team_bottom",
+        "portraits",
+        "planned_games"
+      ],
+      "players": 40,
+      "confirmed_matches": 60,
+      "recorded_hands": 510,
+      "current_hands": 3,
+      "phase": "playing",
+      "portable": "portable/01-team_live.json",
+      "event_file": "library/events/6d46a14b383355f697048ffdfd170b47/session.json"
+    },
+    {
+      "key": "team_final",
+      "id": "55687d6f4a6559cd804d9d40077dbae9",
+      "name": "02 【演示】团队联赛・半庄终局",
+      "kind": "team_league",
+      "description": "终局已确认，展示最终点数/pt、队伍总分和赛后走势。",
+      "features": [
+        "team",
+        "finished",
+        "final_pt",
+        "chart",
+        "settlement"
+      ],
+      "players": 40,
+      "confirmed_matches": 61,
+      "recorded_hands": 519,
+      "current_hands": 9,
+      "phase": "finished",
+      "portable": "portable/02-team_final.json",
+      "event_file": "library/events/55687d6f4a6559cd804d9d40077dbae9/session.json"
+    },
+    {
+      "key": "individual_live",
+      "id": "92a9ab73373155c18470bf161bfefbbe",
+      "name": "03 【演示】个人联赛・16人完整数据",
+      "kind": "individual_league",
+      "description": "16人32个完整半庄，显示已打/计划场次及ML完整统计。",
+      "features": [
+        "individual",
+        "all_statistics",
+        "individual_sidebar",
+        "individual_bottom"
+      ],
+      "players": 16,
+      "confirmed_matches": 32,
+      "recorded_hands": 272,
+      "current_hands": 3,
+      "phase": "playing",
+      "portable": "portable/03-individual_live.json",
+      "event_file": "library/events/92a9ab73373155c18470bf161bfefbbe/session.json"
+    },
+    {
+      "key": "large_individual",
+      "id": "9f348f6ebd3756d79138317f05479e36",
+      "name": "04 【演示】个人联赛・48人分页",
+      "kind": "individual_league",
+      "description": "48人各两场，检查完整名次、超过36人的图片分页和长表格。",
+      "features": [
+        "individual",
+        "image_pagination",
+        "planned_games"
+      ],
+      "players": 48,
+      "confirmed_matches": 24,
+      "recorded_hands": 204,
+      "current_hands": 3,
+      "phase": "playing",
+      "portable": "portable/04-large_individual.json",
+      "event_file": "library/events/9f348f6ebd3756d79138317f05479e36/session.json"
+    },
+    {
+      "key": "team_pages",
+      "id": "6c3866fe3d3c5fccae365e86ea095a43",
+      "name": "05 【演示】团队联赛・13队分页",
+      "kind": "team_league",
+      "description": "13队52人，队伍侧栏第二页，包含正分、负分、晋级线和计划场次。",
+      "features": [
+        "team",
+        "sidebar_pagination",
+        "qualification_line"
+      ],
+      "players": 52,
+      "confirmed_matches": 26,
+      "recorded_hands": 221,
+      "current_hands": 3,
+      "phase": "playing",
+      "portable": "portable/05-team_pages.json",
+      "event_file": "library/events/6c3866fe3d3c5fccae365e86ea095a43/session.json"
+    },
+    {
+      "key": "knockout_ready",
+      "id": "0f29fda56afd50e399ce74e262687359",
+      "name": "06 【演示】淘汰赛・赛前编排",
+      "kind": "individual_knockout",
+      "description": "16人四进二，每桌两半庄，首轮已排好，可从第一桌实际开打。",
+      "features": [
+        "knockout",
+        "ready",
+        "four_to_two",
+        "manual_pairing"
+      ],
+      "players": 16,
+      "confirmed_matches": 0,
+      "recorded_hands": 0,
+      "current_hands": 0,
+      "phase": "playing",
+      "portable": "portable/06-knockout_ready.json",
+      "event_file": "library/events/0f29fda56afd50e399ce74e262687359/session.json"
+    },
+    {
+      "key": "knockout_progress",
+      "id": "48956d8990a25da89122a31898be7a4e",
+      "name": "07 【演示】淘汰赛・晋级进行中",
+      "kind": "individual_knockout",
+      "description": "首轮全部晋级，半决赛一桌已打一场，当前为第二场进行中。",
+      "features": [
+        "knockout",
+        "four_to_two",
+        "live_node",
+        "multi_match_node",
+        "advancement"
+      ],
+      "players": 16,
+      "confirmed_matches": 9,
+      "recorded_hands": 76,
+      "current_hands": 3,
+      "phase": "playing",
+      "portable": "portable/07-knockout_progress.json",
+      "event_file": "library/events/48956d8990a25da89122a31898be7a4e/session.json"
+    },
+    {
+      "key": "knockout_final",
+      "id": "d9a1807ca9575ca9bd16d57d6fe2b574",
+      "name": "08 【演示】淘汰赛・全程完成",
+      "kind": "individual_knockout",
+      "description": "16人到决赛共14个完整半庄，冠军已确认，完整晋级图可导出。",
+      "features": [
+        "knockout",
+        "finished",
+        "champion",
+        "bracket_export"
+      ],
+      "players": 16,
+      "confirmed_matches": 14,
+      "recorded_hands": 119,
+      "current_hands": 9,
+      "phase": "finished",
+      "portable": "portable/08-knockout_final.json",
+      "event_file": "library/events/d9a1807ca9575ca9bd16d57d6fe2b574/session.json"
+    },
+    {
+      "key": "knockout_one",
+      "id": "bc1222be4b635df89a84cddee4c91028",
+      "name": "09 【演示】淘汰赛・四进一条件",
+      "kind": "individual_knockout",
+      "description": "16人四进一，三桌已晋级，第四桌进入南四，可测试最后一局晋级条件。",
+      "features": [
+        "knockout",
+        "four_to_one",
+        "qualification",
+        "south_four"
+      ],
+      "players": 16,
+      "confirmed_matches": 3,
+      "recorded_hands": 25,
+      "current_hands": 8,
+      "phase": "playing",
+      "portable": "portable/09-knockout_one.json",
+      "event_file": "library/events/bc1222be4b635df89a84cddee4c91028/session.json"
+    },
+    {
+      "key": "knockout_three",
+      "id": "d9de08a6b1515804906062ac934fc67c",
+      "name": "10 【演示】淘汰赛・四进三与直入",
+      "kind": "individual_knockout",
+      "description": "10人自定义赛程：两桌四进三，加两名直入选手，再晋级决赛。",
+      "features": [
+        "knockout",
+        "four_to_three",
+        "seeded_bye",
+        "manual_pairing"
+      ],
+      "players": 10,
+      "confirmed_matches": 2,
+      "recorded_hands": 17,
+      "current_hands": 3,
+      "phase": "playing",
+      "portable": "portable/10-knockout_three.json",
+      "event_file": "library/events/d9de08a6b1515804906062ac934fc67c/session.json"
+    },
+    {
+      "key": "wait_states",
+      "id": "624abed3369f5a42ad0dd66a06ffcdb2",
+      "name": "11 【演示】听牌・有役无役与振听",
+      "kind": "individual_league",
+      "description": "四席同时比较有役、无役、振听、山存0/未知，并包含全部副露和五宝牌。",
+      "features": [
+        "wait_yaku",
+        "wait_no_yaku",
+        "furiten",
+        "remaining_zero",
+        "remaining_unknown",
+        "melds",
+        "five_dora",
+        "deferred_riichi"
+      ],
+      "players": 4,
+      "confirmed_matches": 0,
+      "recorded_hands": 0,
+      "current_hands": 0,
+      "phase": "playing",
+      "portable": "portable/11-wait_states.json",
+      "event_file": "library/events/624abed3369f5a42ad0dd66a06ffcdb2/session.json"
+    },
+    {
+      "key": "history_gaps",
+      "id": "00f410aaccb452e1b2e519df8c68fadf",
+      "name": "12 【演示】统计・缺失历史与补录",
+      "kind": "individual_league",
+      "description": "可靠历史基数、不完整顺位、只补最终点数及未出场选手，检查“—”和覆盖说明。",
+      "features": [
+        "history_baselines",
+        "missing_history",
+        "manual_results",
+        "unplayed",
+        "statuses"
+      ],
+      "players": 12,
+      "confirmed_matches": 2,
+      "recorded_hands": 0,
+      "current_hands": 0,
+      "phase": "playing",
+      "portable": "portable/12-history_gaps.json",
+      "event_file": "library/events/00f410aaccb452e1b2e519df8c68fadf/session.json"
+    },
+    {
+      "key": "custom_reports",
+      "id": "c7ead4337b4a580288d60744c520bdaf",
+      "name": "13 【演示】报表・全部统计与自定义表头",
+      "kind": "team_league",
+      "description": "所有可选个人统计列，重排列序，修改表头；计算保持一致。",
+      "features": [
+        "all_columns",
+        "custom_headers",
+        "column_order",
+        "xlsx",
+        "png"
+      ],
+      "players": 40,
+      "confirmed_matches": 60,
+      "recorded_hands": 510,
+      "current_hands": 3,
+      "phase": "playing",
+      "portable": "portable/13-custom_reports.json",
+      "event_file": "library/events/c7ead4337b4a580288d60744c520bdaf/session.json"
+    },
+    {
+      "key": "japanese_layout",
+      "id": "21bbeb84423b5040a22902a69a3fe566",
+      "name": "14 【演示】双语・字体与独立布局",
+      "kind": "individual_league",
+      "description": "日文播出界面、独立字体和窗口设置；切回其他赛事恢复各自配置。",
+      "features": [
+        "japanese",
+        "event_settings",
+        "fonts",
+        "layout"
+      ],
+      "players": 16,
+      "confirmed_matches": 32,
+      "recorded_hands": 272,
+      "current_hands": 3,
+      "phase": "playing",
+      "portable": "portable/14-japanese_layout.json",
+      "event_file": "library/events/21bbeb84423b5040a22902a69a3fe566/session.json"
+    },
+    {
+      "key": "legacy_team_complete",
+      "id": "be82206ca48e51e19a1ee4c7ca648459",
+      "name": "15 【演示】完整团队赛 · 40名真实选手",
+      "kind": "team_league",
+      "description": "10支队伍、40名M.League真实选手及官方照片，10场完整模拟半庄和逐局统计，当前半庄可继续测试立直、副露、听牌、结算与晋级。照片及姓名是真实素材，成绩全部为模拟数据。",
+      "features": [
+        "legacy_scenario",
+        "team_complete"
+      ],
+      "players": 40,
+      "confirmed_matches": 10,
+      "recorded_hands": 120,
+      "current_hands": 4,
+      "phase": "playing",
+      "portable": "portable/15-legacy_team_complete.json",
+      "event_file": "library/events/be82206ca48e51e19a1ee4c7ca648459/session.json"
+    },
+    {
+      "key": "legacy_individual_complete",
+      "id": "c9c8ce6674f8576a8b6c69367ed8881c",
+      "name": "16 【演示】完整个人赛 · 16名真实选手",
+      "kind": "individual_league",
+      "description": "16名M.League真实选手及官方照片，4场完整模拟半庄和当前半庄记录，包含个人累计积分、技术统计、点数曲线和可继续操作的对局。成绩全部为模拟数据。",
+      "features": [
+        "legacy_scenario",
+        "individual_complete"
+      ],
+      "players": 16,
+      "confirmed_matches": 4,
+      "recorded_hands": 48,
+      "current_hands": 4,
+      "phase": "playing",
+      "portable": "portable/16-legacy_individual_complete.json",
+      "event_file": "library/events/c9c8ce6674f8576a8b6c69367ed8881c/session.json"
+    },
+    {
+      "key": "legacy_animation_start",
+      "id": "b54fe5a8ec1c59028eaa67b168202932",
+      "name": "17 【演示】开局与操作演示",
+      "kind": "individual_league",
+      "description": "四名演示选手的干净开局，供测试宝牌、副露、立直、和牌支付及自动推进。",
+      "features": [
+        "legacy_scenario",
+        "animation_start"
+      ],
+      "players": 4,
+      "confirmed_matches": 0,
+      "recorded_hands": 0,
+      "current_hands": 0,
+      "phase": "playing",
+      "portable": "portable/17-legacy_animation_start.json",
+      "event_file": "library/events/b54fe5a8ec1c59028eaa67b168202932/session.json"
+    },
+    {
+      "key": "legacy_live_full",
+      "id": "8994925d186254138e6349a22954d9d9",
+      "name": "18 【演示】完整对局显示",
+      "kind": "individual_league",
+      "description": "五张宝牌、吃碰明杠暗杠加杠、立直与听牌、山存零和未知、本场及供托。",
+      "features": [
+        "legacy_scenario",
+        "live_full"
+      ],
+      "players": 4,
+      "confirmed_matches": 0,
+      "recorded_hands": 0,
+      "current_hands": 0,
+      "phase": "playing",
+      "portable": "portable/18-legacy_live_full.json",
+      "event_file": "library/events/8994925d186254138e6349a22954d9d9/session.json"
+    },
+    {
+      "key": "legacy_m_tournament",
+      "id": "9365cb17908259c6b4ef76b1e6da85e1",
+      "name": "19 【演示】晋级条件复现",
+      "kind": "individual_league",
+      "description": "复现2025年6月2日A组第二场的公开积分局面，显示自摸与直击条件，可切换四进一、四进二、四进三。",
+      "features": [
+        "legacy_scenario",
+        "m_tournament"
+      ],
+      "players": 4,
+      "confirmed_matches": 0,
+      "recorded_hands": 0,
+      "current_hands": 0,
+      "phase": "playing",
+      "portable": "portable/19-legacy_m_tournament.json",
+      "event_file": "library/events/9365cb17908259c6b4ef76b1e6da85e1/session.json"
+    },
+    {
+      "key": "legacy_team_ranking",
+      "id": "8b2fe95929e55e81a8eec10c9ce9bc96",
+      "name": "20 【演示】十队联赛排名",
+      "kind": "team_league",
+      "description": "十支虚构队伍的开场前已归档积分，仅高亮本桌队伍；底部按四席显示所属队伍名次及积分，半庄结束并记录本场积分后展示最终变化。",
+      "features": [
+        "legacy_scenario",
+        "team_ranking"
+      ],
+      "players": 10,
+      "confirmed_matches": 0,
+      "recorded_hands": 0,
+      "current_hands": 0,
+      "phase": "playing",
+      "portable": "portable/20-legacy_team_ranking.json",
+      "event_file": "library/events/8b2fe95929e55e81a8eec10c9ce9bc96/session.json"
+    },
+    {
+      "key": "legacy_individual_ranking",
+      "id": "13a85d053adc5df1881ddea1333d6daf",
+      "name": "21 【演示】十六人个人赛与统计",
+      "kind": "individual_league",
+      "description": "十六名虚构选手的开场前已归档积分与历史统计，当前四人高亮；底部固定四席显示名次及积分，半庄结束并记录本场积分后展示最终结果。",
+      "features": [
+        "legacy_scenario",
+        "individual_ranking"
+      ],
+      "players": 16,
+      "confirmed_matches": 0,
+      "recorded_hands": 0,
+      "current_hands": 0,
+      "phase": "playing",
+      "portable": "portable/21-legacy_individual_ranking.json",
+      "event_file": "library/events/13a85d053adc5df1881ddea1333d6daf/session.json"
+    },
+    {
+      "key": "legacy_match_finished",
+      "id": "df2b32df90bf524190aa50f43fa9fed3",
+      "name": "22 【演示】完整半庄与赛后曲线",
+      "kind": "individual_league",
+      "description": "用真实结算引擎生成十二局完整半庄，包含两次流局、连庄、立直、副露、荣和与自摸；点数曲线四条线从起点同步延伸。",
+      "features": [
+        "legacy_scenario",
+        "match_finished"
+      ],
+      "players": 4,
+      "confirmed_matches": 1,
+      "recorded_hands": 12,
+      "current_hands": 12,
+      "phase": "finished",
+      "portable": "portable/22-legacy_match_finished.json",
+      "event_file": "library/events/df2b32df90bf524190aa50f43fa9fed3/session.json"
+    },
+    {
+      "key": "legacy_final_edge",
+      "id": "c0835315746e5409a8772b113296c2e1",
+      "name": "23 【演示】同分、负分与终局供托",
+      "kind": "individual_league",
+      "description": "南四局三家同点第一、第四家负分，1000点终局供托按400、300、300分配；并列顺位保持不变。",
+      "features": [
+        "legacy_scenario",
+        "final_edge"
+      ],
+      "players": 4,
+      "confirmed_matches": 1,
+      "recorded_hands": 1,
+      "current_hands": 1,
+      "phase": "finished",
+      "portable": "portable/23-legacy_final_edge.json",
+      "event_file": "library/events/c0835315746e5409a8772b113296c2e1/session.json"
+    },
+    {
+      "key": "legacy_long_names",
+      "id": "216edb647435506fa0818cd8e1052a76",
+      "name": "24 【演示】长名称与多役种结算",
+      "kind": "individual_league",
+      "description": "长姓名和长队名，十一番三倍满及多项役种，用于检查字号、换行和边界。",
+      "features": [
+        "legacy_scenario",
+        "long_names"
+      ],
+      "players": 4,
+      "confirmed_matches": 0,
+      "recorded_hands": 0,
+      "current_hands": 1,
+      "phase": "finished",
+      "portable": "portable/24-legacy_long_names.json",
+      "event_file": "library/events/216edb647435506fa0818cd8e1052a76/session.json"
+    },
+    {
+      "key": "legacy_yakuman_single",
+      "id": "193c5551dcc451cab8cbda21340b2e64",
+      "name": "25 【演示】单倍役满结算",
+      "kind": "individual_league",
+      "description": "大三元单倍役满的支付与结算显示，含负分选手。",
+      "features": [
+        "legacy_scenario",
+        "yakuman_single"
+      ],
+      "players": 4,
+      "confirmed_matches": 0,
+      "recorded_hands": 0,
+      "current_hands": 1,
+      "phase": "finished",
+      "portable": "portable/25-legacy_yakuman_single.json",
+      "event_file": "library/events/193c5551dcc451cab8cbda21340b2e64/session.json"
+    },
+    {
+      "key": "legacy_yakuman_multiple",
+      "id": "f65b572b189b59379282325a4c152cd1",
+      "name": "26 【演示】双倍役满结算",
+      "kind": "individual_league",
+      "description": "四暗刻加字一色的双倍役满，检查役满倍数、六万四千点支付及负分。",
+      "features": [
+        "legacy_scenario",
+        "yakuman_multiple"
+      ],
+      "players": 4,
+      "confirmed_matches": 0,
+      "recorded_hands": 0,
+      "current_hands": 1,
+      "phase": "finished",
+      "portable": "portable/26-legacy_yakuman_multiple.json",
+      "event_file": "library/events/f65b572b189b59379282325a4c152cd1/session.json"
+    }
+  ]
+}

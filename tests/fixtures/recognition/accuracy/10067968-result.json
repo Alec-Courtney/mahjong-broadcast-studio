@@ -1,0 +1,235 @@
+{
+  "id": "10067968",
+  "file": "10067968.jpg",
+  "match_date": "2023-02-17",
+  "condition": "Partial hand during tsumo; finger occludes red five pin; 9 sou held at an angle",
+  "roi": [
+    495,
+    330,
+    590,
+    270
+  ],
+  "full_hand_visible": false,
+  "exclusions": "Only the nine visually identifiable faces inside this ROI are scored. Fully hidden hand tiles and melds outside the ROI are not inferred. Not included in complete-hand success denominator.",
+  "tiles": [
+    "2m",
+    "3m",
+    "4m",
+    "6s",
+    "8s",
+    "3p",
+    "3p",
+    "0p",
+    "9s"
+  ],
+  "boxes": [
+    [
+      520,
+      480,
+      593,
+      572
+    ],
+    [
+      592,
+      457,
+      655,
+      554
+    ],
+    [
+      654,
+      436,
+      717,
+      530
+    ],
+    [
+      717,
+      418,
+      772,
+      509
+    ],
+    [
+      772,
+      398,
+      824,
+      490
+    ],
+    [
+      824,
+      381,
+      877,
+      470
+    ],
+    [
+      877,
+      364,
+      925,
+      454
+    ],
+    [
+      925,
+      350,
+      970,
+      436
+    ],
+    [
+      970,
+      355,
+      1055,
+      482
+    ]
+  ],
+  "source": {
+    "id": "10067968",
+    "article_url": "https://times.abema.tv/articles/-/10067968",
+    "image_url": "https://times-abema.ismcdn.jp/mwimgs/1/c/1448w/img_1c757e7875badc28a3d82c15e83939da253738.jpg",
+    "file": "10067968.jpg",
+    "sha256": "f034e00de682fca7821aaa1f93f00f09f48ca8f193192092ddaffa4023ffbaaa",
+    "source_type": "official M.LEAGUE broadcast still published by ABEMA",
+    "video_timestamp": null,
+    "copyright": "ABEMA/M.LEAGUE; local evaluation only"
+  },
+  "image_size": [
+    1448,
+    814
+  ],
+  "result": {
+    "detections": [
+      {
+        "tile": "2m",
+        "confidence": 0.7919896841049194,
+        "bbox": [
+          527.898193359375,
+          469.7839660644531,
+          603.822021484375,
+          563.026611328125
+        ],
+        "class_name": "2m"
+      },
+      {
+        "tile": "3m",
+        "confidence": 0.8452408909797668,
+        "bbox": [
+          590.2034912109375,
+          447.294189453125,
+          662.972412109375,
+          549.646484375
+        ],
+        "class_name": "3m"
+      },
+      {
+        "tile": "4m",
+        "confidence": 0.8763841986656189,
+        "bbox": [
+          647.3952026367188,
+          429.5567321777344,
+          721.2012939453125,
+          527.9903564453125
+        ],
+        "class_name": "4m"
+      },
+      {
+        "tile": "8s",
+        "confidence": 0.6918618083000183,
+        "bbox": [
+          760.78125,
+          396.6252136230469,
+          833.4614868164062,
+          496.897705078125
+        ],
+        "class_name": "8s"
+      },
+      {
+        "tile": "3p",
+        "confidence": 0.7716827392578125,
+        "bbox": [
+          815.9203491210938,
+          382.44482421875,
+          883.9415283203125,
+          472.28271484375
+        ],
+        "class_name": "3p"
+      },
+      {
+        "tile": "3p",
+        "confidence": 0.7771826386451721,
+        "bbox": [
+          861.7197265625,
+          364.8753662109375,
+          929.821044921875,
+          457.2868347167969
+        ],
+        "class_name": "3p"
+      }
+    ],
+    "width": 1448,
+    "height": 814,
+    "source": "yolo11m_v2_best.onnx",
+    "elapsed_ms": 305.65720004960895,
+    "provider": "nikmomo/Mahjong-YOLO · ONNX CPU",
+    "captured_at": 0.0
+  },
+  "matching": [
+    {
+      "ground_truth_index": 2,
+      "prediction_index": 2,
+      "iou": 0.7840502340108826,
+      "expected": "4m",
+      "predicted": "4m",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 1,
+      "prediction_index": 1,
+      "iou": 0.7558240607094424,
+      "expected": "3m",
+      "predicted": "3m",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 5,
+      "prediction_index": 4,
+      "iou": 0.7499730278276179,
+      "expected": "3p",
+      "predicted": "3p",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 6,
+      "prediction_index": 5,
+      "iou": 0.6752547829502772,
+      "expected": "3p",
+      "predicted": "3p",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 4,
+      "prediction_index": 3,
+      "iou": 0.6564369687280598,
+      "expected": "8s",
+      "predicted": "8s",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 0,
+      "prediction_index": 0,
+      "iou": 0.644229056431212,
+      "expected": "2m",
+      "predicted": "2m",
+      "correct": true
+    }
+  ],
+  "visible_ground_truth": 9,
+  "predicted_count": 6,
+  "localized_count": 6,
+  "correct_tile_count": 6,
+  "false_positive_or_wrong_label": 0,
+  "missed_or_wrong_label": 3,
+  "strict_visible_face_exact": false,
+  "tile_multiset_exact": false,
+  "unmatched_gt": [
+    3,
+    7,
+    8
+  ],
+  "unmatched_predictions": []
+}

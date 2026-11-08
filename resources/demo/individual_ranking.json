@@ -1,0 +1,684 @@
+{
+  "format": "MahjongOverlayStudio",
+  "version": 6,
+  "state": {
+    "schemaVersion": 1,
+    "id": "demo-individual_ranking",
+    "title": "演示 · 十六人个人赛与统计",
+    "initialDealer": 0,
+    "initialScores": [
+      25000,
+      25000,
+      25000,
+      25000
+    ],
+    "initialPot": 0,
+    "rules": {
+      "startPoints": 25000,
+      "returnPoints": 30000,
+      "uma": [
+        50,
+        10,
+        -10,
+        -30
+      ],
+      "okaEnabled": false,
+      "terminalPot": "unallocated",
+      "terminalPotTie": "mleague",
+      "tieBreak": "share",
+      "dealerTenpaiRenchan": true,
+      "agariYame": false,
+      "tenpaiYame": false,
+      "notenPayment": 3000,
+      "honbaRon": 300,
+      "honbaTsumoEach": 100,
+      "allowNegative": true,
+      "endOnZero": false,
+      "kiriageMangan": true,
+      "kazoeYakuman": false
+    },
+    "players": [
+      {
+        "id": "demo-p1",
+        "name": "青木 凛",
+        "score": 39000,
+        "riichi": false,
+        "melds": [],
+        "photo": "demo://avatars/1.png",
+        "color": "#ffffff",
+        "team_color": "#4b9270",
+        "team": "青岚",
+        "team_id": "demo-team-1",
+        "tenpai": false,
+        "waits": [],
+        "remaining": null
+      },
+      {
+        "id": "demo-p2",
+        "name": "朝雾 遥",
+        "score": 17000,
+        "riichi": false,
+        "melds": [],
+        "photo": "demo://avatars/2.png",
+        "color": "#ffffff",
+        "team_color": "#bf4d63",
+        "team": "绯樱",
+        "team_id": "demo-team-2",
+        "tenpai": false,
+        "waits": [],
+        "remaining": null
+      },
+      {
+        "id": "demo-p3",
+        "name": "白石 奏",
+        "score": 18000,
+        "riichi": false,
+        "melds": [],
+        "photo": "demo://avatars/3.png",
+        "color": "#ffffff",
+        "team_color": "#4a81b8",
+        "team": "海蓝",
+        "team_id": "demo-team-3",
+        "tenpai": false,
+        "waits": [],
+        "remaining": null
+      },
+      {
+        "id": "demo-p4",
+        "name": "橘 结衣",
+        "score": 26000,
+        "riichi": false,
+        "melds": [],
+        "photo": "demo://avatars/4.png",
+        "color": "#ffffff",
+        "team_color": "#dfb34e",
+        "team": "金曜",
+        "team_id": "demo-team-4",
+        "tenpai": false,
+        "waits": [],
+        "remaining": null
+      }
+    ],
+    "dealer": 1,
+    "roundIndex": 5,
+    "honba": 0,
+    "pot": 0,
+    "doraIndicators": [],
+    "phase": "playing",
+    "lastResult": null,
+    "finalRanking": null,
+    "accountingTotal": 100000,
+    "accountingAdjustment": 0,
+    "lastCorrection": null,
+    "revision": 0,
+    "handSequence": 0,
+    "appliedEventIds": [],
+    "manualDisplay": true,
+    "broadcast": {
+      "version": 1,
+      "config": {
+        "title": "演示 · 十六人个人赛与统计",
+        "standings_mode": "individual",
+        "qualification_slots": 2,
+        "qualification_final": false,
+        "qualification_mode": "individual",
+        "qualification_calculation": "auto",
+        "start_points": 25000,
+        "return_points": 30000,
+        "uma": [
+          50,
+          10,
+          -10,
+          -30
+        ],
+        "oka_enabled": false,
+        "tie_break": "share",
+        "qualification_tie_break": "seed",
+        "manual_conditions": {},
+        "show_match_title": false,
+        "hud_opacity": 0.82,
+        "standings_live": false,
+        "statistics_scope": "all",
+        "statistics_view": "rates",
+        "chart_mode": "scores",
+        "statistics_page": 0,
+        "commentary_title": "二度受",
+        "commentary_body": "两组搭子的进张重叠，如同色23与56都需要4，会压缩有效进张。",
+        "commentary_builtin": true,
+        "commentary_duration": 0,
+        "event_mode": "individual",
+        "settlement_enabled": true,
+        "settlement_hold": 3.0,
+        "settlement_total_hold": 3.0,
+        "sidebar_mode": "individual"
+      },
+      "roster": [
+        {
+          "id": "demo-p1",
+          "name": "青木 凛",
+          "team": "青岚",
+          "team_id": "demo-team-1",
+          "color": "#4b9270",
+          "photo": "demo://avatars/1.png",
+          "base_points": 88.6,
+          "games": 20,
+          "seed": 1,
+          "status": "active",
+          "stats": {
+            "hands": 180,
+            "calls": 42,
+            "riichi": 34,
+            "wins": 38,
+            "deal_ins": 17,
+            "win_points": 235600,
+            "deal_in_points": 88400
+          }
+        },
+        {
+          "id": "demo-p2",
+          "name": "朝雾 遥",
+          "team": "绯樱",
+          "team_id": "demo-team-2",
+          "color": "#bf4d63",
+          "photo": "demo://avatars/2.png",
+          "base_points": 71.3,
+          "games": 21,
+          "seed": 2,
+          "status": "active",
+          "stats": {
+            "hands": 193,
+            "calls": 45,
+            "riichi": 36,
+            "wins": 40,
+            "deal_ins": 18,
+            "win_points": 253200,
+            "deal_in_points": 96120
+          }
+        },
+        {
+          "id": "demo-p3",
+          "name": "白石 奏",
+          "team": "海蓝",
+          "team_id": "demo-team-3",
+          "color": "#4a81b8",
+          "photo": "demo://avatars/3.png",
+          "base_points": 62.7,
+          "games": 22,
+          "seed": 3,
+          "status": "active",
+          "stats": {
+            "hands": 206,
+            "calls": 48,
+            "riichi": 38,
+            "wins": 42,
+            "deal_ins": 19,
+            "win_points": 271320,
+            "deal_in_points": 104120
+          }
+        },
+        {
+          "id": "demo-p4",
+          "name": "橘 结衣",
+          "team": "金曜",
+          "team_id": "demo-team-4",
+          "color": "#dfb34e",
+          "photo": "demo://avatars/4.png",
+          "base_points": 44.1,
+          "games": 23,
+          "seed": 4,
+          "status": "active",
+          "stats": {
+            "hands": 219,
+            "calls": 51,
+            "riichi": 40,
+            "wins": 44,
+            "deal_ins": 20,
+            "win_points": 289960,
+            "deal_in_points": 112400
+          }
+        },
+        {
+          "id": "demo-p5",
+          "name": "藤原 真",
+          "team": "紫苑",
+          "team_id": "demo-team-5",
+          "color": "#836bb4",
+          "photo": "demo://avatars/5.png",
+          "base_points": 18.8,
+          "games": 24,
+          "seed": 5,
+          "status": "active",
+          "stats": {
+            "hands": 232,
+            "calls": 54,
+            "riichi": 42,
+            "wins": 46,
+            "deal_ins": 21,
+            "win_points": 309120,
+            "deal_in_points": 120960
+          }
+        },
+        {
+          "id": "demo-p6",
+          "name": "樱井 澪",
+          "team": "翡翠",
+          "team_id": "demo-team-6",
+          "color": "#48a4a3",
+          "photo": "demo://avatars/6.png",
+          "base_points": -5.4,
+          "games": 25,
+          "seed": 6,
+          "status": "active",
+          "stats": {
+            "hands": 245,
+            "calls": 57,
+            "riichi": 44,
+            "wins": 48,
+            "deal_ins": 22,
+            "win_points": 328800,
+            "deal_in_points": 129800
+          }
+        },
+        {
+          "id": "demo-p7",
+          "name": "神谷 悠",
+          "team": "琥珀",
+          "team_id": "demo-team-7",
+          "color": "#c97444",
+          "photo": "demo://avatars/7.png",
+          "base_points": -31.2,
+          "games": 26,
+          "seed": 7,
+          "status": "active",
+          "stats": {
+            "hands": 258,
+            "calls": 60,
+            "riichi": 46,
+            "wins": 50,
+            "deal_ins": 23,
+            "win_points": 349000,
+            "deal_in_points": 138920
+          }
+        },
+        {
+          "id": "demo-p8",
+          "name": "高桥 晴",
+          "team": "银翼",
+          "team_id": "demo-team-8",
+          "color": "#71859a",
+          "photo": "demo://avatars/8.png",
+          "base_points": -82.6,
+          "games": 27,
+          "seed": 8,
+          "status": "active",
+          "stats": {
+            "hands": 271,
+            "calls": 63,
+            "riichi": 48,
+            "wins": 52,
+            "deal_ins": 24,
+            "win_points": 369720,
+            "deal_in_points": 148320
+          }
+        },
+        {
+          "id": "demo-p9",
+          "name": "浅野 葵",
+          "team": "若叶",
+          "team_id": "demo-team-9",
+          "color": "#98a164",
+          "photo": "",
+          "base_points": 400.0,
+          "games": 28,
+          "seed": 9,
+          "status": "active",
+          "stats": {
+            "hands": 284,
+            "calls": 66,
+            "riichi": 50,
+            "wins": 54,
+            "deal_ins": 25,
+            "win_points": 390960,
+            "deal_in_points": 158000
+          }
+        },
+        {
+          "id": "demo-p10",
+          "name": "森川 光",
+          "team": "星月",
+          "team_id": "demo-team-10",
+          "color": "#b06996",
+          "photo": "",
+          "base_points": 350.0,
+          "games": 29,
+          "seed": 10,
+          "status": "active",
+          "stats": {
+            "hands": 297,
+            "calls": 69,
+            "riichi": 52,
+            "wins": 56,
+            "deal_ins": 26,
+            "win_points": 412720,
+            "deal_in_points": 167960
+          }
+        },
+        {
+          "id": "demo-p11",
+          "name": "结城 玲",
+          "team": "天青",
+          "team_id": "demo-team-11",
+          "color": "#4e8aa0",
+          "photo": "",
+          "base_points": 300.0,
+          "games": 30,
+          "seed": 11,
+          "status": "active",
+          "stats": {
+            "hands": 310,
+            "calls": 72,
+            "riichi": 54,
+            "wins": 58,
+            "deal_ins": 27,
+            "win_points": 435000,
+            "deal_in_points": 178200
+          }
+        },
+        {
+          "id": "demo-p12",
+          "name": "小野 莲",
+          "team": "朱雀",
+          "team_id": "demo-team-12",
+          "color": "#af554c",
+          "photo": "",
+          "base_points": 250.0,
+          "games": 31,
+          "seed": 12,
+          "status": "active",
+          "stats": {
+            "hands": 323,
+            "calls": 75,
+            "riichi": 56,
+            "wins": 60,
+            "deal_ins": 28,
+            "win_points": 457800,
+            "deal_in_points": 188720
+          }
+        },
+        {
+          "id": "demo-p13",
+          "name": "中村 雪",
+          "team": "月白",
+          "team_id": "demo-team-13",
+          "color": "#8a91a9",
+          "photo": "",
+          "base_points": 200.0,
+          "games": 32,
+          "seed": 13,
+          "status": "active",
+          "stats": {
+            "hands": 336,
+            "calls": 78,
+            "riichi": 58,
+            "wins": 62,
+            "deal_ins": 29,
+            "win_points": 481120,
+            "deal_in_points": 199520
+          }
+        },
+        {
+          "id": "demo-p14",
+          "name": "宫泽 诚",
+          "team": "橙光",
+          "team_id": "demo-team-14",
+          "color": "#c17e3a",
+          "photo": "",
+          "base_points": 175.0,
+          "games": 33,
+          "seed": 14,
+          "status": "active",
+          "stats": {
+            "hands": 349,
+            "calls": 81,
+            "riichi": 60,
+            "wins": 64,
+            "deal_ins": 30,
+            "win_points": 504960,
+            "deal_in_points": 210600
+          }
+        },
+        {
+          "id": "demo-p15",
+          "name": "水野 凪",
+          "team": "浅葱",
+          "team_id": "demo-team-15",
+          "color": "#629c8a",
+          "photo": "",
+          "base_points": 150.0,
+          "games": 34,
+          "seed": 15,
+          "status": "active",
+          "stats": {
+            "hands": 362,
+            "calls": 84,
+            "riichi": 62,
+            "wins": 66,
+            "deal_ins": 31,
+            "win_points": 529320,
+            "deal_in_points": 221960
+          }
+        },
+        {
+          "id": "demo-p16",
+          "name": "北原 奈绪",
+          "team": "雪见",
+          "team_id": "demo-team-16",
+          "color": "#a6a9ac",
+          "photo": "",
+          "base_points": 125.0,
+          "games": 35,
+          "seed": 16,
+          "status": "active",
+          "stats": {
+            "hands": 375,
+            "calls": 87,
+            "riichi": 64,
+            "wins": 68,
+            "deal_ins": 32,
+            "win_points": 554200,
+            "deal_in_points": 233600
+          }
+        }
+      ],
+      "hands": [],
+      "matches": [],
+      "current_hand": "a28c60558a0940a88722d00055cfe100",
+      "initial_scores": [
+        39000,
+        17000,
+        18000,
+        26000
+      ],
+      "initial_label": "记录起点",
+      "partial": true,
+      "initial_players": [
+        {
+          "id": "demo-p1",
+          "name": "青木 凛",
+          "score": 39000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/1.png",
+          "color": "#ffffff",
+          "team_color": "#4b9270",
+          "team": "青岚",
+          "team_id": "demo-team-1",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        },
+        {
+          "id": "demo-p2",
+          "name": "朝雾 遥",
+          "score": 17000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/2.png",
+          "color": "#ffffff",
+          "team_color": "#bf4d63",
+          "team": "绯樱",
+          "team_id": "demo-team-2",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        },
+        {
+          "id": "demo-p3",
+          "name": "白石 奏",
+          "score": 18000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/3.png",
+          "color": "#ffffff",
+          "team_color": "#4a81b8",
+          "team": "海蓝",
+          "team_id": "demo-team-3",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        },
+        {
+          "id": "demo-p4",
+          "name": "橘 结衣",
+          "score": 26000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/4.png",
+          "color": "#ffffff",
+          "team_color": "#dfb34e",
+          "team": "金曜",
+          "team_id": "demo-team-4",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        }
+      ]
+    }
+  },
+  "settings": {
+    "theme": "saikouisen",
+    "locked": false,
+    "topmost": false,
+    "capture_bg": "transparent",
+    "speed": 1.0,
+    "windows": {
+      "round": [
+        20,
+        12,
+        218,
+        61
+      ],
+      "dora": [
+        238,
+        12,
+        195,
+        61
+      ],
+      "commentary": [
+        340,
+        81,
+        600,
+        52
+      ],
+      "qualification": [
+        20,
+        114,
+        208,
+        338
+      ],
+      "standings": [
+        20,
+        588,
+        1240,
+        108
+      ],
+      "statistics": [
+        40,
+        60,
+        1200,
+        600
+      ],
+      "chart": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "yaku": [
+        20,
+        530,
+        1240,
+        148
+      ],
+      "player0": [
+        10,
+        460,
+        305,
+        237
+      ],
+      "player1": [
+        327,
+        460,
+        305,
+        237
+      ],
+      "player2": [
+        644,
+        460,
+        305,
+        237
+      ],
+      "player3": [
+        961,
+        460,
+        305,
+        237
+      ]
+    },
+    "layout_version": 7,
+    "visible": {
+      "round": true,
+      "dora": true,
+      "player0": true,
+      "player1": true,
+      "player2": true,
+      "player3": true,
+      "yaku": true,
+      "qualification": true,
+      "commentary": false,
+      "standings": false,
+      "statistics": false,
+      "chart": false
+    },
+    "show_yaku": false,
+    "show_overlays": true,
+    "language": "zh_CN",
+    "broadcast_scene": "table",
+    "commentary_auto": true,
+    "commentary_auto_geometry": [
+      340,
+      81,
+      600,
+      52
+    ]
+  },
+  "last_info": null,
+  "demo": {
+    "id": "individual_ranking",
+    "label": "十六人个人赛与统计",
+    "description": "十六名虚构选手的开场前已归档积分与历史统计，当前四人高亮；底部固定四席显示名次及积分，半庄结束并记录本场积分后展示最终结果。",
+    "fictional": true,
+    "recorded_by": "real settlement engine",
+    "source": "synthetic demonstration"
+  }
+}

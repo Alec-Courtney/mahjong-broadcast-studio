@@ -1,0 +1,74 @@
+[
+  {
+    "id": "team_complete",
+    "label": "完整团队赛 · 40名演示选手",
+    "description": "M.League 的10支队伍、40名选手及官网肖像，附50个模拟半庄和逐局技术统计。可继续操作当前半庄。",
+    "filename": "team_complete.json"
+  },
+  {
+    "id": "individual_complete",
+    "label": "完整个人赛 · 16名演示选手",
+    "description": "16名 M.League 选手及官网肖像，附20个模拟半庄、个人积分、逐局技术统计和当前对局。",
+    "filename": "individual_complete.json"
+  },
+  {
+    "id": "animation_start",
+    "label": "开局与操作演示",
+    "description": "四名演示选手的干净开局，供测试宝牌、副露、立直、和牌支付及自动推进。",
+    "filename": "animation_start.json"
+  },
+  {
+    "id": "live_full",
+    "label": "完整对局显示",
+    "description": "五张宝牌、吃碰明杠暗杠加杠、立直与听牌、山存零和未知、本场及供托。",
+    "filename": "live_full.json"
+  },
+  {
+    "id": "m_tournament",
+    "label": "晋级条件复现",
+    "description": "复现2025年6月2日A组第二场的公开积分局面，显示自摸与直击条件，可切换四进一、四进二、四进三。",
+    "filename": "m_tournament.json"
+  },
+  {
+    "id": "team_ranking",
+    "label": "十队联赛排名",
+    "description": "十支虚构队伍的开场前已归档积分，仅高亮本桌队伍；底部按四席显示所属队伍名次及积分，半庄结束并记录本场积分后展示最终变化。",
+    "filename": "team_ranking.json"
+  },
+  {
+    "id": "individual_ranking",
+    "label": "十六人个人赛与统计",
+    "description": "十六名虚构选手的开场前已归档积分与历史统计，当前四人高亮；底部固定四席显示名次及积分，半庄结束并记录本场积分后展示最终结果。",
+    "filename": "individual_ranking.json"
+  },
+  {
+    "id": "match_finished",
+    "label": "完整半庄与赛后曲线",
+    "description": "用真实结算引擎生成十二局完整半庄，包含两次流局、连庄、立直、副露、荣和与自摸；点数曲线四条线从起点同步延伸。",
+    "filename": "match_finished.json"
+  },
+  {
+    "id": "final_edge",
+    "label": "同分、负分与终局供托",
+    "description": "南四局三家同点第一、第四家负分，1000点终局供托按400、300、300分配；并列顺位保持不变。",
+    "filename": "final_edge.json"
+  },
+  {
+    "id": "long_names",
+    "label": "长名称与多役种结算",
+    "description": "长姓名和长队名，十一番三倍满及多项役种，用于检查字号、换行和边界。",
+    "filename": "long_names.json"
+  },
+  {
+    "id": "yakuman_single",
+    "label": "单倍役满结算",
+    "description": "大三元单倍役满的支付与结算显示，含负分选手。",
+    "filename": "yakuman_single.json"
+  },
+  {
+    "id": "yakuman_multiple",
+    "label": "双倍役满结算",
+    "description": "四暗刻加字一色的双倍役满，检查役满倍数、六万四千点支付及负分。",
+    "filename": "yakuman_multiple.json"
+  }
+]

@@ -1,0 +1,48 @@
+[
+  {
+    "id": "10175913",
+    "article_url": "https://times.abema.tv/articles/-/10175913?page=2",
+    "image_url": "https://times-abema.ismcdn.jp/mwimgs/1/8/724w/img_18efb9e79ecba2f295b4bfe8f96b8821439155.jpg",
+    "file": "10175913.jpg",
+    "sha256": "8b0749bdbaf38366fdca6e56fa7793fc4b95d49fd4a7e43149f0f4756296da42",
+    "source_type": "official M.LEAGUE broadcast still published by ABEMA",
+    "video_timestamp": null,
+    "copyright": "ABEMA/M.LEAGUE; local evaluation only"
+  },
+  {
+    "id": "10067968",
+    "article_url": "https://times.abema.tv/articles/-/10067968",
+    "image_url": "https://times-abema.ismcdn.jp/mwimgs/1/c/1448w/img_1c757e7875badc28a3d82c15e83939da253738.jpg",
+    "file": "10067968.jpg",
+    "sha256": "f034e00de682fca7821aaa1f93f00f09f48ca8f193192092ddaffa4023ffbaaa",
+    "source_type": "official M.LEAGUE broadcast still published by ABEMA",
+    "video_timestamp": null,
+    "copyright": "ABEMA/M.LEAGUE; local evaluation only"
+  },
+  {
+    "id": "10059940",
+    "article_url": "https://times.abema.tv/articles/-/10059940",
+    "image_url": "https://times-abema.ismcdn.jp/mwimgs/1/f/-/img_1f3c4ae24f037cd43a3c00defc8f5c47256578.jpg",
+    "file": "10059940.jpg",
+    "sha256": "60a3874892f119b7f3c5d4b9ae57fb0fe2ed6d112b7fb9e6533ddb6c38c9a21c",
+    "source_type": "official M.LEAGUE broadcast still published by ABEMA",
+    "video_timestamp": null,
+    "copyright": "ABEMA/M.LEAGUE; local evaluation only"
+  },
+  {
+    "id": "10163230",
+    "article_url": "https://times.abema.tv/articles/-/10163230?page=2",
+    "image_url": "https://times-abema.ismcdn.jp/mwimgs/b/f/724w/img_bff77107cf4c1500d747c126e2b63399421696.jpg",
+    "file": "10163230.jpg",
+    "sha256": "a41e14232e6b5673920636ffd1debc4ba283976b805c5f4f1a94146d273de146",
+    "source_type": "official M.LEAGUE broadcast still published by ABEMA",
+    "video_timestamp": null,
+    "copyright": "ABEMA/M.LEAGUE; local evaluation only"
+  },
+  {
+    "id": "20260108",
+    "article_url": "https://abema.tv/video/episode/444-1_s80_p2726",
+    "image_url": "https://image.p-c2-x.abema-tv.com/image/programs/444-1_s80_p2726/thumb001.png?background=000000&fit=fill&height=432&quality=75&version=1779884582&width=768",
+    "failed": "<urlopen error _ssl.c:1015: The handshake operation timed out>"
+  }
+]

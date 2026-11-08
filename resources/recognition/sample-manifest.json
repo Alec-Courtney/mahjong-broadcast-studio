@@ -1,0 +1,38 @@
+{
+  "purpose": "User-requested offline recognition evaluation using real M.LEAGUE camera stills",
+  "samples": [
+    {
+      "file": "mleague-hand.jpg",
+      "url": "https://times-abema.ismcdn.jp/mwimgs/a/7/724w/img_a7a7f2f0ea65c44944bc20379631615a399394.jpg",
+      "bytes": 71441,
+      "sha256": "f75eb2213b475e1388ed3dbd7fb93ff4bd1de53966f0651a83b23ad490a36355",
+      "article": "https://times.abema.tv/articles/photo/10116191",
+      "attribution": "ABEMA TIMES / M.LEAGUE. Public article still, local evaluation only; not a model training dataset."
+    },
+    {
+      "file": "mleague-hand-hd.jpg",
+      "url": "https://times-abema.ismcdn.jp/mwimgs/a/7/1448w/img_a7a7f2f0ea65c44944bc20379631615a399394.jpg",
+      "bytes": 198039,
+      "sha256": "88b364a3c0ca337089bc1dddb7538a3efae2c35b5441504820aa36d645548db4",
+      "article": "https://times.abema.tv/articles/photo/10116191",
+      "attribution": "ABEMA TIMES / M.LEAGUE. Public article still, local evaluation only; not a model training dataset."
+    },
+    {
+      "file": "mleague-chinitsu.jpg",
+      "url": "https://times-abema.ismcdn.jp/mwimgs/7/e/1200w/img_7e859be7c3c2c2d3943ee316e46fd619424525.jpg",
+      "bytes": 133543,
+      "sha256": "2d41db2416d314c631a4b0dbb1c005041dc2c156bead5b94b2276c50eda2a698",
+      "article": "https://times.abema.tv/articles/-/10205552",
+      "attribution": "ABEMA TIMES / M.LEAGUE. Public article still, local evaluation only; not a model training dataset."
+    },
+    {
+      "file": "mleague-chiitoi.jpg",
+      "url": "https://times-abema.ismcdn.jp/mwimgs/c/7/1448w/img_c7ab4b0405cf02096a2a8d79b947aa4d289250.jpg",
+      "bytes": 201257,
+      "sha256": "85b89e5e3c3ce1d0dc02a6d799405626b1ad48dbbb98d189cbe95465f40baffe",
+      "article": "https://times.abema.tv/articles/-/10049229",
+      "attribution": "ABEMA TIMES / M.LEAGUE. Public article still, local evaluation only; not a model training dataset."
+    }
+  ],
+  "upstream_composites": "upstream-validation-01.png and upstream-validation-02.png are upstream annotated evaluation figures, not clean independent ground truth. See manifest.json."
+}

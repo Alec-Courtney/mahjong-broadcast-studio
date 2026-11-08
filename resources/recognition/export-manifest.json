@@ -1,0 +1,87 @@
+{
+  "source_repository": "https://github.com/nikmomo/Mahjong-YOLO",
+  "source_revision": "28ffceed232ad95fd019c47a6c51ae7c78791a0e",
+  "build_tools": {
+    "ultralytics": "8.3.203",
+    "torch": "2.8.0+cpu",
+    "onnx": "1.19.0"
+  },
+  "arguments": {
+    "imgsz": 640,
+    "batch": 1,
+    "device": "cpu",
+    "simplify": false,
+    "dynamic": false,
+    "half": false,
+    "opset": 17,
+    "nms": false
+  },
+  "files": [
+    {
+      "checkpoint": "yolo11n_v2_best.pt",
+      "checkpoint_sha256": "ea35d50b9568fc67277538038e7c456b3f29ebd65e1de7bd141e5a1d3a9d0ff1",
+      "file": "yolo11n_v2_best.onnx",
+      "sha256": "bd06b76f87cd0980d372753e853bb7144d198e7ce64d01d0d1d978cfb4dbff51",
+      "bytes": 10594053,
+      "metadata": {
+        "description": "Ultralytics YOLO11n model",
+        "author": "Ultralytics",
+        "date": "2026-11-04T10:32:28.533797",
+        "version": "8.3.203",
+        "license": "AGPL-3.0 License (https://ultralytics.com/license)",
+        "docs": "https://docs.ultralytics.com",
+        "stride": "32",
+        "task": "detect",
+        "batch": "1",
+        "imgsz": "[640, 640]",
+        "names": "{0: '1m', 1: '1p', 2: '1s', 3: '1z', 4: '2m', 5: '2p', 6: '2s', 7: '2z', 8: '3m', 9: '3p', 10: '3s', 11: '3z', 12: '4m', 13: '4p', 14: '4s', 15: '4z', 16: '5m', 17: '5p', 18: '5s', 19: '5z', 20: '6m', 21: '6p', 22: '6s', 23: '6z', 24: '7m', 25: '7p', 26: '7s', 27: '7z', 28: '8m', 29: '8p', 30: '8s', 31: '9m', 32: '9p', 33: '9s', 34: 'UNKNOWN', 35: '0m', 36: '0p', 37: '0s'}",
+        "args": "{'batch': 1, 'half': False, 'dynamic': False, 'simplify': False, 'opset': 17, 'nms': False}",
+        "channels": "3"
+      }
+    },
+    {
+      "checkpoint": "yolo11s_v2_best.pt",
+      "checkpoint_sha256": "1b755721c3b581fe550d9568c85a6c5cf12558c6232453943b73dc669eafd6fd",
+      "file": "yolo11s_v2_best.onnx",
+      "sha256": "c5b72011be4c9f035a36d23a998a151bc3152719069f1bff084ff2ed291b214b",
+      "bytes": 37945957,
+      "metadata": {
+        "description": "Ultralytics YOLO11s model",
+        "author": "Ultralytics",
+        "date": "2026-11-04T10:32:29.536205",
+        "version": "8.3.203",
+        "license": "AGPL-3.0 License (https://ultralytics.com/license)",
+        "docs": "https://docs.ultralytics.com",
+        "stride": "32",
+        "task": "detect",
+        "batch": "1",
+        "imgsz": "[640, 640]",
+        "names": "{0: '1m', 1: '1p', 2: '1s', 3: '1z', 4: '2m', 5: '2p', 6: '2s', 7: '2z', 8: '3m', 9: '3p', 10: '3s', 11: '3z', 12: '4m', 13: '4p', 14: '4s', 15: '4z', 16: '5m', 17: '5p', 18: '5s', 19: '5z', 20: '6m', 21: '6p', 22: '6s', 23: '6z', 24: '7m', 25: '7p', 26: '7s', 27: '7z', 28: '8m', 29: '8p', 30: '8s', 31: '9m', 32: '9p', 33: '9s', 34: 'UNKNOWN', 35: '0m', 36: '0p', 37: '0s'}",
+        "args": "{'batch': 1, 'half': False, 'dynamic': False, 'simplify': False, 'opset': 17, 'nms': False}",
+        "channels": "3"
+      }
+    },
+    {
+      "checkpoint": "yolo11m_v2_best.pt",
+      "checkpoint_sha256": "a00a03dd9229f5809d4de3c9474b9bcdd74b7b42a5a507e92a803755e268d372",
+      "file": "yolo11m_v2_best.onnx",
+      "sha256": "bf2fb3708bbfd7e9dd2afe7af4415b10d32dbe44b1675212f4ba9342b5709da7",
+      "bytes": 80491600,
+      "metadata": {
+        "description": "Ultralytics YOLO11m model",
+        "author": "Ultralytics",
+        "date": "2026-11-04T10:32:30.882316",
+        "version": "8.3.203",
+        "license": "AGPL-3.0 License (https://ultralytics.com/license)",
+        "docs": "https://docs.ultralytics.com",
+        "stride": "32",
+        "task": "detect",
+        "batch": "1",
+        "imgsz": "[640, 640]",
+        "names": "{0: '1m', 1: '1p', 2: '1s', 3: '1z', 4: '2m', 5: '2p', 6: '2s', 7: '2z', 8: '3m', 9: '3p', 10: '3s', 11: '3z', 12: '4m', 13: '4p', 14: '4s', 15: '4z', 16: '5m', 17: '5p', 18: '5s', 19: '5z', 20: '6m', 21: '6p', 22: '6s', 23: '6z', 24: '7m', 25: '7p', 26: '7s', 27: '7z', 28: '8m', 29: '8p', 30: '8s', 31: '9m', 32: '9p', 33: '9s', 34: 'UNKNOWN', 35: '0m', 36: '0p', 37: '0s'}",
+        "args": "{'batch': 1, 'half': False, 'dynamic': False, 'simplify': False, 'opset': 17, 'nms': False}",
+        "channels": "3"
+      }
+    }
+  ]
+}

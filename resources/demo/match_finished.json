@@ -1,0 +1,4069 @@
+{
+  "format": "MahjongOverlayStudio",
+  "version": 6,
+  "state": {
+    "schemaVersion": 1,
+    "id": "demo-match_finished",
+    "title": "演示 · 完整半庄与赛后曲线",
+    "initialDealer": 0,
+    "initialScores": [
+      25000,
+      25000,
+      25000,
+      25000
+    ],
+    "initialPot": 0,
+    "rules": {
+      "startPoints": 25000,
+      "returnPoints": 30000,
+      "uma": [
+        50,
+        10,
+        -10,
+        -30
+      ],
+      "okaEnabled": false,
+      "terminalPot": "unallocated",
+      "terminalPotTie": "mleague",
+      "tieBreak": "share",
+      "dealerTenpaiRenchan": true,
+      "agariYame": false,
+      "tenpaiYame": false,
+      "notenPayment": 3000,
+      "honbaRon": 300,
+      "honbaTsumoEach": 100,
+      "allowNegative": true,
+      "endOnZero": false,
+      "kiriageMangan": true,
+      "kazoeYakuman": false
+    },
+    "players": [
+      {
+        "id": "demo-p1",
+        "name": "青木 凛",
+        "score": 21700,
+        "riichi": false,
+        "melds": [],
+        "photo": "demo://avatars/1.png",
+        "color": "#ffffff",
+        "team_color": "#4b9270",
+        "team": "青岚",
+        "team_id": "demo-team-1",
+        "tenpai": false,
+        "waits": [],
+        "remaining": null
+      },
+      {
+        "id": "demo-p2",
+        "name": "朝雾 遥",
+        "score": 27300,
+        "riichi": true,
+        "melds": [],
+        "photo": "demo://avatars/2.png",
+        "color": "#ffffff",
+        "team_color": "#bf4d63",
+        "team": "绯樱",
+        "team_id": "demo-team-2",
+        "tenpai": true,
+        "waits": [],
+        "remaining": null
+      },
+      {
+        "id": "demo-p3",
+        "name": "白石 奏",
+        "score": 25700,
+        "riichi": false,
+        "melds": [
+          {
+            "id": "demo-match_finished-meld-58",
+            "kind": "pon",
+            "tiles": [
+              "7s",
+              "7s",
+              "7s"
+            ],
+            "from": 3,
+            "calledIndex": 2
+          }
+        ],
+        "photo": "demo://avatars/3.png",
+        "color": "#ffffff",
+        "team_color": "#4a81b8",
+        "team": "海蓝",
+        "team_id": "demo-team-3",
+        "tenpai": false,
+        "waits": [],
+        "remaining": null
+      },
+      {
+        "id": "demo-p4",
+        "name": "橘 结衣",
+        "score": 25300,
+        "riichi": false,
+        "melds": [],
+        "photo": "demo://avatars/4.png",
+        "color": "#ffffff",
+        "team_color": "#dfb34e",
+        "team": "金曜",
+        "team_id": "demo-team-4",
+        "tenpai": false,
+        "waits": [],
+        "remaining": null
+      }
+    ],
+    "dealer": 3,
+    "roundIndex": 7,
+    "honba": 0,
+    "pot": 0,
+    "doraIndicators": [
+      "5z"
+    ],
+    "phase": "finished",
+    "lastResult": {
+      "id": "demo-match_finished-result-59",
+      "kind": "tsumo",
+      "title": "朝雾 遥 自摸",
+      "detail": "30 符 4 番 · 满贯 · 基础 8000 点 · 供托 1000",
+      "roundIndex": 7,
+      "dealer": 3,
+      "honba": 0,
+      "deltas": [
+        -2000,
+        9000,
+        -2000,
+        -4000
+      ],
+      "beforeScores": [
+        23700,
+        18300,
+        27700,
+        29300
+      ],
+      "afterScores": [
+        21700,
+        27300,
+        25700,
+        25300
+      ],
+      "potBefore": 1000,
+      "potAfter": 0,
+      "winner": 1,
+      "loser": null,
+      "fu": 30,
+      "han": 4,
+      "yakuman": 0,
+      "limit": "满贯",
+      "basePoints": 8000,
+      "payments": [
+        {
+          "from": 0,
+          "to": 1,
+          "amount": 2000,
+          "base": 2000,
+          "honba": 0
+        },
+        {
+          "from": 2,
+          "to": 1,
+          "amount": 2000,
+          "base": 2000,
+          "honba": 0
+        },
+        {
+          "from": 3,
+          "to": 1,
+          "amount": 4000,
+          "base": 4000,
+          "honba": 0
+        }
+      ],
+      "potAwards": [
+        {
+          "player": 1,
+          "amount": 1000
+        }
+      ],
+      "terminalPotAwards": [],
+      "tenpai": null,
+      "next": {
+        "finished": true,
+        "roundIndex": 7,
+        "dealer": 3,
+        "honba": 0,
+        "pot": 0,
+        "reason": "south4_end",
+        "label": "半庄结束"
+      },
+      "displayDeltas": [
+        -2000,
+        9000,
+        -2000,
+        -4000
+      ]
+    },
+    "finalRanking": {
+      "scoresBeforePot": [
+        21700,
+        27300,
+        25700,
+        25300
+      ],
+      "groups": [
+        {
+          "rank": 1,
+          "players": [
+            1
+          ],
+          "places": [
+            1
+          ]
+        },
+        {
+          "rank": 2,
+          "players": [
+            2
+          ],
+          "places": [
+            2
+          ]
+        },
+        {
+          "rank": 3,
+          "players": [
+            3
+          ],
+          "places": [
+            3
+          ]
+        },
+        {
+          "rank": 4,
+          "players": [
+            0
+          ],
+          "places": [
+            4
+          ]
+        }
+      ],
+      "tieBreak": "share"
+    },
+    "accountingTotal": 100000,
+    "accountingAdjustment": 0,
+    "lastCorrection": null,
+    "revision": 59,
+    "handSequence": 11,
+    "appliedEventIds": [],
+    "manualDisplay": true,
+    "broadcast": {
+      "version": 1,
+      "config": {
+        "title": "演示 · 完整半庄与赛后曲线",
+        "standings_mode": "individual",
+        "qualification_slots": 2,
+        "qualification_final": false,
+        "qualification_mode": "individual",
+        "qualification_calculation": "auto",
+        "start_points": 25000,
+        "return_points": 30000,
+        "uma": [
+          50,
+          10,
+          -10,
+          -30
+        ],
+        "oka_enabled": false,
+        "tie_break": "share",
+        "qualification_tie_break": "seed",
+        "manual_conditions": {},
+        "show_match_title": false,
+        "hud_opacity": 0.82,
+        "standings_live": false,
+        "statistics_scope": "match",
+        "statistics_view": "result",
+        "chart_mode": "scores",
+        "statistics_page": 0,
+        "commentary_title": "二度受",
+        "commentary_body": "两组搭子的进张重叠，如同色23与56都需要4，会压缩有效进张。",
+        "commentary_builtin": true,
+        "commentary_duration": 0,
+        "event_mode": "individual",
+        "settlement_enabled": true,
+        "settlement_hold": 3.0,
+        "settlement_total_hold": 3.0
+      },
+      "roster": [
+        {
+          "id": "demo-p1",
+          "name": "青木 凛",
+          "team": "青岚",
+          "team_id": "demo-team-1",
+          "color": "#4b9270",
+          "photo": "demo://avatars/1.png",
+          "base_points": 0,
+          "games": 0,
+          "seed": 1,
+          "status": "active",
+          "stats": {}
+        },
+        {
+          "id": "demo-p2",
+          "name": "朝雾 遥",
+          "team": "绯樱",
+          "team_id": "demo-team-2",
+          "color": "#bf4d63",
+          "photo": "demo://avatars/2.png",
+          "base_points": 0,
+          "games": 0,
+          "seed": 2,
+          "status": "active",
+          "stats": {}
+        },
+        {
+          "id": "demo-p3",
+          "name": "白石 奏",
+          "team": "海蓝",
+          "team_id": "demo-team-3",
+          "color": "#4a81b8",
+          "photo": "demo://avatars/3.png",
+          "base_points": 0,
+          "games": 0,
+          "seed": 3,
+          "status": "active",
+          "stats": {}
+        },
+        {
+          "id": "demo-p4",
+          "name": "橘 结衣",
+          "team": "金曜",
+          "team_id": "demo-team-4",
+          "color": "#dfb34e",
+          "photo": "demo://avatars/4.png",
+          "base_points": 0,
+          "games": 0,
+          "seed": 4,
+          "status": "active",
+          "stats": {}
+        }
+      ],
+      "hands": [
+        {
+          "id": "e9123798f6114da9b7ad104e848b3c77",
+          "label": "东1局",
+          "round_index": 0,
+          "honba": 0,
+          "kind": "ron",
+          "before_scores": [
+            24000,
+            25000,
+            25000,
+            25000
+          ],
+          "after_scores": [
+            30800,
+            19200,
+            25000,
+            25000
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 5800,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 1,
+              "win_points": 0,
+              "deal_in_points": 5800
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-4",
+            "kind": "ron",
+            "title": "青木 凛 荣和",
+            "detail": "30 符 3 番 · 基础 5800 点 · 供托 1000",
+            "roundIndex": 0,
+            "dealer": 0,
+            "honba": 0,
+            "deltas": [
+              6800,
+              -5800,
+              0,
+              0
+            ],
+            "beforeScores": [
+              24000,
+              25000,
+              25000,
+              25000
+            ],
+            "afterScores": [
+              30800,
+              19200,
+              25000,
+              25000
+            ],
+            "potBefore": 1000,
+            "potAfter": 0,
+            "winner": 0,
+            "loser": 1,
+            "fu": 30,
+            "han": 3,
+            "yakuman": 0,
+            "limit": "",
+            "basePoints": 5800,
+            "payments": [
+              {
+                "from": 1,
+                "to": 0,
+                "amount": 5800,
+                "base": 5800,
+                "honba": 0
+              }
+            ],
+            "potAwards": [
+              {
+                "player": 0,
+                "amount": 1000
+              }
+            ],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": false,
+              "roundIndex": 0,
+              "dealer": 0,
+              "honba": 1,
+              "pot": 0,
+              "reason": "dealer_win",
+              "label": "东1局 1 本场"
+            },
+            "displayDeltas": [
+              6800,
+              -5800,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "983ad252e4b1417aa70a5a9889ae0358",
+          "label": "东1局 1本场",
+          "round_index": 0,
+          "honba": 1,
+          "kind": "tsumo",
+          "before_scores": [
+            30800,
+            19200,
+            24000,
+            25000
+          ],
+          "after_scores": [
+            29700,
+            18600,
+            27300,
+            24400
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 2300,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-9",
+            "kind": "tsumo",
+            "title": "白石 奏 自摸",
+            "detail": "30 符 2 番 · 基础 2000 点 · 1 本场 · 供托 1000",
+            "roundIndex": 0,
+            "dealer": 0,
+            "honba": 1,
+            "deltas": [
+              -1100,
+              -600,
+              3300,
+              -600
+            ],
+            "beforeScores": [
+              30800,
+              19200,
+              24000,
+              25000
+            ],
+            "afterScores": [
+              29700,
+              18600,
+              27300,
+              24400
+            ],
+            "potBefore": 1000,
+            "potAfter": 0,
+            "winner": 2,
+            "loser": null,
+            "fu": 30,
+            "han": 2,
+            "yakuman": 0,
+            "limit": "",
+            "basePoints": 2000,
+            "payments": [
+              {
+                "from": 0,
+                "to": 2,
+                "amount": 1100,
+                "base": 1000,
+                "honba": 100
+              },
+              {
+                "from": 1,
+                "to": 2,
+                "amount": 600,
+                "base": 500,
+                "honba": 100
+              },
+              {
+                "from": 3,
+                "to": 2,
+                "amount": 600,
+                "base": 500,
+                "honba": 100
+              }
+            ],
+            "potAwards": [
+              {
+                "player": 2,
+                "amount": 1000
+              }
+            ],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": false,
+              "roundIndex": 1,
+              "dealer": 1,
+              "honba": 0,
+              "pot": 0,
+              "reason": "rotation",
+              "label": "东2局"
+            },
+            "displayDeltas": [
+              -1100,
+              -600,
+              3300,
+              -600
+            ]
+          }
+        },
+        {
+          "id": "0c359354f187400ab059cfc0799d164e",
+          "label": "东2局",
+          "round_index": 1,
+          "honba": 0,
+          "kind": "draw",
+          "before_scores": [
+            29700,
+            17600,
+            27300,
+            24400
+          ],
+          "after_scores": [
+            28200,
+            19100,
+            28800,
+            22900
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-14",
+            "kind": "draw",
+            "title": "流局",
+            "detail": "朝雾 遥、白石 奏 听牌 · 场上 3000 点",
+            "roundIndex": 1,
+            "dealer": 1,
+            "honba": 0,
+            "deltas": [
+              -1500,
+              1500,
+              1500,
+              -1500
+            ],
+            "beforeScores": [
+              29700,
+              17600,
+              27300,
+              24400
+            ],
+            "afterScores": [
+              28200,
+              19100,
+              28800,
+              22900
+            ],
+            "potBefore": 1000,
+            "potAfter": 1000,
+            "winner": null,
+            "loser": null,
+            "fu": null,
+            "han": null,
+            "yakuman": 0,
+            "limit": "",
+            "basePoints": 0,
+            "payments": [],
+            "potAwards": [],
+            "terminalPotAwards": [],
+            "tenpai": [
+              1,
+              2
+            ],
+            "next": {
+              "finished": false,
+              "roundIndex": 1,
+              "dealer": 1,
+              "honba": 1,
+              "pot": 1000,
+              "reason": "dealer_tenpai",
+              "label": "东2局 1 本场"
+            },
+            "displayDeltas": [
+              -1500,
+              1500,
+              1500,
+              -1500
+            ]
+          }
+        },
+        {
+          "id": "312952d7162a4e00b621b4109523ad73",
+          "label": "东2局 1本场",
+          "round_index": 1,
+          "honba": 1,
+          "kind": "ron",
+          "before_scores": [
+            28200,
+            19100,
+            28800,
+            22900
+          ],
+          "after_scores": [
+            19900,
+            19100,
+            28800,
+            32200
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 1,
+              "win_points": 0,
+              "deal_in_points": 8300
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 8300,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-19",
+            "kind": "ron",
+            "title": "橘 结衣 荣和",
+            "detail": "40 符 4 番 · 满贯 · 基础 8000 点 · 1 本场 · 供托 1000",
+            "roundIndex": 1,
+            "dealer": 1,
+            "honba": 1,
+            "deltas": [
+              -8300,
+              0,
+              0,
+              9300
+            ],
+            "beforeScores": [
+              28200,
+              19100,
+              28800,
+              22900
+            ],
+            "afterScores": [
+              19900,
+              19100,
+              28800,
+              32200
+            ],
+            "potBefore": 1000,
+            "potAfter": 0,
+            "winner": 3,
+            "loser": 0,
+            "fu": 40,
+            "han": 4,
+            "yakuman": 0,
+            "limit": "满贯",
+            "basePoints": 8000,
+            "payments": [
+              {
+                "from": 0,
+                "to": 3,
+                "amount": 8300,
+                "base": 8000,
+                "honba": 300
+              }
+            ],
+            "potAwards": [
+              {
+                "player": 3,
+                "amount": 1000
+              }
+            ],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": false,
+              "roundIndex": 2,
+              "dealer": 2,
+              "honba": 0,
+              "pot": 0,
+              "reason": "rotation",
+              "label": "东3局"
+            },
+            "displayDeltas": [
+              -8300,
+              0,
+              0,
+              9300
+            ]
+          }
+        },
+        {
+          "id": "a67685c15d024e6da8cb7419d34762fa",
+          "label": "东3局",
+          "round_index": 2,
+          "honba": 0,
+          "kind": "ron",
+          "before_scores": [
+            19900,
+            19100,
+            27800,
+            32200
+          ],
+          "after_scores": [
+            19900,
+            19100,
+            32700,
+            28300
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 3900,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 1,
+              "win_points": 0,
+              "deal_in_points": 3900
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-24",
+            "kind": "ron",
+            "title": "白石 奏 荣和",
+            "detail": "40 符 2 番 · 基础 3900 点 · 供托 1000",
+            "roundIndex": 2,
+            "dealer": 2,
+            "honba": 0,
+            "deltas": [
+              0,
+              0,
+              4900,
+              -3900
+            ],
+            "beforeScores": [
+              19900,
+              19100,
+              27800,
+              32200
+            ],
+            "afterScores": [
+              19900,
+              19100,
+              32700,
+              28300
+            ],
+            "potBefore": 1000,
+            "potAfter": 0,
+            "winner": 2,
+            "loser": 3,
+            "fu": 40,
+            "han": 2,
+            "yakuman": 0,
+            "limit": "",
+            "basePoints": 3900,
+            "payments": [
+              {
+                "from": 3,
+                "to": 2,
+                "amount": 3900,
+                "base": 3900,
+                "honba": 0
+              }
+            ],
+            "potAwards": [
+              {
+                "player": 2,
+                "amount": 1000
+              }
+            ],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": false,
+              "roundIndex": 2,
+              "dealer": 2,
+              "honba": 1,
+              "pot": 0,
+              "reason": "dealer_win",
+              "label": "东3局 1 本场"
+            },
+            "displayDeltas": [
+              0,
+              0,
+              4900,
+              -3900
+            ]
+          }
+        },
+        {
+          "id": "e076f59a92f34de098db792477e9143d",
+          "label": "东3局 1本场",
+          "round_index": 2,
+          "honba": 1,
+          "kind": "ron",
+          "before_scores": [
+            19900,
+            19100,
+            32700,
+            28300
+          ],
+          "after_scores": [
+            19900,
+            27400,
+            24400,
+            28300
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 8300,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 1,
+              "win_points": 0,
+              "deal_in_points": 8300
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-29",
+            "kind": "ron",
+            "title": "朝雾 遥 荣和",
+            "detail": "30 符 5 番 · 满贯 · 基础 8000 点 · 1 本场",
+            "roundIndex": 2,
+            "dealer": 2,
+            "honba": 1,
+            "deltas": [
+              0,
+              8300,
+              -8300,
+              0
+            ],
+            "beforeScores": [
+              19900,
+              19100,
+              32700,
+              28300
+            ],
+            "afterScores": [
+              19900,
+              27400,
+              24400,
+              28300
+            ],
+            "potBefore": 0,
+            "potAfter": 0,
+            "winner": 1,
+            "loser": 2,
+            "fu": 30,
+            "han": 5,
+            "yakuman": 0,
+            "limit": "满贯",
+            "basePoints": 8000,
+            "payments": [
+              {
+                "from": 2,
+                "to": 1,
+                "amount": 8300,
+                "base": 8000,
+                "honba": 300
+              }
+            ],
+            "potAwards": [],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": false,
+              "roundIndex": 3,
+              "dealer": 3,
+              "honba": 0,
+              "pot": 0,
+              "reason": "rotation",
+              "label": "东4局"
+            },
+            "displayDeltas": [
+              0,
+              8300,
+              -8300,
+              0
+            ]
+          }
+        },
+        {
+          "id": "6e745c3ad5e8499aa6758972b24cd2c2",
+          "label": "东4局",
+          "round_index": 3,
+          "honba": 0,
+          "kind": "tsumo",
+          "before_scores": [
+            18900,
+            27400,
+            24400,
+            28300
+          ],
+          "after_scores": [
+            25100,
+            26100,
+            23100,
+            25700
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 5200,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-34",
+            "kind": "tsumo",
+            "title": "青木 凛 自摸",
+            "detail": "40 符 3 番 · 基础 5200 点 · 供托 1000",
+            "roundIndex": 3,
+            "dealer": 3,
+            "honba": 0,
+            "deltas": [
+              6200,
+              -1300,
+              -1300,
+              -2600
+            ],
+            "beforeScores": [
+              18900,
+              27400,
+              24400,
+              28300
+            ],
+            "afterScores": [
+              25100,
+              26100,
+              23100,
+              25700
+            ],
+            "potBefore": 1000,
+            "potAfter": 0,
+            "winner": 0,
+            "loser": null,
+            "fu": 40,
+            "han": 3,
+            "yakuman": 0,
+            "limit": "",
+            "basePoints": 5200,
+            "payments": [
+              {
+                "from": 1,
+                "to": 0,
+                "amount": 1300,
+                "base": 1300,
+                "honba": 0
+              },
+              {
+                "from": 2,
+                "to": 0,
+                "amount": 1300,
+                "base": 1300,
+                "honba": 0
+              },
+              {
+                "from": 3,
+                "to": 0,
+                "amount": 2600,
+                "base": 2600,
+                "honba": 0
+              }
+            ],
+            "potAwards": [
+              {
+                "player": 0,
+                "amount": 1000
+              }
+            ],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": false,
+              "roundIndex": 4,
+              "dealer": 0,
+              "honba": 0,
+              "pot": 0,
+              "reason": "rotation",
+              "label": "南1局"
+            },
+            "displayDeltas": [
+              6200,
+              -1300,
+              -1300,
+              -2600
+            ]
+          }
+        },
+        {
+          "id": "3093c207af4147f994637c702294420b",
+          "label": "南1局",
+          "round_index": 4,
+          "honba": 0,
+          "kind": "draw",
+          "before_scores": [
+            25100,
+            25100,
+            23100,
+            25700
+          ],
+          "after_scores": [
+            22100,
+            26100,
+            24100,
+            26700
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-39",
+            "kind": "draw",
+            "title": "流局",
+            "detail": "朝雾 遥、白石 奏、橘 结衣 听牌 · 场上 3000 点",
+            "roundIndex": 4,
+            "dealer": 0,
+            "honba": 0,
+            "deltas": [
+              -3000,
+              1000,
+              1000,
+              1000
+            ],
+            "beforeScores": [
+              25100,
+              25100,
+              23100,
+              25700
+            ],
+            "afterScores": [
+              22100,
+              26100,
+              24100,
+              26700
+            ],
+            "potBefore": 1000,
+            "potAfter": 1000,
+            "winner": null,
+            "loser": null,
+            "fu": null,
+            "han": null,
+            "yakuman": 0,
+            "limit": "",
+            "basePoints": 0,
+            "payments": [],
+            "potAwards": [],
+            "terminalPotAwards": [],
+            "tenpai": [
+              1,
+              2,
+              3
+            ],
+            "next": {
+              "finished": false,
+              "roundIndex": 5,
+              "dealer": 1,
+              "honba": 1,
+              "pot": 1000,
+              "reason": "rotation",
+              "label": "南2局 1 本场"
+            },
+            "displayDeltas": [
+              -3000,
+              1000,
+              1000,
+              1000
+            ]
+          }
+        },
+        {
+          "id": "3eaa13cfd23d42f1988815c2aacb2a0b",
+          "label": "南2局 1本场",
+          "round_index": 5,
+          "honba": 1,
+          "kind": "ron",
+          "before_scores": [
+            22100,
+            26100,
+            24100,
+            25700
+          ],
+          "after_scores": [
+            22100,
+            21900,
+            24100,
+            31900
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 1,
+              "win_points": 0,
+              "deal_in_points": 4200
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 4200,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-44",
+            "kind": "ron",
+            "title": "橘 结衣 荣和",
+            "detail": "30 符 3 番 · 基础 3900 点 · 1 本场 · 供托 2000",
+            "roundIndex": 5,
+            "dealer": 1,
+            "honba": 1,
+            "deltas": [
+              0,
+              -4200,
+              0,
+              6200
+            ],
+            "beforeScores": [
+              22100,
+              26100,
+              24100,
+              25700
+            ],
+            "afterScores": [
+              22100,
+              21900,
+              24100,
+              31900
+            ],
+            "potBefore": 2000,
+            "potAfter": 0,
+            "winner": 3,
+            "loser": 1,
+            "fu": 30,
+            "han": 3,
+            "yakuman": 0,
+            "limit": "",
+            "basePoints": 3900,
+            "payments": [
+              {
+                "from": 1,
+                "to": 3,
+                "amount": 4200,
+                "base": 3900,
+                "honba": 300
+              }
+            ],
+            "potAwards": [
+              {
+                "player": 3,
+                "amount": 2000
+              }
+            ],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": false,
+              "roundIndex": 6,
+              "dealer": 2,
+              "honba": 0,
+              "pot": 0,
+              "reason": "rotation",
+              "label": "南3局"
+            },
+            "displayDeltas": [
+              0,
+              -4200,
+              0,
+              6200
+            ]
+          }
+        },
+        {
+          "id": "299c855088fd4bf0af2cf2069ef7b8fb",
+          "label": "南3局",
+          "round_index": 6,
+          "honba": 0,
+          "kind": "tsumo",
+          "before_scores": [
+            22100,
+            21900,
+            23100,
+            31900
+          ],
+          "after_scores": [
+            19500,
+            19300,
+            31900,
+            29300
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 7800,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-49",
+            "kind": "tsumo",
+            "title": "白石 奏 自摸",
+            "detail": "40 符 3 番 · 基础 7800 点 · 供托 1000",
+            "roundIndex": 6,
+            "dealer": 2,
+            "honba": 0,
+            "deltas": [
+              -2600,
+              -2600,
+              8800,
+              -2600
+            ],
+            "beforeScores": [
+              22100,
+              21900,
+              23100,
+              31900
+            ],
+            "afterScores": [
+              19500,
+              19300,
+              31900,
+              29300
+            ],
+            "potBefore": 1000,
+            "potAfter": 0,
+            "winner": 2,
+            "loser": null,
+            "fu": 40,
+            "han": 3,
+            "yakuman": 0,
+            "limit": "",
+            "basePoints": 7800,
+            "payments": [
+              {
+                "from": 0,
+                "to": 2,
+                "amount": 2600,
+                "base": 2600,
+                "honba": 0
+              },
+              {
+                "from": 1,
+                "to": 2,
+                "amount": 2600,
+                "base": 2600,
+                "honba": 0
+              },
+              {
+                "from": 3,
+                "to": 2,
+                "amount": 2600,
+                "base": 2600,
+                "honba": 0
+              }
+            ],
+            "potAwards": [
+              {
+                "player": 2,
+                "amount": 1000
+              }
+            ],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": false,
+              "roundIndex": 6,
+              "dealer": 2,
+              "honba": 1,
+              "pot": 0,
+              "reason": "dealer_win",
+              "label": "南3局 1 本场"
+            },
+            "displayDeltas": [
+              -2600,
+              -2600,
+              8800,
+              -2600
+            ]
+          }
+        },
+        {
+          "id": "fc6a578f79d04d7da9542a455e71ed37",
+          "label": "南3局 1本场",
+          "round_index": 6,
+          "honba": 1,
+          "kind": "ron",
+          "before_scores": [
+            18500,
+            19300,
+            31900,
+            29300
+          ],
+          "after_scores": [
+            23700,
+            19300,
+            27700,
+            29300
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 4200,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 1,
+              "win_points": 0,
+              "deal_in_points": 4200
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-54",
+            "kind": "ron",
+            "title": "青木 凛 荣和",
+            "detail": "30 符 3 番 · 基础 3900 点 · 1 本场 · 供托 1000",
+            "roundIndex": 6,
+            "dealer": 2,
+            "honba": 1,
+            "deltas": [
+              5200,
+              0,
+              -4200,
+              0
+            ],
+            "beforeScores": [
+              18500,
+              19300,
+              31900,
+              29300
+            ],
+            "afterScores": [
+              23700,
+              19300,
+              27700,
+              29300
+            ],
+            "potBefore": 1000,
+            "potAfter": 0,
+            "winner": 0,
+            "loser": 2,
+            "fu": 30,
+            "han": 3,
+            "yakuman": 0,
+            "limit": "",
+            "basePoints": 3900,
+            "payments": [
+              {
+                "from": 2,
+                "to": 0,
+                "amount": 4200,
+                "base": 3900,
+                "honba": 300
+              }
+            ],
+            "potAwards": [
+              {
+                "player": 0,
+                "amount": 1000
+              }
+            ],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": false,
+              "roundIndex": 7,
+              "dealer": 3,
+              "honba": 0,
+              "pot": 0,
+              "reason": "rotation",
+              "label": "南4局"
+            },
+            "displayDeltas": [
+              5200,
+              0,
+              -4200,
+              0
+            ]
+          }
+        },
+        {
+          "id": "cc0803230b8947c3a4a6f26e35a4822d",
+          "label": "南4局",
+          "round_index": 7,
+          "honba": 0,
+          "kind": "tsumo",
+          "before_scores": [
+            23700,
+            18300,
+            27700,
+            29300
+          ],
+          "after_scores": [
+            21700,
+            27300,
+            25700,
+            25300
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 8000,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 1,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            }
+          ],
+          "result": {
+            "id": "demo-match_finished-result-59",
+            "kind": "tsumo",
+            "title": "朝雾 遥 自摸",
+            "detail": "30 符 4 番 · 满贯 · 基础 8000 点 · 供托 1000",
+            "roundIndex": 7,
+            "dealer": 3,
+            "honba": 0,
+            "deltas": [
+              -2000,
+              9000,
+              -2000,
+              -4000
+            ],
+            "beforeScores": [
+              23700,
+              18300,
+              27700,
+              29300
+            ],
+            "afterScores": [
+              21700,
+              27300,
+              25700,
+              25300
+            ],
+            "potBefore": 1000,
+            "potAfter": 0,
+            "winner": 1,
+            "loser": null,
+            "fu": 30,
+            "han": 4,
+            "yakuman": 0,
+            "limit": "满贯",
+            "basePoints": 8000,
+            "payments": [
+              {
+                "from": 0,
+                "to": 1,
+                "amount": 2000,
+                "base": 2000,
+                "honba": 0
+              },
+              {
+                "from": 2,
+                "to": 1,
+                "amount": 2000,
+                "base": 2000,
+                "honba": 0
+              },
+              {
+                "from": 3,
+                "to": 1,
+                "amount": 4000,
+                "base": 4000,
+                "honba": 0
+              }
+            ],
+            "potAwards": [
+              {
+                "player": 1,
+                "amount": 1000
+              }
+            ],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": true,
+              "roundIndex": 7,
+              "dealer": 3,
+              "honba": 0,
+              "pot": 0,
+              "reason": "south4_end",
+              "label": "半庄结束"
+            },
+            "displayDeltas": [
+              -2000,
+              9000,
+              -2000,
+              -4000
+            ]
+          }
+        }
+      ],
+      "matches": [
+        {
+          "id": "demo-match_finished",
+          "title": "演示 · 完整半庄与赛后曲线",
+          "committed": true,
+          "hands": [
+            {
+              "id": "e9123798f6114da9b7ad104e848b3c77",
+              "label": "东1局",
+              "round_index": 0,
+              "honba": 0,
+              "kind": "ron",
+              "before_scores": [
+                24000,
+                25000,
+                25000,
+                25000
+              ],
+              "after_scores": [
+                30800,
+                19200,
+                25000,
+                25000
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 1,
+                  "wins": 1,
+                  "deal_ins": 0,
+                  "win_points": 5800,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 1,
+                  "win_points": 0,
+                  "deal_in_points": 5800
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-4",
+                "kind": "ron",
+                "title": "青木 凛 荣和",
+                "detail": "30 符 3 番 · 基础 5800 点 · 供托 1000",
+                "roundIndex": 0,
+                "dealer": 0,
+                "honba": 0,
+                "deltas": [
+                  6800,
+                  -5800,
+                  0,
+                  0
+                ],
+                "beforeScores": [
+                  24000,
+                  25000,
+                  25000,
+                  25000
+                ],
+                "afterScores": [
+                  30800,
+                  19200,
+                  25000,
+                  25000
+                ],
+                "potBefore": 1000,
+                "potAfter": 0,
+                "winner": 0,
+                "loser": 1,
+                "fu": 30,
+                "han": 3,
+                "yakuman": 0,
+                "limit": "",
+                "basePoints": 5800,
+                "payments": [
+                  {
+                    "from": 1,
+                    "to": 0,
+                    "amount": 5800,
+                    "base": 5800,
+                    "honba": 0
+                  }
+                ],
+                "potAwards": [
+                  {
+                    "player": 0,
+                    "amount": 1000
+                  }
+                ],
+                "terminalPotAwards": [],
+                "tenpai": null,
+                "next": {
+                  "finished": false,
+                  "roundIndex": 0,
+                  "dealer": 0,
+                  "honba": 1,
+                  "pot": 0,
+                  "reason": "dealer_win",
+                  "label": "东1局 1 本场"
+                },
+                "displayDeltas": [
+                  6800,
+                  -5800,
+                  0,
+                  0
+                ]
+              }
+            },
+            {
+              "id": "983ad252e4b1417aa70a5a9889ae0358",
+              "label": "东1局 1本场",
+              "round_index": 0,
+              "honba": 1,
+              "kind": "tsumo",
+              "before_scores": [
+                30800,
+                19200,
+                24000,
+                25000
+              ],
+              "after_scores": [
+                29700,
+                18600,
+                27300,
+                24400
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 1,
+                  "wins": 1,
+                  "deal_ins": 0,
+                  "win_points": 2300,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-9",
+                "kind": "tsumo",
+                "title": "白石 奏 自摸",
+                "detail": "30 符 2 番 · 基础 2000 点 · 1 本场 · 供托 1000",
+                "roundIndex": 0,
+                "dealer": 0,
+                "honba": 1,
+                "deltas": [
+                  -1100,
+                  -600,
+                  3300,
+                  -600
+                ],
+                "beforeScores": [
+                  30800,
+                  19200,
+                  24000,
+                  25000
+                ],
+                "afterScores": [
+                  29700,
+                  18600,
+                  27300,
+                  24400
+                ],
+                "potBefore": 1000,
+                "potAfter": 0,
+                "winner": 2,
+                "loser": null,
+                "fu": 30,
+                "han": 2,
+                "yakuman": 0,
+                "limit": "",
+                "basePoints": 2000,
+                "payments": [
+                  {
+                    "from": 0,
+                    "to": 2,
+                    "amount": 1100,
+                    "base": 1000,
+                    "honba": 100
+                  },
+                  {
+                    "from": 1,
+                    "to": 2,
+                    "amount": 600,
+                    "base": 500,
+                    "honba": 100
+                  },
+                  {
+                    "from": 3,
+                    "to": 2,
+                    "amount": 600,
+                    "base": 500,
+                    "honba": 100
+                  }
+                ],
+                "potAwards": [
+                  {
+                    "player": 2,
+                    "amount": 1000
+                  }
+                ],
+                "terminalPotAwards": [],
+                "tenpai": null,
+                "next": {
+                  "finished": false,
+                  "roundIndex": 1,
+                  "dealer": 1,
+                  "honba": 0,
+                  "pot": 0,
+                  "reason": "rotation",
+                  "label": "东2局"
+                },
+                "displayDeltas": [
+                  -1100,
+                  -600,
+                  3300,
+                  -600
+                ]
+              }
+            },
+            {
+              "id": "0c359354f187400ab059cfc0799d164e",
+              "label": "东2局",
+              "round_index": 1,
+              "honba": 0,
+              "kind": "draw",
+              "before_scores": [
+                29700,
+                17600,
+                27300,
+                24400
+              ],
+              "after_scores": [
+                28200,
+                19100,
+                28800,
+                22900
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 1,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-14",
+                "kind": "draw",
+                "title": "流局",
+                "detail": "朝雾 遥、白石 奏 听牌 · 场上 3000 点",
+                "roundIndex": 1,
+                "dealer": 1,
+                "honba": 0,
+                "deltas": [
+                  -1500,
+                  1500,
+                  1500,
+                  -1500
+                ],
+                "beforeScores": [
+                  29700,
+                  17600,
+                  27300,
+                  24400
+                ],
+                "afterScores": [
+                  28200,
+                  19100,
+                  28800,
+                  22900
+                ],
+                "potBefore": 1000,
+                "potAfter": 1000,
+                "winner": null,
+                "loser": null,
+                "fu": null,
+                "han": null,
+                "yakuman": 0,
+                "limit": "",
+                "basePoints": 0,
+                "payments": [],
+                "potAwards": [],
+                "terminalPotAwards": [],
+                "tenpai": [
+                  1,
+                  2
+                ],
+                "next": {
+                  "finished": false,
+                  "roundIndex": 1,
+                  "dealer": 1,
+                  "honba": 1,
+                  "pot": 1000,
+                  "reason": "dealer_tenpai",
+                  "label": "东2局 1 本场"
+                },
+                "displayDeltas": [
+                  -1500,
+                  1500,
+                  1500,
+                  -1500
+                ]
+              }
+            },
+            {
+              "id": "312952d7162a4e00b621b4109523ad73",
+              "label": "东2局 1本场",
+              "round_index": 1,
+              "honba": 1,
+              "kind": "ron",
+              "before_scores": [
+                28200,
+                19100,
+                28800,
+                22900
+              ],
+              "after_scores": [
+                19900,
+                19100,
+                28800,
+                32200
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 1,
+                  "win_points": 0,
+                  "deal_in_points": 8300
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 1,
+                  "deal_ins": 0,
+                  "win_points": 8300,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-19",
+                "kind": "ron",
+                "title": "橘 结衣 荣和",
+                "detail": "40 符 4 番 · 满贯 · 基础 8000 点 · 1 本场 · 供托 1000",
+                "roundIndex": 1,
+                "dealer": 1,
+                "honba": 1,
+                "deltas": [
+                  -8300,
+                  0,
+                  0,
+                  9300
+                ],
+                "beforeScores": [
+                  28200,
+                  19100,
+                  28800,
+                  22900
+                ],
+                "afterScores": [
+                  19900,
+                  19100,
+                  28800,
+                  32200
+                ],
+                "potBefore": 1000,
+                "potAfter": 0,
+                "winner": 3,
+                "loser": 0,
+                "fu": 40,
+                "han": 4,
+                "yakuman": 0,
+                "limit": "满贯",
+                "basePoints": 8000,
+                "payments": [
+                  {
+                    "from": 0,
+                    "to": 3,
+                    "amount": 8300,
+                    "base": 8000,
+                    "honba": 300
+                  }
+                ],
+                "potAwards": [
+                  {
+                    "player": 3,
+                    "amount": 1000
+                  }
+                ],
+                "terminalPotAwards": [],
+                "tenpai": null,
+                "next": {
+                  "finished": false,
+                  "roundIndex": 2,
+                  "dealer": 2,
+                  "honba": 0,
+                  "pot": 0,
+                  "reason": "rotation",
+                  "label": "东3局"
+                },
+                "displayDeltas": [
+                  -8300,
+                  0,
+                  0,
+                  9300
+                ]
+              }
+            },
+            {
+              "id": "a67685c15d024e6da8cb7419d34762fa",
+              "label": "东3局",
+              "round_index": 2,
+              "honba": 0,
+              "kind": "ron",
+              "before_scores": [
+                19900,
+                19100,
+                27800,
+                32200
+              ],
+              "after_scores": [
+                19900,
+                19100,
+                32700,
+                28300
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 1,
+                  "wins": 1,
+                  "deal_ins": 0,
+                  "win_points": 3900,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 1,
+                  "win_points": 0,
+                  "deal_in_points": 3900
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-24",
+                "kind": "ron",
+                "title": "白石 奏 荣和",
+                "detail": "40 符 2 番 · 基础 3900 点 · 供托 1000",
+                "roundIndex": 2,
+                "dealer": 2,
+                "honba": 0,
+                "deltas": [
+                  0,
+                  0,
+                  4900,
+                  -3900
+                ],
+                "beforeScores": [
+                  19900,
+                  19100,
+                  27800,
+                  32200
+                ],
+                "afterScores": [
+                  19900,
+                  19100,
+                  32700,
+                  28300
+                ],
+                "potBefore": 1000,
+                "potAfter": 0,
+                "winner": 2,
+                "loser": 3,
+                "fu": 40,
+                "han": 2,
+                "yakuman": 0,
+                "limit": "",
+                "basePoints": 3900,
+                "payments": [
+                  {
+                    "from": 3,
+                    "to": 2,
+                    "amount": 3900,
+                    "base": 3900,
+                    "honba": 0
+                  }
+                ],
+                "potAwards": [
+                  {
+                    "player": 2,
+                    "amount": 1000
+                  }
+                ],
+                "terminalPotAwards": [],
+                "tenpai": null,
+                "next": {
+                  "finished": false,
+                  "roundIndex": 2,
+                  "dealer": 2,
+                  "honba": 1,
+                  "pot": 0,
+                  "reason": "dealer_win",
+                  "label": "东3局 1 本场"
+                },
+                "displayDeltas": [
+                  0,
+                  0,
+                  4900,
+                  -3900
+                ]
+              }
+            },
+            {
+              "id": "e076f59a92f34de098db792477e9143d",
+              "label": "东3局 1本场",
+              "round_index": 2,
+              "honba": 1,
+              "kind": "ron",
+              "before_scores": [
+                19900,
+                19100,
+                32700,
+                28300
+              ],
+              "after_scores": [
+                19900,
+                27400,
+                24400,
+                28300
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 1,
+                  "deal_ins": 0,
+                  "win_points": 8300,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 1,
+                  "win_points": 0,
+                  "deal_in_points": 8300
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-29",
+                "kind": "ron",
+                "title": "朝雾 遥 荣和",
+                "detail": "30 符 5 番 · 满贯 · 基础 8000 点 · 1 本场",
+                "roundIndex": 2,
+                "dealer": 2,
+                "honba": 1,
+                "deltas": [
+                  0,
+                  8300,
+                  -8300,
+                  0
+                ],
+                "beforeScores": [
+                  19900,
+                  19100,
+                  32700,
+                  28300
+                ],
+                "afterScores": [
+                  19900,
+                  27400,
+                  24400,
+                  28300
+                ],
+                "potBefore": 0,
+                "potAfter": 0,
+                "winner": 1,
+                "loser": 2,
+                "fu": 30,
+                "han": 5,
+                "yakuman": 0,
+                "limit": "满贯",
+                "basePoints": 8000,
+                "payments": [
+                  {
+                    "from": 2,
+                    "to": 1,
+                    "amount": 8300,
+                    "base": 8000,
+                    "honba": 300
+                  }
+                ],
+                "potAwards": [],
+                "terminalPotAwards": [],
+                "tenpai": null,
+                "next": {
+                  "finished": false,
+                  "roundIndex": 3,
+                  "dealer": 3,
+                  "honba": 0,
+                  "pot": 0,
+                  "reason": "rotation",
+                  "label": "东4局"
+                },
+                "displayDeltas": [
+                  0,
+                  8300,
+                  -8300,
+                  0
+                ]
+              }
+            },
+            {
+              "id": "6e745c3ad5e8499aa6758972b24cd2c2",
+              "label": "东4局",
+              "round_index": 3,
+              "honba": 0,
+              "kind": "tsumo",
+              "before_scores": [
+                18900,
+                27400,
+                24400,
+                28300
+              ],
+              "after_scores": [
+                25100,
+                26100,
+                23100,
+                25700
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 1,
+                  "wins": 1,
+                  "deal_ins": 0,
+                  "win_points": 5200,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-34",
+                "kind": "tsumo",
+                "title": "青木 凛 自摸",
+                "detail": "40 符 3 番 · 基础 5200 点 · 供托 1000",
+                "roundIndex": 3,
+                "dealer": 3,
+                "honba": 0,
+                "deltas": [
+                  6200,
+                  -1300,
+                  -1300,
+                  -2600
+                ],
+                "beforeScores": [
+                  18900,
+                  27400,
+                  24400,
+                  28300
+                ],
+                "afterScores": [
+                  25100,
+                  26100,
+                  23100,
+                  25700
+                ],
+                "potBefore": 1000,
+                "potAfter": 0,
+                "winner": 0,
+                "loser": null,
+                "fu": 40,
+                "han": 3,
+                "yakuman": 0,
+                "limit": "",
+                "basePoints": 5200,
+                "payments": [
+                  {
+                    "from": 1,
+                    "to": 0,
+                    "amount": 1300,
+                    "base": 1300,
+                    "honba": 0
+                  },
+                  {
+                    "from": 2,
+                    "to": 0,
+                    "amount": 1300,
+                    "base": 1300,
+                    "honba": 0
+                  },
+                  {
+                    "from": 3,
+                    "to": 0,
+                    "amount": 2600,
+                    "base": 2600,
+                    "honba": 0
+                  }
+                ],
+                "potAwards": [
+                  {
+                    "player": 0,
+                    "amount": 1000
+                  }
+                ],
+                "terminalPotAwards": [],
+                "tenpai": null,
+                "next": {
+                  "finished": false,
+                  "roundIndex": 4,
+                  "dealer": 0,
+                  "honba": 0,
+                  "pot": 0,
+                  "reason": "rotation",
+                  "label": "南1局"
+                },
+                "displayDeltas": [
+                  6200,
+                  -1300,
+                  -1300,
+                  -2600
+                ]
+              }
+            },
+            {
+              "id": "3093c207af4147f994637c702294420b",
+              "label": "南1局",
+              "round_index": 4,
+              "honba": 0,
+              "kind": "draw",
+              "before_scores": [
+                25100,
+                25100,
+                23100,
+                25700
+              ],
+              "after_scores": [
+                22100,
+                26100,
+                24100,
+                26700
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 1,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-39",
+                "kind": "draw",
+                "title": "流局",
+                "detail": "朝雾 遥、白石 奏、橘 结衣 听牌 · 场上 3000 点",
+                "roundIndex": 4,
+                "dealer": 0,
+                "honba": 0,
+                "deltas": [
+                  -3000,
+                  1000,
+                  1000,
+                  1000
+                ],
+                "beforeScores": [
+                  25100,
+                  25100,
+                  23100,
+                  25700
+                ],
+                "afterScores": [
+                  22100,
+                  26100,
+                  24100,
+                  26700
+                ],
+                "potBefore": 1000,
+                "potAfter": 1000,
+                "winner": null,
+                "loser": null,
+                "fu": null,
+                "han": null,
+                "yakuman": 0,
+                "limit": "",
+                "basePoints": 0,
+                "payments": [],
+                "potAwards": [],
+                "terminalPotAwards": [],
+                "tenpai": [
+                  1,
+                  2,
+                  3
+                ],
+                "next": {
+                  "finished": false,
+                  "roundIndex": 5,
+                  "dealer": 1,
+                  "honba": 1,
+                  "pot": 1000,
+                  "reason": "rotation",
+                  "label": "南2局 1 本场"
+                },
+                "displayDeltas": [
+                  -3000,
+                  1000,
+                  1000,
+                  1000
+                ]
+              }
+            },
+            {
+              "id": "3eaa13cfd23d42f1988815c2aacb2a0b",
+              "label": "南2局 1本场",
+              "round_index": 5,
+              "honba": 1,
+              "kind": "ron",
+              "before_scores": [
+                22100,
+                26100,
+                24100,
+                25700
+              ],
+              "after_scores": [
+                22100,
+                21900,
+                24100,
+                31900
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 1,
+                  "win_points": 0,
+                  "deal_in_points": 4200
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 1,
+                  "wins": 1,
+                  "deal_ins": 0,
+                  "win_points": 4200,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-44",
+                "kind": "ron",
+                "title": "橘 结衣 荣和",
+                "detail": "30 符 3 番 · 基础 3900 点 · 1 本场 · 供托 2000",
+                "roundIndex": 5,
+                "dealer": 1,
+                "honba": 1,
+                "deltas": [
+                  0,
+                  -4200,
+                  0,
+                  6200
+                ],
+                "beforeScores": [
+                  22100,
+                  26100,
+                  24100,
+                  25700
+                ],
+                "afterScores": [
+                  22100,
+                  21900,
+                  24100,
+                  31900
+                ],
+                "potBefore": 2000,
+                "potAfter": 0,
+                "winner": 3,
+                "loser": 1,
+                "fu": 30,
+                "han": 3,
+                "yakuman": 0,
+                "limit": "",
+                "basePoints": 3900,
+                "payments": [
+                  {
+                    "from": 1,
+                    "to": 3,
+                    "amount": 4200,
+                    "base": 3900,
+                    "honba": 300
+                  }
+                ],
+                "potAwards": [
+                  {
+                    "player": 3,
+                    "amount": 2000
+                  }
+                ],
+                "terminalPotAwards": [],
+                "tenpai": null,
+                "next": {
+                  "finished": false,
+                  "roundIndex": 6,
+                  "dealer": 2,
+                  "honba": 0,
+                  "pot": 0,
+                  "reason": "rotation",
+                  "label": "南3局"
+                },
+                "displayDeltas": [
+                  0,
+                  -4200,
+                  0,
+                  6200
+                ]
+              }
+            },
+            {
+              "id": "299c855088fd4bf0af2cf2069ef7b8fb",
+              "label": "南3局",
+              "round_index": 6,
+              "honba": 0,
+              "kind": "tsumo",
+              "before_scores": [
+                22100,
+                21900,
+                23100,
+                31900
+              ],
+              "after_scores": [
+                19500,
+                19300,
+                31900,
+                29300
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 1,
+                  "wins": 1,
+                  "deal_ins": 0,
+                  "win_points": 7800,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-49",
+                "kind": "tsumo",
+                "title": "白石 奏 自摸",
+                "detail": "40 符 3 番 · 基础 7800 点 · 供托 1000",
+                "roundIndex": 6,
+                "dealer": 2,
+                "honba": 0,
+                "deltas": [
+                  -2600,
+                  -2600,
+                  8800,
+                  -2600
+                ],
+                "beforeScores": [
+                  22100,
+                  21900,
+                  23100,
+                  31900
+                ],
+                "afterScores": [
+                  19500,
+                  19300,
+                  31900,
+                  29300
+                ],
+                "potBefore": 1000,
+                "potAfter": 0,
+                "winner": 2,
+                "loser": null,
+                "fu": 40,
+                "han": 3,
+                "yakuman": 0,
+                "limit": "",
+                "basePoints": 7800,
+                "payments": [
+                  {
+                    "from": 0,
+                    "to": 2,
+                    "amount": 2600,
+                    "base": 2600,
+                    "honba": 0
+                  },
+                  {
+                    "from": 1,
+                    "to": 2,
+                    "amount": 2600,
+                    "base": 2600,
+                    "honba": 0
+                  },
+                  {
+                    "from": 3,
+                    "to": 2,
+                    "amount": 2600,
+                    "base": 2600,
+                    "honba": 0
+                  }
+                ],
+                "potAwards": [
+                  {
+                    "player": 2,
+                    "amount": 1000
+                  }
+                ],
+                "terminalPotAwards": [],
+                "tenpai": null,
+                "next": {
+                  "finished": false,
+                  "roundIndex": 6,
+                  "dealer": 2,
+                  "honba": 1,
+                  "pot": 0,
+                  "reason": "dealer_win",
+                  "label": "南3局 1 本场"
+                },
+                "displayDeltas": [
+                  -2600,
+                  -2600,
+                  8800,
+                  -2600
+                ]
+              }
+            },
+            {
+              "id": "fc6a578f79d04d7da9542a455e71ed37",
+              "label": "南3局 1本场",
+              "round_index": 6,
+              "honba": 1,
+              "kind": "ron",
+              "before_scores": [
+                18500,
+                19300,
+                31900,
+                29300
+              ],
+              "after_scores": [
+                23700,
+                19300,
+                27700,
+                29300
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 1,
+                  "wins": 1,
+                  "deal_ins": 0,
+                  "win_points": 4200,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 1,
+                  "win_points": 0,
+                  "deal_in_points": 4200
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-54",
+                "kind": "ron",
+                "title": "青木 凛 荣和",
+                "detail": "30 符 3 番 · 基础 3900 点 · 1 本场 · 供托 1000",
+                "roundIndex": 6,
+                "dealer": 2,
+                "honba": 1,
+                "deltas": [
+                  5200,
+                  0,
+                  -4200,
+                  0
+                ],
+                "beforeScores": [
+                  18500,
+                  19300,
+                  31900,
+                  29300
+                ],
+                "afterScores": [
+                  23700,
+                  19300,
+                  27700,
+                  29300
+                ],
+                "potBefore": 1000,
+                "potAfter": 0,
+                "winner": 0,
+                "loser": 2,
+                "fu": 30,
+                "han": 3,
+                "yakuman": 0,
+                "limit": "",
+                "basePoints": 3900,
+                "payments": [
+                  {
+                    "from": 2,
+                    "to": 0,
+                    "amount": 4200,
+                    "base": 3900,
+                    "honba": 300
+                  }
+                ],
+                "potAwards": [
+                  {
+                    "player": 0,
+                    "amount": 1000
+                  }
+                ],
+                "terminalPotAwards": [],
+                "tenpai": null,
+                "next": {
+                  "finished": false,
+                  "roundIndex": 7,
+                  "dealer": 3,
+                  "honba": 0,
+                  "pot": 0,
+                  "reason": "rotation",
+                  "label": "南4局"
+                },
+                "displayDeltas": [
+                  5200,
+                  0,
+                  -4200,
+                  0
+                ]
+              }
+            },
+            {
+              "id": "cc0803230b8947c3a4a6f26e35a4822d",
+              "label": "南4局",
+              "round_index": 7,
+              "honba": 0,
+              "kind": "tsumo",
+              "before_scores": [
+                23700,
+                18300,
+                27700,
+                29300
+              ],
+              "after_scores": [
+                21700,
+                27300,
+                25700,
+                25300
+              ],
+              "players": [
+                {
+                  "id": "demo-p1",
+                  "name": "青木 凛",
+                  "color": "#4b9270",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p2",
+                  "name": "朝雾 遥",
+                  "color": "#bf4d63",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 1,
+                  "wins": 1,
+                  "deal_ins": 0,
+                  "win_points": 8000,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p3",
+                  "name": "白石 奏",
+                  "color": "#4a81b8",
+                  "hands": 1,
+                  "calls": 1,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                },
+                {
+                  "id": "demo-p4",
+                  "name": "橘 结衣",
+                  "color": "#dfb34e",
+                  "hands": 1,
+                  "calls": 0,
+                  "riichi": 0,
+                  "wins": 0,
+                  "deal_ins": 0,
+                  "win_points": 0,
+                  "deal_in_points": 0
+                }
+              ],
+              "result": {
+                "id": "demo-match_finished-result-59",
+                "kind": "tsumo",
+                "title": "朝雾 遥 自摸",
+                "detail": "30 符 4 番 · 满贯 · 基础 8000 点 · 供托 1000",
+                "roundIndex": 7,
+                "dealer": 3,
+                "honba": 0,
+                "deltas": [
+                  -2000,
+                  9000,
+                  -2000,
+                  -4000
+                ],
+                "beforeScores": [
+                  23700,
+                  18300,
+                  27700,
+                  29300
+                ],
+                "afterScores": [
+                  21700,
+                  27300,
+                  25700,
+                  25300
+                ],
+                "potBefore": 1000,
+                "potAfter": 0,
+                "winner": 1,
+                "loser": null,
+                "fu": 30,
+                "han": 4,
+                "yakuman": 0,
+                "limit": "满贯",
+                "basePoints": 8000,
+                "payments": [
+                  {
+                    "from": 0,
+                    "to": 1,
+                    "amount": 2000,
+                    "base": 2000,
+                    "honba": 0
+                  },
+                  {
+                    "from": 2,
+                    "to": 1,
+                    "amount": 2000,
+                    "base": 2000,
+                    "honba": 0
+                  },
+                  {
+                    "from": 3,
+                    "to": 1,
+                    "amount": 4000,
+                    "base": 4000,
+                    "honba": 0
+                  }
+                ],
+                "potAwards": [
+                  {
+                    "player": 1,
+                    "amount": 1000
+                  }
+                ],
+                "terminalPotAwards": [],
+                "tenpai": null,
+                "next": {
+                  "finished": true,
+                  "roundIndex": 7,
+                  "dealer": 3,
+                  "honba": 0,
+                  "pot": 0,
+                  "reason": "south4_end",
+                  "label": "半庄结束"
+                },
+                "displayDeltas": [
+                  -2000,
+                  9000,
+                  -2000,
+                  -4000
+                ]
+              }
+            }
+          ],
+          "results": [
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "team": "绯樱",
+              "team_id": "demo-team-2",
+              "color": "#bf4d63",
+              "seed": 2,
+              "rank": 1,
+              "score": 27300,
+              "points": 47.3
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "team": "海蓝",
+              "team_id": "demo-team-3",
+              "color": "#4a81b8",
+              "seed": 3,
+              "rank": 2,
+              "score": 25700,
+              "points": 5.7
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "team": "金曜",
+              "team_id": "demo-team-4",
+              "color": "#dfb34e",
+              "seed": 4,
+              "rank": 3,
+              "score": 25300,
+              "points": -14.7
+            },
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "team": "青岚",
+              "team_id": "demo-team-1",
+              "color": "#4b9270",
+              "seed": 1,
+              "rank": 4,
+              "score": 21700,
+              "points": -38.3
+            }
+          ],
+          "initial_scores": [
+            25000,
+            25000,
+            25000,
+            25000
+          ],
+          "initial_players": [
+            {
+              "id": "demo-p1",
+              "name": "青木 凛",
+              "score": 25000,
+              "riichi": false,
+              "melds": [],
+              "photo": "demo://avatars/1.png",
+              "color": "#ffffff",
+              "team_color": "#4b9270",
+              "team": "青岚",
+              "team_id": "demo-team-1",
+              "tenpai": false,
+              "waits": [],
+              "remaining": null
+            },
+            {
+              "id": "demo-p2",
+              "name": "朝雾 遥",
+              "score": 25000,
+              "riichi": false,
+              "melds": [],
+              "photo": "demo://avatars/2.png",
+              "color": "#ffffff",
+              "team_color": "#bf4d63",
+              "team": "绯樱",
+              "team_id": "demo-team-2",
+              "tenpai": false,
+              "waits": [],
+              "remaining": null
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "score": 25000,
+              "riichi": false,
+              "melds": [],
+              "photo": "demo://avatars/3.png",
+              "color": "#ffffff",
+              "team_color": "#4a81b8",
+              "team": "海蓝",
+              "team_id": "demo-team-3",
+              "tenpai": false,
+              "waits": [],
+              "remaining": null
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "score": 25000,
+              "riichi": false,
+              "melds": [],
+              "photo": "demo://avatars/4.png",
+              "color": "#ffffff",
+              "team_color": "#dfb34e",
+              "team": "金曜",
+              "team_id": "demo-team-4",
+              "tenpai": false,
+              "waits": [],
+              "remaining": null
+            }
+          ],
+          "partial": false,
+          "config": {
+            "title": "演示 · 完整半庄与赛后曲线",
+            "standings_mode": "individual",
+            "qualification_slots": 2,
+            "qualification_final": false,
+            "qualification_mode": "individual",
+            "qualification_calculation": "auto",
+            "start_points": 25000,
+            "return_points": 30000,
+            "uma": [
+              50,
+              10,
+              -10,
+              -30
+            ],
+            "oka_enabled": false,
+            "tie_break": "share",
+            "qualification_tie_break": "seed",
+            "manual_conditions": {},
+            "show_match_title": false,
+            "hud_opacity": 0.82,
+            "standings_live": true,
+            "standings_page": 0,
+            "standings_page_size": 4,
+            "statistics_scope": "match",
+            "statistics_view": "result",
+            "chart_mode": "scores",
+            "statistics_page": 0,
+            "commentary_title": "副露",
+            "commentary_body": "吃、碰或明杠，组成公开的面子。暗杠不计入副露。",
+            "commentary_builtin": true,
+            "commentary_duration": 0
+          }
+        }
+      ],
+      "current_hand": "cc0803230b8947c3a4a6f26e35a4822d",
+      "initial_scores": [
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "initial_label": "开始",
+      "partial": false,
+      "initial_players": [
+        {
+          "id": "demo-p1",
+          "name": "青木 凛",
+          "score": 25000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/1.png",
+          "color": "#ffffff",
+          "team_color": "#4b9270",
+          "team": "青岚",
+          "team_id": "demo-team-1",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        },
+        {
+          "id": "demo-p2",
+          "name": "朝雾 遥",
+          "score": 25000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/2.png",
+          "color": "#ffffff",
+          "team_color": "#bf4d63",
+          "team": "绯樱",
+          "team_id": "demo-team-2",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        },
+        {
+          "id": "demo-p3",
+          "name": "白石 奏",
+          "score": 25000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/3.png",
+          "color": "#ffffff",
+          "team_color": "#4a81b8",
+          "team": "海蓝",
+          "team_id": "demo-team-3",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        },
+        {
+          "id": "demo-p4",
+          "name": "橘 结衣",
+          "score": 25000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/4.png",
+          "color": "#ffffff",
+          "team_color": "#dfb34e",
+          "team": "金曜",
+          "team_id": "demo-team-4",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        }
+      ]
+    },
+    "lastEvent": {
+      "type": "tsumo",
+      "id": null,
+      "revision": 59
+    }
+  },
+  "settings": {
+    "theme": "saikouisen",
+    "locked": false,
+    "topmost": false,
+    "capture_bg": "transparent",
+    "speed": 1.0,
+    "windows": {
+      "round": [
+        20,
+        12,
+        218,
+        61
+      ],
+      "dora": [
+        238,
+        12,
+        195,
+        61
+      ],
+      "commentary": [
+        340,
+        81,
+        600,
+        52
+      ],
+      "qualification": [
+        20,
+        114,
+        208,
+        338
+      ],
+      "standings": [
+        20,
+        588,
+        1240,
+        108
+      ],
+      "statistics": [
+        40,
+        60,
+        1200,
+        600
+      ],
+      "chart": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "yaku": [
+        20,
+        530,
+        1240,
+        148
+      ],
+      "player0": [
+        10,
+        460,
+        305,
+        237
+      ],
+      "player1": [
+        327,
+        460,
+        305,
+        237
+      ],
+      "player2": [
+        644,
+        460,
+        305,
+        237
+      ],
+      "player3": [
+        961,
+        460,
+        305,
+        237
+      ]
+    },
+    "layout_version": 7,
+    "visible": {
+      "round": false,
+      "dora": false,
+      "player0": false,
+      "player1": false,
+      "player2": false,
+      "player3": false,
+      "yaku": false,
+      "qualification": false,
+      "commentary": false,
+      "standings": false,
+      "statistics": false,
+      "chart": true
+    },
+    "show_yaku": false,
+    "show_overlays": true,
+    "language": "zh_CN",
+    "broadcast_scene": "table",
+    "commentary_auto": true,
+    "commentary_auto_geometry": [
+      340,
+      81,
+      600,
+      52
+    ]
+  },
+  "last_info": {
+    "name": "朝雾 遥",
+    "winner": 1,
+    "kind": "tsumo",
+    "color": "#ffffff",
+    "han": 4,
+    "fu": 30,
+    "yakuman": 0,
+    "yaku": [
+      "立直",
+      "门前清自摸和",
+      "宝牌 2"
+    ],
+    "limit": "满贯",
+    "base_points": 8000
+  },
+  "demo": {
+    "id": "match_finished",
+    "label": "完整半庄与赛后曲线",
+    "description": "用真实结算引擎生成十二局完整半庄，包含两次流局、连庄、立直、副露、荣和与自摸；点数曲线四条线从起点同步延伸。",
+    "fictional": true,
+    "recorded_by": "real settlement engine",
+    "source": "synthetic demonstration"
+  }
+}

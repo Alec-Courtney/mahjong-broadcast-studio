@@ -1,0 +1,48 @@
+{
+  "title_axes_reveal": {
+    "source": "reference\\ML_Full_Recreation\\06_\u5408\u6210\u97f3\u6548\\title_axes_reveal.wav",
+    "source_sha256": "6402db0548a0ece2e1023a868b34c58f8248b417f3f1b20d903f397b07d134b4",
+    "packaged_sha256": "49d755e2af3b9c976e1bdb3208027b5ded702face3d2759b9ae2ef2b8110bd3d",
+    "duration_seconds": 0.78,
+    "channels": 2,
+    "sample_width": 2,
+    "sample_rate": 48000
+  },
+  "graph_reveal": {
+    "kind": "original_synthesis",
+    "duration_seconds": 2.667,
+    "sample_frames": 128016,
+    "channels": 2,
+    "sample_width": 2,
+    "sample_rate": 48000,
+    "peak": 0.169403076171875,
+    "packaged_sha256": "aef149c7ddbedf650906244e87ff069d553574cb25130c7d6b8d05d75d882a71"
+  },
+  "photo_cards_reveal": {
+    "source": "reference\\ML_Full_Recreation\\06_\u5408\u6210\u97f3\u6548\\photo_cards_reveal.wav",
+    "source_sha256": "38664f8a6a5382f053da1ac1e18b7ca4efb14e1dc7c85a9fc2478642abe28b4b",
+    "packaged_sha256": "db6f2f0a9bf3673cd8da665d46123c9289d810ada95ed4a1531974e6eb5d1bd0",
+    "duration_seconds": 0.7,
+    "channels": 2,
+    "sample_width": 2,
+    "sample_rate": 48000
+  },
+  "layout_sweep": {
+    "source": "reference\\ML_Full_Recreation\\06_\u5408\u6210\u97f3\u6548\\layout_sweep.wav",
+    "source_sha256": "185a0e13b90abfbe4f181a5108bbc966a37230c7eb59318c1d9976116b579147",
+    "packaged_sha256": "e8aef8f076afc3fb9d1e025f937a254e568c34baa2334257786313d201b3407f",
+    "duration_seconds": 1.6,
+    "channels": 2,
+    "sample_width": 2,
+    "sample_rate": 48000
+  },
+  "data_sweep": {
+    "source": "reference\\ML_Full_Recreation\\06_\u5408\u6210\u97f3\u6548\\data_sweep.wav",
+    "source_sha256": "5c55552431d8e86e74408318e01f10c673b44e6b4a072f4b1cae5e78378bd614",
+    "packaged_sha256": "c7530dec08499f386cf9d9b40e2014259acd89f02757763106df25cb7ea922c6",
+    "duration_seconds": 0.8,
+    "channels": 2,
+    "sample_width": 2,
+    "sample_rate": 48000
+  }
+}

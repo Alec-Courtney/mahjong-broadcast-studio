@@ -1,0 +1,2 @@
+PySide6-Essentials==6.12.0
+mahjong==2.0.0

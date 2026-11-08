@@ -1,0 +1,417 @@
+{
+  "id": "10059940",
+  "file": "10059940.jpg",
+  "match_date": "2022-12-16",
+  "condition": "Clear upright 14-tile opening hand, oblique camera",
+  "roi": [
+    350,
+    205,
+    620,
+    255
+  ],
+  "full_hand_visible": true,
+  "tiles": [
+    "3z",
+    "3z",
+    "3z",
+    "1p",
+    "4p",
+    "5p",
+    "6p",
+    "6p",
+    "8p",
+    "8p",
+    "3m",
+    "3s",
+    "9s",
+    "3z"
+  ],
+  "boxes": [
+    [
+      373,
+      366,
+      430,
+      449
+    ],
+    [
+      430,
+      350,
+      480,
+      433
+    ],
+    [
+      480,
+      337,
+      529,
+      416
+    ],
+    [
+      530,
+      322,
+      575,
+      401
+    ],
+    [
+      575,
+      307,
+      619,
+      390
+    ],
+    [
+      619,
+      294,
+      660,
+      373
+    ],
+    [
+      662,
+      281,
+      704,
+      361
+    ],
+    [
+      705,
+      269,
+      745,
+      347
+    ],
+    [
+      746,
+      256,
+      785,
+      335
+    ],
+    [
+      786,
+      244,
+      824,
+      322
+    ],
+    [
+      825,
+      234,
+      863,
+      309
+    ],
+    [
+      864,
+      223,
+      898,
+      298
+    ],
+    [
+      899,
+      211,
+      931,
+      288
+    ],
+    [
+      920,
+      210,
+      962,
+      282
+    ]
+  ],
+  "source": {
+    "id": "10059940",
+    "article_url": "https://times.abema.tv/articles/-/10059940",
+    "image_url": "https://times-abema.ismcdn.jp/mwimgs/1/f/-/img_1f3c4ae24f037cd43a3c00defc8f5c47256578.jpg",
+    "file": "10059940.jpg",
+    "sha256": "60a3874892f119b7f3c5d4b9ae57fb0fe2ed6d112b7fb9e6533ddb6c38c9a21c",
+    "source_type": "official M.LEAGUE broadcast still published by ABEMA",
+    "video_timestamp": null,
+    "copyright": "ABEMA/M.LEAGUE; local evaluation only"
+  },
+  "image_size": [
+    1200,
+    675
+  ],
+  "result": {
+    "detections": [
+      {
+        "tile": "3z",
+        "confidence": 0.6728883981704712,
+        "bbox": [
+          373.05865478515625,
+          367.7894287109375,
+          437.16046142578125,
+          443.12042236328125
+        ],
+        "class_name": "3z"
+      },
+      {
+        "tile": "3z",
+        "confidence": 0.7247682809829712,
+        "bbox": [
+          420.7472229003906,
+          352.21923828125,
+          485.89141845703125,
+          429.7882385253906
+        ],
+        "class_name": "3z"
+      },
+      {
+        "tile": "3z",
+        "confidence": 0.8450798988342285,
+        "bbox": [
+          473.27935791015625,
+          336.434814453125,
+          533.4157104492188,
+          413.66632080078125
+        ],
+        "class_name": "3z"
+      },
+      {
+        "tile": "1p",
+        "confidence": 0.7949265241622925,
+        "bbox": [
+          519.7987060546875,
+          321.43170166015625,
+          582.7452392578125,
+          398.4744873046875
+        ],
+        "class_name": "1p"
+      },
+      {
+        "tile": "4p",
+        "confidence": 0.7109235525131226,
+        "bbox": [
+          567.54443359375,
+          309.40789794921875,
+          626.67919921875,
+          389.32708740234375
+        ],
+        "class_name": "4p"
+      },
+      {
+        "tile": "5p",
+        "confidence": 0.8338596224784851,
+        "bbox": [
+          613.408447265625,
+          295.9670715332031,
+          670.6441650390625,
+          375.53863525390625
+        ],
+        "class_name": "5p"
+      },
+      {
+        "tile": "6p",
+        "confidence": 0.7669143676757812,
+        "bbox": [
+          653.8392333984375,
+          284.1556091308594,
+          713.15869140625,
+          361.9924011230469
+        ],
+        "class_name": "6p"
+      },
+      {
+        "tile": "6p",
+        "confidence": 0.7523620128631592,
+        "bbox": [
+          697.0980834960938,
+          273.98370361328125,
+          749.8419189453125,
+          349.621337890625
+        ],
+        "class_name": "6p"
+      },
+      {
+        "tile": "8p",
+        "confidence": 0.783302903175354,
+        "bbox": [
+          736.9423217773438,
+          262.57281494140625,
+          788.54052734375,
+          337.53936767578125
+        ],
+        "class_name": "8p"
+      },
+      {
+        "tile": "8p",
+        "confidence": 0.7756671905517578,
+        "bbox": [
+          776.3055419921875,
+          252.672119140625,
+          826.6030883789062,
+          325.624755859375
+        ],
+        "class_name": "8p"
+      },
+      {
+        "tile": "3m",
+        "confidence": 0.8110035061836243,
+        "bbox": [
+          812.5517578125,
+          241.5423126220703,
+          865.02783203125,
+          313.7611999511719
+        ],
+        "class_name": "3m"
+      },
+      {
+        "tile": "3s",
+        "confidence": 0.8099113702774048,
+        "bbox": [
+          849.8279418945312,
+          234.39588928222656,
+          900.3744506835938,
+          302.28009033203125
+        ],
+        "class_name": "3s"
+      },
+      {
+        "tile": "9s",
+        "confidence": 0.5982205271720886,
+        "bbox": [
+          883.6670532226562,
+          222.4768524169922,
+          936.5256958007812,
+          293.135986328125
+        ],
+        "class_name": "9s"
+      },
+      {
+        "tile": "3z",
+        "confidence": 0.8465673923492432,
+        "bbox": [
+          918.830078125,
+          212.62509155273438,
+          966.5977172851562,
+          281.3164367675781
+        ],
+        "class_name": "3z"
+      }
+    ],
+    "width": 1200,
+    "height": 675,
+    "source": "yolo11m_v2_best.onnx",
+    "elapsed_ms": 350.18720012158155,
+    "provider": "nikmomo/Mahjong-YOLO · ONNX CPU",
+    "captured_at": 0.0
+  },
+  "matching": [
+    {
+      "ground_truth_index": 13,
+      "prediction_index": 13,
+      "iou": 0.8435318272356788,
+      "expected": "3z",
+      "predicted": "3z",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 0,
+      "prediction_index": 0,
+      "iou": 0.8138745276852045,
+      "expected": "3z",
+      "predicted": "3z",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 2,
+      "prediction_index": 2,
+      "iou": 0.7894158858047189,
+      "expected": "3z",
+      "predicted": "3z",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 1,
+      "prediction_index": 1,
+      "iou": 0.7283857053397259,
+      "expected": "3z",
+      "predicted": "3z",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 4,
+      "prediction_index": 4,
+      "iou": 0.7233163093651275,
+      "expected": "4p",
+      "predicted": "4p",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 7,
+      "prediction_index": 7,
+      "iou": 0.6972581189770762,
+      "expected": "6p",
+      "predicted": "6p",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 3,
+      "prediction_index": 3,
+      "iou": 0.6933702157693036,
+      "expected": "1p",
+      "predicted": "1p",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 8,
+      "prediction_index": 8,
+      "iou": 0.6848525489268895,
+      "expected": "8p",
+      "predicted": "8p",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 5,
+      "prediction_index": 5,
+      "iou": 0.6814153074134193,
+      "expected": "5p",
+      "predicted": "5p",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 6,
+      "prediction_index": 6,
+      "iou": 0.6794988235489404,
+      "expected": "6p",
+      "predicted": "6p",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 9,
+      "prediction_index": 9,
+      "iou": 0.658799470900969,
+      "expected": "8p",
+      "predicted": "8p",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 10,
+      "prediction_index": 10,
+      "iou": 0.6288416243810293,
+      "expected": "3m",
+      "predicted": "3m",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 11,
+      "prediction_index": 11,
+      "iou": 0.5662922853647872,
+      "expected": "3s",
+      "predicted": "3s",
+      "correct": true
+    },
+    {
+      "ground_truth_index": 12,
+      "prediction_index": 12,
+      "iou": 0.5111252679521008,
+      "expected": "9s",
+      "predicted": "9s",
+      "correct": true
+    }
+  ],
+  "visible_ground_truth": 14,
+  "predicted_count": 14,
+  "localized_count": 14,
+  "correct_tile_count": 14,
+  "false_positive_or_wrong_label": 0,
+  "missed_or_wrong_label": 0,
+  "strict_visible_face_exact": true,
+  "tile_multiset_exact": true,
+  "unmatched_gt": [],
+  "unmatched_predictions": []
+}

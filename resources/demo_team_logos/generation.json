@@ -1,0 +1,38 @@
+{
+  "created_date": "2026-11-01",
+  "description": "Original fictional demonstration team emblems. Not official team logos and not bound to any real team.",
+  "assets": [
+    {
+      "id": "wave_teal",
+      "destination": "resources/demo_team_logos/demo_wave_teal_v1.png",
+      "mode": "built-in image_gen",
+      "transparent_background": true,
+      "prompt": "Use case: logo-brand\nAsset type: original fictional demo team emblem, a raster PNG used as a fallback in a small player portrait area in a Mahjong broadcast desktop app.\nPrimary request: Create a single isolated emblem of one bold abstract curling ocean wave, made from two broad interlocking curved shapes.\nStyle/medium: clean polished flat geometric sports emblem; vector-like large filled shapes, smooth antialiased edges, no texture, no 3D.\nComposition/framing: square image, centered icon occupying about 70% of the canvas; generous completely transparent padding on all four sides. The silhouette must remain easy to recognize at 48 pixels.\nColor palette: deep teal #0B5558 and bright blue-green #1AA89D, with a restrained warm white accent.\nScene/backdrop: actual transparent alpha background, including the corners; no painted background and no checkerboard.\nText: none.\nConstraints: This is an original fictional demonstration emblem, not an official team logo. One icon only. No letters, numbers, words, slogans, watermarks, photographs, human faces, brand logos, fine decorative details, mockup surfaces, shadows outside the emblem, or presentation sheet.",
+      "source_id": "01a1971a-a2ea-7921-84b8-7c72220e427e/exec-25cda3b3-0b96-45db-9494-06732baa4db2.png"
+    },
+    {
+      "id": "meteor_magenta",
+      "destination": "resources/demo_team_logos/demo_meteor_magenta_v1.png",
+      "mode": "built-in image_gen",
+      "transparent_background": true,
+      "prompt": "Use case: logo-brand\nAsset type: original fictional demo team emblem, a raster PNG used as a fallback in a small player portrait area in a Mahjong broadcast desktop app.\nPrimary request: Create a single isolated emblem of one simple five-point shooting star with a short broad tapered comet trail, dynamic diagonal silhouette.\nStyle/medium: clean polished flat geometric sports emblem; vector-like large filled shapes, smooth antialiased edges, no texture, no 3D.\nComposition/framing: square image, centered icon occupying about 70% of the canvas; generous completely transparent padding on all four sides. The silhouette must remain easy to recognize at 48 pixels.\nColor palette: deep plum #6D1846 and vivid magenta #D23E7A, with a restrained warm white accent.\nScene/backdrop: actual transparent alpha background, including the corners; no painted background and no checkerboard.\nText: none.\nConstraints: This is an original fictional demonstration emblem, not an official team logo. One icon only. No letters, numbers, words, slogans, watermarks, photographs, human faces, brand logos, fine decorative details, mockup surfaces, shadows outside the emblem, or presentation sheet.",
+      "source_id": "01a1971a-a2ea-7921-84b8-7c72220e427e/exec-a7dee586-e0f1-4790-87de-458001ae913b.png"
+    },
+    {
+      "id": "peak_gold",
+      "destination": "resources/demo_team_logos/demo_peak_gold_v1.png",
+      "mode": "built-in image_gen",
+      "transparent_background": true,
+      "prompt": "Use case: logo-brand\nAsset type: original fictional demo team emblem, a raster PNG used as a fallback in a small player portrait area in a Mahjong broadcast desktop app.\nPrimary request: Create a single isolated emblem of one angular mountain peak silhouette with a simple rising sun partially behind it, no fine lines.\nStyle/medium: clean polished flat geometric sports emblem; vector-like large filled shapes, smooth antialiased edges, no texture, no 3D.\nComposition/framing: square image, centered icon occupying about 70% of the canvas; generous completely transparent padding on all four sides. The silhouette must remain easy to recognize at 48 pixels.\nColor palette: deep burnt gold #8A5A13 and orange gold #E1A636, with a restrained warm white accent.\nScene/backdrop: actual transparent alpha background, including the corners; no painted background and no checkerboard.\nText: none.\nConstraints: This is an original fictional demonstration emblem, not an official team logo. One icon only. No letters, numbers, words, slogans, watermarks, photographs, human faces, brand logos, fine decorative details, mockup surfaces, shadows outside the emblem, or presentation sheet.",
+      "source_id": "01a1971a-a2ea-7921-84b8-7c72220e427e/exec-9a5ee0ba-4824-493d-9fbf-893fc2e5aaa1.png"
+    },
+    {
+      "id": "bird_blue",
+      "destination": "resources/demo_team_logos/demo_bird_blue_v1.png",
+      "mode": "built-in image_gen",
+      "transparent_background": true,
+      "prompt": "Use case: logo-brand\nAsset type: original fictional demo team emblem, a raster PNG used as a fallback in a small player portrait area in a Mahjong broadcast desktop app.\nPrimary request: Create a single isolated emblem of one bold stylized soaring bird silhouette seen from the front with upward spread wings, symmetrical and geometric.\nStyle/medium: clean polished flat geometric sports emblem; vector-like large filled shapes, smooth antialiased edges, no texture, no 3D.\nComposition/framing: square image, centered icon occupying about 70% of the canvas; generous completely transparent padding on all four sides. The silhouette must remain easy to recognize at 48 pixels.\nColor palette: deep navy blue #0B4776 and clear bright blue #2796C7, with a restrained warm white accent.\nScene/backdrop: actual transparent alpha background, including the corners; no painted background and no checkerboard.\nText: none.\nConstraints: This is an original fictional demonstration emblem, not an official team logo. One icon only. No letters, numbers, words, slogans, watermarks, photographs, human faces, brand logos, fine decorative details, mockup surfaces, shadows outside the emblem, or presentation sheet.",
+      "source_id": "01a1971a-a2ea-7921-84b8-7c72220e427e/exec-a6adeaf4-4324-439f-b89c-8f6c3f9121be.png"
+    }
+  ]
+}

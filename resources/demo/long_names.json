@@ -1,0 +1,668 @@
+{
+  "format": "MahjongOverlayStudio",
+  "version": 6,
+  "state": {
+    "schemaVersion": 1,
+    "id": "demo-long_names",
+    "title": "演示 · 长名称与多役种结算",
+    "initialDealer": 0,
+    "initialScores": [
+      25000,
+      25000,
+      25000,
+      25000
+    ],
+    "initialPot": 0,
+    "rules": {
+      "startPoints": 25000,
+      "returnPoints": 30000,
+      "uma": [
+        50,
+        10,
+        -10,
+        -30
+      ],
+      "okaEnabled": false,
+      "terminalPot": "unallocated",
+      "terminalPotTie": "mleague",
+      "tieBreak": "share",
+      "dealerTenpaiRenchan": true,
+      "agariYame": false,
+      "tenpaiYame": false,
+      "notenPayment": 3000,
+      "honbaRon": 300,
+      "honbaTsumoEach": 100,
+      "allowNegative": true,
+      "endOnZero": false,
+      "kiriageMangan": true,
+      "kazoeYakuman": false
+    },
+    "players": [
+      {
+        "id": "demo-p1",
+        "name": "竞技麻将特别代表・青木 凛",
+        "score": 49000,
+        "riichi": true,
+        "melds": [],
+        "photo": "demo://avatars/1.png",
+        "color": "#ffffff",
+        "team_color": "#4b9270",
+        "team": "晨星联合竞技麻将俱乐部特别代表队",
+        "team_id": "demo-team-1",
+        "tenpai": true,
+        "waits": [],
+        "remaining": null
+      },
+      {
+        "id": "demo-p2",
+        "name": "International Riichi Club Akira",
+        "score": 25000,
+        "riichi": false,
+        "melds": [],
+        "photo": "demo://avatars/2.png",
+        "color": "#ffffff",
+        "team_color": "#bf4d63",
+        "team": "International Invitational",
+        "team_id": "demo-team-2",
+        "tenpai": false,
+        "waits": [],
+        "remaining": null
+      },
+      {
+        "id": "demo-p3",
+        "name": "白石 奏",
+        "score": 25000,
+        "riichi": false,
+        "melds": [],
+        "photo": "demo://avatars/3.png",
+        "color": "#ffffff",
+        "team_color": "#4a81b8",
+        "team": "海蓝",
+        "team_id": "demo-team-3",
+        "tenpai": false,
+        "waits": [],
+        "remaining": null
+      },
+      {
+        "id": "demo-p4",
+        "name": "橘 结衣",
+        "score": 1000,
+        "riichi": false,
+        "melds": [],
+        "photo": "demo://avatars/4.png",
+        "color": "#ffffff",
+        "team_color": "#dfb34e",
+        "team": "金曜",
+        "team_id": "demo-team-4",
+        "tenpai": false,
+        "waits": [],
+        "remaining": null
+      }
+    ],
+    "dealer": 3,
+    "roundIndex": 7,
+    "honba": 0,
+    "pot": 0,
+    "doraIndicators": [],
+    "phase": "finished",
+    "lastResult": {
+      "id": "demo-long_names-result-2",
+      "kind": "ron",
+      "title": "竞技麻将特别代表・青木 凛 荣和",
+      "detail": "30 符 11 番 · 三倍满 · 基础 24000 点 · 供托 1000",
+      "roundIndex": 7,
+      "dealer": 3,
+      "honba": 0,
+      "deltas": [
+        25000,
+        0,
+        0,
+        -24000
+      ],
+      "beforeScores": [
+        24000,
+        25000,
+        25000,
+        25000
+      ],
+      "afterScores": [
+        49000,
+        25000,
+        25000,
+        1000
+      ],
+      "potBefore": 1000,
+      "potAfter": 0,
+      "winner": 0,
+      "loser": 3,
+      "fu": 30,
+      "han": 11,
+      "yakuman": 0,
+      "limit": "三倍满",
+      "basePoints": 24000,
+      "payments": [
+        {
+          "from": 3,
+          "to": 0,
+          "amount": 24000,
+          "base": 24000,
+          "honba": 0
+        }
+      ],
+      "potAwards": [
+        {
+          "player": 0,
+          "amount": 1000
+        }
+      ],
+      "terminalPotAwards": [],
+      "tenpai": null,
+      "next": {
+        "finished": true,
+        "roundIndex": 7,
+        "dealer": 3,
+        "honba": 0,
+        "pot": 0,
+        "reason": "south4_end",
+        "label": "半庄结束"
+      },
+      "displayDeltas": [
+        25000,
+        0,
+        0,
+        -24000
+      ]
+    },
+    "finalRanking": {
+      "scoresBeforePot": [
+        49000,
+        25000,
+        25000,
+        1000
+      ],
+      "groups": [
+        {
+          "rank": 1,
+          "players": [
+            0
+          ],
+          "places": [
+            1
+          ]
+        },
+        {
+          "rank": 2,
+          "players": [
+            1,
+            2
+          ],
+          "places": [
+            2,
+            3
+          ]
+        },
+        {
+          "rank": 4,
+          "players": [
+            3
+          ],
+          "places": [
+            4
+          ]
+        }
+      ],
+      "tieBreak": "share"
+    },
+    "accountingTotal": 100000,
+    "accountingAdjustment": 0,
+    "lastCorrection": null,
+    "revision": 2,
+    "handSequence": 0,
+    "appliedEventIds": [],
+    "manualDisplay": true,
+    "broadcast": {
+      "version": 1,
+      "config": {
+        "title": "演示 · 长名称与多役种结算",
+        "standings_mode": "individual",
+        "qualification_slots": 2,
+        "qualification_final": false,
+        "qualification_mode": "individual",
+        "qualification_calculation": "auto",
+        "start_points": 25000,
+        "return_points": 30000,
+        "uma": [
+          50,
+          10,
+          -10,
+          -30
+        ],
+        "oka_enabled": false,
+        "tie_break": "share",
+        "qualification_tie_break": "seed",
+        "manual_conditions": {},
+        "show_match_title": true,
+        "hud_opacity": 0.82,
+        "standings_live": false,
+        "statistics_scope": "all",
+        "statistics_view": "rates",
+        "chart_mode": "scores",
+        "statistics_page": 0,
+        "commentary_title": "二度受",
+        "commentary_body": "两组搭子的进张重叠，如同色23与56都需要4，会压缩有效进张。",
+        "commentary_builtin": true,
+        "commentary_duration": 0,
+        "event_mode": "individual",
+        "settlement_enabled": true,
+        "settlement_hold": 3.0,
+        "settlement_total_hold": 3.0
+      },
+      "roster": [
+        {
+          "id": "demo-p1",
+          "name": "竞技麻将特别代表・青木 凛",
+          "team": "晨星联合竞技麻将俱乐部特别代表队",
+          "team_id": "demo-team-1",
+          "color": "#4b9270",
+          "photo": "demo://avatars/1.png",
+          "base_points": 0,
+          "games": 0,
+          "seed": 1,
+          "status": "active",
+          "stats": {}
+        },
+        {
+          "id": "demo-p2",
+          "name": "International Riichi Club Akira",
+          "team": "International Invitational",
+          "team_id": "demo-team-2",
+          "color": "#bf4d63",
+          "photo": "demo://avatars/2.png",
+          "base_points": 0,
+          "games": 0,
+          "seed": 2,
+          "status": "active",
+          "stats": {}
+        },
+        {
+          "id": "demo-p3",
+          "name": "白石 奏",
+          "team": "海蓝",
+          "team_id": "demo-team-3",
+          "color": "#4a81b8",
+          "photo": "demo://avatars/3.png",
+          "base_points": 0,
+          "games": 0,
+          "seed": 3,
+          "status": "active",
+          "stats": {}
+        },
+        {
+          "id": "demo-p4",
+          "name": "橘 结衣",
+          "team": "金曜",
+          "team_id": "demo-team-4",
+          "color": "#dfb34e",
+          "photo": "demo://avatars/4.png",
+          "base_points": 0,
+          "games": 0,
+          "seed": 4,
+          "status": "active",
+          "stats": {}
+        }
+      ],
+      "hands": [
+        {
+          "id": "de53864675da4be9b54f7ba1144f8b01",
+          "label": "南4局",
+          "round_index": 7,
+          "honba": 0,
+          "kind": "ron",
+          "before_scores": [
+            24000,
+            25000,
+            25000,
+            25000
+          ],
+          "after_scores": [
+            49000,
+            25000,
+            25000,
+            1000
+          ],
+          "players": [
+            {
+              "id": "demo-p1",
+              "name": "竞技麻将特别代表・青木 凛",
+              "color": "#4b9270",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 1,
+              "wins": 1,
+              "deal_ins": 0,
+              "win_points": 24000,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p2",
+              "name": "International Riichi Club Akira",
+              "color": "#bf4d63",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p3",
+              "name": "白石 奏",
+              "color": "#4a81b8",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 0,
+              "win_points": 0,
+              "deal_in_points": 0
+            },
+            {
+              "id": "demo-p4",
+              "name": "橘 结衣",
+              "color": "#dfb34e",
+              "hands": 1,
+              "calls": 0,
+              "riichi": 0,
+              "wins": 0,
+              "deal_ins": 1,
+              "win_points": 0,
+              "deal_in_points": 24000
+            }
+          ],
+          "result": {
+            "id": "demo-long_names-result-2",
+            "kind": "ron",
+            "title": "竞技麻将特别代表・青木 凛 荣和",
+            "detail": "30 符 11 番 · 三倍满 · 基础 24000 点 · 供托 1000",
+            "roundIndex": 7,
+            "dealer": 3,
+            "honba": 0,
+            "deltas": [
+              25000,
+              0,
+              0,
+              -24000
+            ],
+            "beforeScores": [
+              24000,
+              25000,
+              25000,
+              25000
+            ],
+            "afterScores": [
+              49000,
+              25000,
+              25000,
+              1000
+            ],
+            "potBefore": 1000,
+            "potAfter": 0,
+            "winner": 0,
+            "loser": 3,
+            "fu": 30,
+            "han": 11,
+            "yakuman": 0,
+            "limit": "三倍满",
+            "basePoints": 24000,
+            "payments": [
+              {
+                "from": 3,
+                "to": 0,
+                "amount": 24000,
+                "base": 24000,
+                "honba": 0
+              }
+            ],
+            "potAwards": [
+              {
+                "player": 0,
+                "amount": 1000
+              }
+            ],
+            "terminalPotAwards": [],
+            "tenpai": null,
+            "next": {
+              "finished": true,
+              "roundIndex": 7,
+              "dealer": 3,
+              "honba": 0,
+              "pot": 0,
+              "reason": "south4_end",
+              "label": "半庄结束"
+            },
+            "displayDeltas": [
+              25000,
+              0,
+              0,
+              -24000
+            ]
+          }
+        }
+      ],
+      "matches": [],
+      "current_hand": "de53864675da4be9b54f7ba1144f8b01",
+      "initial_scores": [
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "initial_label": "开始",
+      "partial": true,
+      "initial_players": [
+        {
+          "id": "demo-p1",
+          "name": "青木 凛",
+          "score": 25000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/1.png",
+          "color": "#ffffff",
+          "team_color": "#4b9270",
+          "team": "青岚",
+          "team_id": "demo-team-1",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        },
+        {
+          "id": "demo-p2",
+          "name": "朝雾 遥",
+          "score": 25000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/2.png",
+          "color": "#ffffff",
+          "team_color": "#bf4d63",
+          "team": "绯樱",
+          "team_id": "demo-team-2",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        },
+        {
+          "id": "demo-p3",
+          "name": "白石 奏",
+          "score": 25000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/3.png",
+          "color": "#ffffff",
+          "team_color": "#4a81b8",
+          "team": "海蓝",
+          "team_id": "demo-team-3",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        },
+        {
+          "id": "demo-p4",
+          "name": "橘 结衣",
+          "score": 25000,
+          "riichi": false,
+          "melds": [],
+          "photo": "demo://avatars/4.png",
+          "color": "#ffffff",
+          "team_color": "#dfb34e",
+          "team": "金曜",
+          "team_id": "demo-team-4",
+          "tenpai": false,
+          "waits": [],
+          "remaining": null
+        }
+      ]
+    },
+    "lastEvent": {
+      "type": "ron",
+      "id": null,
+      "revision": 2
+    }
+  },
+  "settings": {
+    "theme": "saikouisen",
+    "locked": false,
+    "topmost": false,
+    "capture_bg": "transparent",
+    "speed": 1.0,
+    "windows": {
+      "round": [
+        20,
+        12,
+        218,
+        81
+      ],
+      "dora": [
+        238,
+        12,
+        195,
+        81
+      ],
+      "commentary": [
+        340,
+        81,
+        600,
+        52
+      ],
+      "qualification": [
+        20,
+        114,
+        208,
+        338
+      ],
+      "standings": [
+        20,
+        588,
+        1240,
+        108
+      ],
+      "statistics": [
+        40,
+        60,
+        1200,
+        600
+      ],
+      "chart": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "yaku": [
+        20,
+        530,
+        1240,
+        148
+      ],
+      "player0": [
+        10,
+        460,
+        305,
+        237
+      ],
+      "player1": [
+        327,
+        460,
+        305,
+        237
+      ],
+      "player2": [
+        644,
+        460,
+        305,
+        237
+      ],
+      "player3": [
+        961,
+        460,
+        305,
+        237
+      ]
+    },
+    "layout_version": 7,
+    "visible": {
+      "round": false,
+      "dora": false,
+      "player0": false,
+      "player1": false,
+      "player2": false,
+      "player3": false,
+      "yaku": true,
+      "qualification": false,
+      "commentary": false,
+      "standings": false,
+      "statistics": false,
+      "chart": false
+    },
+    "show_yaku": true,
+    "show_overlays": true,
+    "language": "zh_CN",
+    "broadcast_scene": "table",
+    "commentary_auto": true,
+    "commentary_auto_geometry": [
+      340,
+      81,
+      600,
+      52
+    ]
+  },
+  "last_info": {
+    "name": "竞技麻将特别代表・青木 凛",
+    "winner": 0,
+    "kind": "ron",
+    "color": "#ffffff",
+    "han": 11,
+    "fu": 30,
+    "yakuman": 0,
+    "yaku": [
+      "立直",
+      "一发",
+      "平和",
+      "断幺九",
+      "三色同顺",
+      "宝牌 3",
+      "赤宝牌 1",
+      "里宝牌 1"
+    ],
+    "limit": "三倍满",
+    "base_points": 24000
+  },
+  "demo": {
+    "id": "long_names",
+    "label": "长名称与多役种结算",
+    "description": "长姓名和长队名，十一番三倍满及多项役种，用于检查字号、换行和边界。",
+    "fictional": true,
+    "recorded_by": "real settlement engine",
+    "source": "synthetic demonstration"
+  }
+}

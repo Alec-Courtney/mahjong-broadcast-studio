@@ -1,0 +1,67 @@
+{
+  "purpose": "Operational gate check against the unchanged raw predictions, not a new YOLO accuracy result",
+  "method": "Each saved still prediction is passed three times to exercise the temporal gate contract; these are not three real video frames.",
+  "confidence": 0.55,
+  "clear_full_14_hand_not_rejected": true,
+  "false_13_with_river_tile_rejected": true,
+  "raw_metrics_unchanged": {
+    "visible_ground_truth": 49,
+    "predicted_count": 44,
+    "localized_count": 43,
+    "correct_tile_count": 43,
+    "false_positive_or_wrong_label": 1,
+    "missed_or_wrong_label": 6,
+    "precision": 0.9772727272727273,
+    "recall": 0.8775510204081632,
+    "localized_label_accuracy": 1.0,
+    "fully_visible_hand_exact": 1,
+    "fully_visible_hand_count": 3
+  },
+  "frames": [
+    {
+      "id": "10059940",
+      "raw_detection_count": 14,
+      "expected_count_for_gate": 14,
+      "row_outlier": false,
+      "valid_frame": true,
+      "emits_after_three_identical_inputs": true,
+      "reason": "valid",
+      "raw_metric_correct": 14,
+      "raw_metric_ground_truth": 14
+    },
+    {
+      "id": "10175913",
+      "raw_detection_count": 13,
+      "expected_count_for_gate": 13,
+      "row_outlier": true,
+      "valid_frame": false,
+      "emits_after_three_identical_inputs": false,
+      "reason": "疑似混入牌河或举牌 · 请核对选区",
+      "raw_metric_correct": 12,
+      "raw_metric_ground_truth": 13
+    },
+    {
+      "id": "10163230",
+      "raw_detection_count": 11,
+      "expected_count_for_gate": 13,
+      "row_outlier": false,
+      "valid_frame": false,
+      "emits_after_three_identical_inputs": false,
+      "reason": "count mismatch",
+      "raw_metric_correct": 11,
+      "raw_metric_ground_truth": 13
+    },
+    {
+      "id": "10067968",
+      "raw_detection_count": 6,
+      "expected_count_for_gate": 13,
+      "row_outlier": false,
+      "valid_frame": false,
+      "emits_after_three_identical_inputs": false,
+      "reason": "count mismatch",
+      "raw_metric_correct": 6,
+      "raw_metric_ground_truth": 9
+    }
+  ],
+  "limitations": "Conservative rejection only. Does not recover the missing 9s or improve detector recall. Manually correct hand/ROI before submitting."
+}

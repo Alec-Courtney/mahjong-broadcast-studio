@@ -1,0 +1,82 @@
+[
+  {
+    "id": "wave_teal",
+    "path": "resources/demo_team_logos/demo_wave_teal_v1.png",
+    "width": 1254,
+    "height": 1254,
+    "alpha_channel": true,
+    "alpha_min": 0,
+    "alpha_max": 255,
+    "transparent_pixels": 1035458,
+    "total_pixels": 1572516,
+    "transparent_ratio": 0.658472,
+    "content_bounds": [
+      27,
+      126,
+      1139,
+      1092
+    ],
+    "sha256": "5a8643396cfde7fba1ba19a42cd24377f6ef1f3ca3122b01b5eda79e2951a142",
+    "copied_bytes_unchanged": true
+  },
+  {
+    "id": "meteor_magenta",
+    "path": "resources/demo_team_logos/demo_meteor_magenta_v1.png",
+    "width": 1254,
+    "height": 1254,
+    "alpha_channel": true,
+    "alpha_min": 0,
+    "alpha_max": 255,
+    "transparent_pixels": 1298033,
+    "total_pixels": 1572516,
+    "transparent_ratio": 0.82545,
+    "content_bounds": [
+      0,
+      92,
+      1230,
+      1130
+    ],
+    "sha256": "713866f9a9b7b0584c25c6c52aa4179135eb6e5a12c6ebfd528a8426fef8f83a",
+    "copied_bytes_unchanged": true
+  },
+  {
+    "id": "peak_gold",
+    "path": "resources/demo_team_logos/demo_peak_gold_v1.png",
+    "width": 1254,
+    "height": 1254,
+    "alpha_channel": true,
+    "alpha_min": 0,
+    "alpha_max": 255,
+    "transparent_pixels": 1191281,
+    "total_pixels": 1572516,
+    "transparent_ratio": 0.757564,
+    "content_bounds": [
+      0,
+      150,
+      1238,
+      1048
+    ],
+    "sha256": "fafe2e8f9b3e03fcfdd3d57dcb872db1671d9761eae6d19297878b7f4f6276f8",
+    "copied_bytes_unchanged": true
+  },
+  {
+    "id": "bird_blue",
+    "path": "resources/demo_team_logos/demo_bird_blue_v1.png",
+    "width": 1254,
+    "height": 1254,
+    "alpha_channel": true,
+    "alpha_min": 0,
+    "alpha_max": 255,
+    "transparent_pixels": 1114305,
+    "total_pixels": 1572516,
+    "transparent_ratio": 0.708613,
+    "content_bounds": [
+      57,
+      21,
+      1127,
+      1193
+    ],
+    "sha256": "aee781a8907be66a4559c52ac24278ac193b11b2d842bc60fbc978c86c65df31",
+    "copied_bytes_unchanged": true
+  }
+]

@@ -1,0 +1,206 @@
+{
+  "tiles": {
+    "repository": "https://github.com/FluffyStuff/riichi-mahjong-tiles",
+    "commit": "26e127ba2117f45cdce5ea0225748cc0cfad3169",
+    "license": "CC0 1.0 / public domain",
+    "presentation": {
+      "upstream_files_modified": true,
+      "editor_metadata_removed": "Removed Inkscape export filenames containing upstream workstation paths. The artwork renders identically. The listed blob IDs refer to the original upstream files.",
+      "body_bounds": [
+        0,
+        0,
+        25,
+        36
+      ],
+      "symbol_bounds": [
+        2.25,
+        3,
+        20.5,
+        30
+      ],
+      "note": "2026-10-24: keep original tile body and back; inset existing symbols to increase white margins across all output and picker tiles. This is a local presentation adjustment, not a measured official broadcast value.",
+      "wind_ink": "#141414",
+      "wind_ink_note": "M.League H03/H15 reference: recolor the four existing blue wind glyphs to black in memory without changing the SVG glyph paths."
+    },
+    "files": [
+      {
+        "path": "Regular/Back.svg",
+        "git_blob": "4620342bd01540b7e575b7fed9186c844e9f7946"
+      },
+      {
+        "path": "Regular/Chun.svg",
+        "git_blob": "831b9c0a089553b3a0b88ce3f1e7e0abd3825227"
+      },
+      {
+        "path": "Regular/Front.svg",
+        "git_blob": "034879030ad4bb22078da8c47619bd762d3fa0ea"
+      },
+      {
+        "path": "Regular/Haku.svg",
+        "git_blob": "12d1d75a188818b7c298574fb612d974f8d9c865"
+      },
+      {
+        "path": "Regular/Hatsu.svg",
+        "git_blob": "4d7f37d6d95b1b1dc61889c466bf97501862ae94"
+      },
+      {
+        "path": "Regular/Man1.svg",
+        "git_blob": "1673e3630dcc664943883ebe5b0735bee5abede9"
+      },
+      {
+        "path": "Regular/Man2.svg",
+        "git_blob": "bb9e3cda2039db1f4f56d5227ec9f4f41e0fcb8e"
+      },
+      {
+        "path": "Regular/Man3.svg",
+        "git_blob": "544ae471994b9c4ff216ec477b1a7fed2d50abbd"
+      },
+      {
+        "path": "Regular/Man4.svg",
+        "git_blob": "1facb4736da8863a4314fd49b0b2d6f7d40f7fdf"
+      },
+      {
+        "path": "Regular/Man5-Dora.svg",
+        "git_blob": "af337270cdd6733bf8dba58e646e76fbe86449ab"
+      },
+      {
+        "path": "Regular/Man5.svg",
+        "git_blob": "ac99fee9ba6a92b607d3b69181101cf68975025a"
+      },
+      {
+        "path": "Regular/Man6.svg",
+        "git_blob": "4b611e312bcb0446c161335d758bb2c25baac028"
+      },
+      {
+        "path": "Regular/Man7.svg",
+        "git_blob": "714afea73e9151a79d5229c6de376df82382528c"
+      },
+      {
+        "path": "Regular/Man8.svg",
+        "git_blob": "6dcdf8946bf248838f5505420033bcd907935057"
+      },
+      {
+        "path": "Regular/Man9.svg",
+        "git_blob": "9ad115d6d2f68cd3b1b466d1b0739e7763324802"
+      },
+      {
+        "path": "Regular/Nan.svg",
+        "git_blob": "c8e247a979f020d6602d2cdd742f4986885e3249"
+      },
+      {
+        "path": "Regular/Pei.svg",
+        "git_blob": "65176e16f80c027c3c6296742808e9d5ece4477b"
+      },
+      {
+        "path": "Regular/Pin1.svg",
+        "git_blob": "2dfebb470ad50688f5824405d0beeef8b15151c4"
+      },
+      {
+        "path": "Regular/Pin2.svg",
+        "git_blob": "8edba73642e68a63b68e2ac0960ae362a2d2174d"
+      },
+      {
+        "path": "Regular/Pin3.svg",
+        "git_blob": "dc48dfbcb6048aa62356106a4e46726d76fe6a87"
+      },
+      {
+        "path": "Regular/Pin4.svg",
+        "git_blob": "8f5551f1a46074694d3a5f88afec6ddaf15345eb"
+      },
+      {
+        "path": "Regular/Pin5-Dora.svg",
+        "git_blob": "8a7b30fa39bc13e06b2c6c64242c220d9d0e3457"
+      },
+      {
+        "path": "Regular/Pin5.svg",
+        "git_blob": "3255fd6c696104c044425caf764e1f50adce2750"
+      },
+      {
+        "path": "Regular/Pin6.svg",
+        "git_blob": "f0df00d6b7c9fe77744b238a512f02b12d1016c9"
+      },
+      {
+        "path": "Regular/Pin7.svg",
+        "git_blob": "92f8a393aa946393ee1127a6da107378533f742f"
+      },
+      {
+        "path": "Regular/Pin8.svg",
+        "git_blob": "f435bf298f072ee4356bb3f721037cff3b60a99a"
+      },
+      {
+        "path": "Regular/Pin9.svg",
+        "git_blob": "91ec6bf79934928f908aff86eeb05f9b2ca94c17"
+      },
+      {
+        "path": "Regular/Shaa.svg",
+        "git_blob": "393b3eeb92b5195176a57f170e28d2ffa42c7bb5"
+      },
+      {
+        "path": "Regular/Sou1.svg",
+        "git_blob": "9986c1a032f930f1a2d0150cb96bbe492a6c3545"
+      },
+      {
+        "path": "Regular/Sou2.svg",
+        "git_blob": "d8e9d2042b907f9a4cf24968c187b702f8f39976"
+      },
+      {
+        "path": "Regular/Sou3.svg",
+        "git_blob": "a620c3a6c661033488bbbad73a92b7ca05fdc403"
+      },
+      {
+        "path": "Regular/Sou4.svg",
+        "git_blob": "64488aea3f2744c3f0ff4795d40c1fe497e80d7c"
+      },
+      {
+        "path": "Regular/Sou5-Dora.svg",
+        "git_blob": "3c98457c320c8fa0d8b73ae2621e296e9cfba2df"
+      },
+      {
+        "path": "Regular/Sou5.svg",
+        "git_blob": "ae87331f9c9940876e94778f4e3c584e1d777567"
+      },
+      {
+        "path": "Regular/Sou6.svg",
+        "git_blob": "f6d32e73fa193f6c0b5a70354700396d734645ff"
+      },
+      {
+        "path": "Regular/Sou7.svg",
+        "git_blob": "4e6ce61b761d31812c66c72eb3c9c644068ca8e1"
+      },
+      {
+        "path": "Regular/Sou8.svg",
+        "git_blob": "cc76f3655424499a3f85010c6364d82f3f45e07b"
+      },
+      {
+        "path": "Regular/Sou9.svg",
+        "git_blob": "6632ebe1aa74c56b256f943212a71bd0300c587a"
+      },
+      {
+        "path": "Regular/Ton.svg",
+        "git_blob": "13a0cf4610d0d63b0a0a53a9e0e85011f003d6d9"
+      }
+    ]
+  },
+  "sticks": {
+    "repository": "https://github.com/hemisemidemipresent/riichinator",
+    "commit": "60768cc9aeb75a093e11af6c0df1b7182b8f2549",
+    "source": "screenshots/stick_example.png",
+    "git_blob": "65beb2af2220fa6f44c18c3dc94e47fe880a5c43",
+    "license": "MIT",
+    "processing": "Crop the two existing stick illustrations; remove connected white exterior pixels; no redrawing.",
+    "crops": {
+      "riichi": [
+        126,
+        80,
+        955,
+        172
+      ],
+      "honba": [
+        126,
+        260,
+        955,
+        352
+      ]
+    }
+  }
+}

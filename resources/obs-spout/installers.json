@@ -1,0 +1,18 @@
+[
+  {
+    "file": "OBS_Spout2_Plugin_Install_v1.13.0.exe",
+    "version": "1.13.0",
+    "compatibility": "OBS 32 系列",
+    "sha256": "8fbdc684cefab2f12fec2e2817b4f1082d9e42b0d4cf16f14bd9418f988d0473",
+    "source": "https://github.com/Off-World-Live/obs-spout2-plugin/releases/download/1.13.0/OBS_Spout2_Plugin_Install_v1.13.0.exe",
+    "release": "https://github.com/Off-World-Live/obs-spout2-plugin/releases/tag/1.13.0"
+  },
+  {
+    "file": "OBS_Spout2_Plugin_Install_v1.15.0.exe",
+    "version": "1.15.0",
+    "compatibility": "OBS 33 及以后",
+    "sha256": "b49480a6c1f0c41eb1881ba21a4356961b4ee8b75394a0793c6005285b2ee8c6",
+    "source": "https://github.com/Off-World-Live/obs-spout2-plugin/releases/download/1.15.0/OBS_Spout2_Plugin_Install_v1.15.0.exe",
+    "release": "https://github.com/Off-World-Live/obs-spout2-plugin/releases/tag/1.15.0"
+  }
+]

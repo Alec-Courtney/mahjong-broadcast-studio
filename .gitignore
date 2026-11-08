@@ -1,0 +1,71 @@
+# Local Python environments and build outputs
+/.venv/
+/.venv-recognition-export/
+__pycache__/
+*.py[cod]
+/build/
+/dist/
+*.spec
+/.cache/
+
+# Local event data, imported media and event artwork
+/data/
+/assets/imported/
+/SHOU_LEAGUE_SL_white.png
+/SHOU联盟 S2赛季标题卡.png
+/resources/branding/SHOU_LEAGUE_SL_white.png
+/.env
+/.env.*
+!/.env.example
+
+# Generated demo output. Source scenarios and the catalog are tracked.
+/demo-suite/library/
+/demo-suite/exports/
+/demo-suite/json/
+/demo-suite/portable/
+/demo-suite/manifest.json
+/demo-suite/validation.json
+
+# Local captures, reference media and packaged releases
+/deliverables/
+/previews/
+/reference/
+/resources/demo/portraits/*.png
+/resources/postmatch_audio/reference_music.wav
+/resources/recognition/mleague-*.jpg
+/resources/recognition/upstream-validation-*.png
+/resources/recognition/*.onnx
+/resources/recognition/*.pt
+/resources/recognition/samples/*.png
+/resources/recognition/samples/*.avi
+/resources/obs-spout/*.exe
+/resources/obs-spout/*.zip
+/resources/sticks/upstream-example.png
+/tests/fixtures/recognition/accuracy/*.jpg
+/MANIFEST.json
+
+# Disposable verification sessions
+/tests/tmp*/
+/tests/team-full-*/
+/tests/team-demo-portable-*/
+/tests/team-plan-*/
+/tests/live-control-*/
+/tests/inline-automation-*/
+/tests/inline-review-*/
+/tests/recognition-settings-*/
+/tests/source-editor-*/
+/tests/four-seat-*/
+/tests/four-source-review-*/
+/tests/corner-editor-*/
+/tests/managed-media-*/
+/tests/opening-*/
+/tests/tile-picker-*/
+/tests/automation-pipeline-*/
+/tests/.library*/
+/tests/*.log
+
+# Local editor and agent files
+/.idea/
+/.vscode/
+/.codex/
+/.agents/

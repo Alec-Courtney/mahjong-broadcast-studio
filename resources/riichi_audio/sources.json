@@ -1,0 +1,15 @@
+{
+  "kind": "original_synthesis",
+  "duration_seconds": 2.5,
+  "sample_frames": 120000,
+  "channels": 2,
+  "sample_width": 2,
+  "sample_rate": 48000,
+  "peak": 0.357421875,
+  "packaged_sha256": "3d38bb407e46c16d59ec43938df54005ad28225508b63cf94b34c4f99205e12b",
+  "asset": "resources/riichi_audio/riichi_declare.wav",
+  "active_window_seconds": [
+    0.46,
+    1.36
+  ]
+}
