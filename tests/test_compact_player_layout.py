@@ -44,7 +44,7 @@ class CompactPlayerLayoutTests(unittest.TestCase):
     def setUp(self):
         (ROOT/'.cache').mkdir(exist_ok=True)
         self.tmp = tempfile.TemporaryDirectory(prefix='compact-player-', dir=ROOT/'.cache')
-        self.model = Model(self.tmp.name, preferences_root=Path(self.tmp.name)/'preferences')
+        self.model = Model(self.tmp.name)
         self.model.settings.update(theme='mleague', show_overlays=True, show_melds=False,
                                    topmost=False, capture_bg='transparent',
                                    overlay_font_family='Microsoft YaHei', overlay_font_scale=1.)
@@ -174,6 +174,47 @@ class CompactPlayerLayoutTests(unittest.TestCase):
         self.assertEqual(self.manager.player_group_snapshot(),before)
         self.assertEqual(self.manager.capture_output_size(self.manager.players_capture),(1920,370))
         self.assertEqual(self.capture().size().toTuple(),(1920,370))
+
+    def test_highest_style_and_old_demo_presets_use_the_ml_capture_layout(self):
+        capture = self.manager.players_capture
+        expected = self.manager.player_group_snapshot()
+        handle = int(capture.winId())
+        self.model.setting('theme', 'saikouisen')
+        for version, row in ((7, None), (7, (104, 710, 432, 438, 348)),
+                             (0, (10, 460, 317, 305, 237)), (7, (10, 460, 317, 305, 242))):
+            with self.subTest(version=version, row=row):
+                self.model.settings['broadcast_canvas_version'] = version
+                windows = self.model.settings['windows']
+                for index in range(4):
+                    key = f'player{index}'
+                    windows.pop(key, None)
+                    if row:
+                        x, y, step, width, height = row
+                        windows[key] = [x + index*step, y, width, height]
+                self.manager.restore_geometry()
+                self.manager.on_display()
+                self.assertEqual(self.manager.player_group_snapshot(), expected)
+                self.assertEqual(capture.geometry(), QRect(0, 710, 1920, 370))
+                self.assertEqual(self.manager.capture_output_size(capture), (1920, 370))
+                self.assertEqual(int(capture.winId()), handle)
+
+    def test_switching_styles_preserves_a_custom_capture_and_refits_standings(self):
+        self.manager.set_player_group(10, 460, 305, 12, settings_patch={'player_side_padding': 12.})
+        self.manager.set_bottom_mode('individual')
+        capture = self.manager.players_capture
+        capture_geometry = capture.geometry()
+        seats = self.manager.player_group_snapshot()
+        standings = self.manager.windows['standings']
+        ml_standings_geometry = standings.geometry()
+        for theme in ('saikouisen', 'mleague'):
+            with self.subTest(theme=theme):
+                self.model.setting('theme', theme)
+                self.assertEqual(capture.geometry(), capture_geometry)
+                self.assertEqual(self.manager.player_group_snapshot(), seats)
+                self.assertEqual(standings.geometry(), self.manager.bottom_bounds().toAlignedRect())
+        self.assertEqual(standings.geometry(), ml_standings_geometry)
+        self.manager.restore_geometry()
+        self.assertEqual(self.manager.player_group_snapshot(), seats)
 
 
 if __name__ == '__main__':

@@ -329,7 +329,7 @@ class OverlayManager:
   for index in range(1,4):bounds=bounds.united(QRectF(self.windows[f'player{index}'].geometry()))
   # Whitespace belongs to the capture canvas. Scaling all artwork to create
   # margins made every card smaller again after its physical size was chosen.
-  body=PLAYER_LAYOUT.body_bounds(self.model.settings.get('theme'))
+  body=PLAYER_LAYOUT.body_bounds()
   left=min(self.windows[f'player{i}'].x()+body.left()*self.windows[f'player{i}'].width()/438 for i in range(4))
   right=max(self.windows[f'player{i}'].x()+body.right()*self.windows[f'player{i}'].width()/438 for i in range(4))
   center=(left+right)/2
@@ -980,23 +980,29 @@ class OverlayManager:
    previous={f'player{i}':[round(canvas.x()+(140+i*408)*factor),round(canvas.y()+710*factor),round(438*factor),round(348*factor)] for i in range(4)}
    if all(self._same_geometry(players[key],previous[key]) for key in player_keys):
     players={key:[round(value) for value in defaults[key]] for key in player_keys}
-  if version==5 and self.model.settings.get('theme')!='saikouisen':
+  if 5<=version<8:
    canvas=reference_canvas();factor=canvas.width()/1920
    previous={f'player{i}':[round(canvas.x()+(104+i*432)*factor),round(canvas.y()+710*factor),round(438*factor),round(348*factor)] for i in range(4)}
    if all(self._same_geometry(players[key],previous[key]) for key in player_keys):
     players={key:[round(value) for value in defaults[key]] for key in player_keys}
-  if version<7 and self.model.settings.get('theme')!='saikouisen':
+  if version<7:
    canvas=reference_canvas();factor=canvas.width()/1920
    previous={f'player{i}':[round(canvas.x()+(32+i*468)*factor),round(canvas.y()+710*factor),round(438*factor),round(348*factor)] for i in range(4)}
    if all(self._same_geometry(players[key],previous[key]) for key in player_keys):
     players={key:[round(value) for value in defaults[key]] for key in player_keys}
-  if version<6 and self.model.settings.get('theme')!='saikouisen' and all(self._same_geometry(players[key],defaults[key]) for key in player_keys):
+  if version<8:
+   # Bundled demos used a smaller row, with both the old and corrected seat heights.
+   height=players['player0'][3]
+   if height in (237,242) and all(self._same_geometry(players[key],(10+317*i,460,305,height))
+                                for i,key in enumerate(player_keys)):
+    players={key:[round(value) for value in defaults[key]] for key in player_keys}
+  if version<6 and all(self._same_geometry(players[key],defaults[key]) for key in player_keys):
    if self.model.settings.get('player_side_padding',6.)==6.:self.model.settings['player_side_padding']=2.3
   if version<1:
    for key,geometry in list(saved.items()):
     if key not in player_keys and key in legacy_defaults and self._same_geometry(geometry,[round(value) for value in legacy_defaults[key]]):saved.pop(key,None)
   saved.update(players)
-  self.model.settings['broadcast_canvas_version']=max(7,version)
+  self.model.settings['broadcast_canvas_version']=max(8,version)
   from qualification_presentation import fixed_sidebar_geometry
   saved['qualification']=fixed_sidebar_geometry(self.model.settings,defaults['qualification'])
   config=self.model.state.get('broadcast',{}).get('config',{})
@@ -1036,9 +1042,8 @@ class OverlayManager:
   x,y=canvas.x(),canvas.y()
   values={'round':(x+40*factor,y+8*factor,self.base_size('round')[0]*.85*factor,self.base_size('round')[1]*.85*factor)}
   player_width=438*factor;player_height=self.base_size('player')[1]*factor
-  theme=self.model.settings.get('theme')
-  step=432 if theme=='saikouisen' else 468
-  origin=(PLAYER_CAPTURE_SIZE[0]-3*step)/2-PLAYER_LAYOUT.body_bounds(theme).center().x()
+  step=468
+  origin=(PLAYER_CAPTURE_SIZE[0]-3*step)/2-PLAYER_LAYOUT.body_bounds().center().x()
   values.update({f'player{i}':(x+(origin+i*step)*factor,y+710*factor,player_width,player_height) for i in range(4)})
   width=1920*factor
   values['yaku']=(x,y+(1060-1920*SIZES['yaku'][1]/SIZES['yaku'][0])*factor,width,width*SIZES['yaku'][1]/SIZES['yaku'][0])
@@ -1213,7 +1218,8 @@ class OverlayManager:
   return bounds
  def _sync_bottom_geometry(self,force=False):
   if 'standings' not in self.windows:return
-  signature=tuple((w.x(),w.y(),w.width(),w.height(),w.base) for w in (self.windows[f'player{i}'] for i in range(4)))
+  players=(self.windows[f'player{i}'] for i in range(4))
+  signature=(self.model.settings.get('theme'),tuple((w.x(),w.y(),w.width(),w.height(),w.base) for w in players))
   enabled=self.enabled.get('standings',False) or self.settlement_window()=='standings'
   if enabled and (force or not self._bottom_was_enabled or signature!=self._bottom_player_signature):
    self.windows['standings'].setGeometry(self.bottom_bounds().toAlignedRect())

@@ -122,8 +122,6 @@ def _settings(visible, show_yaku=False):
         'standings': [20, 588, 1240, 108], 'statistics': [40, 60, 1200, 600],
         'chart': [0, 0, 1280, 720], 'yaku': [20, 530, 1240, 148],
     }
-    for i in range(4):
-        windows['player' + str(i)] = [10 + i * 317, 460, 305, 237]
     return dict(theme='saikouisen', locked=False, topmost=False, capture_bg='transparent', speed=1.,
                 windows=windows, commentary_auto=True, commentary_auto_geometry=windows['commentary'][:], layout_version=7, visible={k: k in visible for k in KEYS},
                 show_yaku=show_yaku, show_overlays=True, language='zh_CN', broadcast_scene='table')

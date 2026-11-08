@@ -148,7 +148,7 @@ class OBSCaptureTests(unittest.TestCase):
         self.model.save()
         reopened=Model(self.model.path)
         self.assertEqual({key:reopened.settings['windows'][key] for key in expected},expected)
-        self.assertEqual(reopened.settings['broadcast_canvas_version'],7)
+        self.assertEqual(reopened.settings['broadcast_canvas_version'],8)
         self.assertEqual((self.model.state,self.model.undo),(state,undo))
 
     def test_offscreen_player_group_moves_together(self):
