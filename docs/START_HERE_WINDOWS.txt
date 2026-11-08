@@ -1,0 +1,34 @@
+Mahjong Broadcast Studio
+
+简体中文
+1. 解压整个 Windows ZIP 到有写入权限的个人文件夹。
+2. 双击 MahjongOverlayStudio.exe。保留同目录的 _internal 文件夹。
+3. 点击「赛事管理 → 赛事库」，选择「【演示】M.League 团队积分赛」并点击「打开选中赛事」。
+4. 从「排名与结果」查看成绩。要在 OBS 中试播，勾选「显示播出窗口」，添加窗口捕获「麻将UI · 四家选手」。
+5. 导入其他赛制时，在「赛事库」点击「导入完整赛事 JSON」，选择 demo-suite 下的文件。
+
+首次运行会在 EXE 同级创建 data，保存赛事、进度和全局设置。导入素材后会按需创建同级的 assets/imported。迁移前可从「备份与说明」导出完整赛事。
+界面语言可在「系统设置 → 界面语言」选择简体中文或日本語。
+MIT 许可见 LICENSE。运行库条款见 licenses/WINDOWS_RUNTIME_NOTICES.md。选手肖像说明见 demo-suite/PHOTO_NOTICE.md。其他素材来源见 _internal/docs/ORIGINAL_THIRD_PARTY_NOTICES.md。
+
+English
+1. Extract the entire Windows ZIP to a folder you can write to.
+2. Double-click MahjongOverlayStudio.exe and keep the _internal folder beside it.
+3. In Event Management → Event Library (赛事管理 → 赛事库), open 【演示】M.League 团队积分赛 with 打开选中赛事.
+4. View standings under 排名与结果. For OBS, enable 显示播出窗口 and use Window Capture on 麻将UI · 四家选手.
+5. To try the other events, click 导入完整赛事 JSON in the event library and choose a file from demo-suite.
+
+On first launch, the app creates data beside the executable for events, progress, and global settings. Imported media is saved to assets/imported as needed. Export a full event backup before moving it.
+The interface supports Simplified Chinese and Japanese. Switch in 系统设置 → 界面语言.
+See LICENSE for the project license, licenses/WINDOWS_RUNTIME_NOTICES.md for runtime terms, and demo-suite/PHOTO_NOTICE.md for portrait credits. Other credits are in _internal/docs/ORIGINAL_THIRD_PARTY_NOTICES.md.
+
+日本語
+1. Windows 用 ZIP 全体を書き込み可能なフォルダーに展開します。
+2. MahjongOverlayStudio.exe をダブルクリックします。同じ場所に _internal フォルダーを残してください。
+3. 大会一覧（赛事管理 → 赛事库）で 【演示】M.League 团队积分赛 を選び、打开选中赛事 で開きます。
+4. 排名与结果 で順位を確認します。OBS では 显示播出窗口 をオンにして、麻将UI · 四家选手 をウィンドウキャプチャします。
+5. ほかの大会を試すには、导入完整赛事 JSON を押し、demo-suite フォルダーから JSON を選びます。
+
+初回起動時に EXE と同じ場所に data が作成され、大会データ、進行状況、全体設定が保存されます。取り込んだ素材は必要に応じて assets/imported に保存されます。移行前に大会をバックアップしてください。
+初期画面は簡体字中国語です。「系统设置 → 界面语言」で「日本語」を選び、「保存」で切り替えられます。
+プロジェクトのライセンスは LICENSE、ランタイムは licenses/WINDOWS_RUNTIME_NOTICES.md、選手写真は demo-suite/PHOTO_NOTICE.md を参照してください。その他の出典は _internal/docs/ORIGINAL_THIRD_PARTY_NOTICES.md に記載しています。

@@ -390,6 +390,7 @@ class EventWorkspaceDialog(SettingsWindow):
         return widget.item(index,0).data(Qt.ItemDataRole.UserRole) if index>=0 and widget.item(index,0) else None
     def build_library(self):
         page=self.page();page.addWidget(QLabel('打开赛事，继续上次的比赛和设置'))
+        page.addWidget(note('首次使用可双击列表中的「【演示】」赛事，也可点「导入完整赛事 JSON」选择 demo-suite 文件夹里的示例。计分与试播步骤见「备份与说明」。'))
         self.library_events = {}
         self.library=table(['赛事名称','赛制','选手','已确认半庄','状态']);self.library.setMinimumHeight(235);page.addWidget(self.library)
         self.library.cellDoubleClicked.connect(lambda *_:self.open_selected())
@@ -1567,9 +1568,13 @@ class EventWorkspaceDialog(SettingsWindow):
         path,_=QFileDialog.getSaveFileName(self,'导出赛程表',str(self.export_dir()/(safe_name(self.model.event['name'])+'-赛程.xlsx')),'Excel (*.xlsx)')
         if path:self.run(lambda:reports.export_schedule_xlsx(self.model.state,self.model.event,path),'彩色赛程表已保存')
     def build_backup(self):
-        page=self.page();page.addWidget(button('导出完整赛事 JSON（含照片）',self.backup_event));page.addWidget(button('导入为另一个独立赛事',self.import_event))
+        page=self.page()
+        page.addWidget(note('练习计分时，先打开演示赛事并返回导播台。在「计分」选择和牌者、和牌方式与番符，荣和还要选择放铳者。核对预览后点「提交结算」。本局结束后点「下一局」，半庄结束后在「半庄管理」记录积分。'))
+        page.addWidget(note('要接入 OBS，请在「赛事设置 → 画面与设备 → 播出窗口」点击「导出 OBS 窗口捕获场景」，再在 OBS 的「场景集合 → 导入」选择导出的文件。'))
+        page.addWidget(button('导出完整赛事 JSON（含照片）',self.backup_event));page.addWidget(button('导入为另一个独立赛事',self.import_event))
         page.addWidget(button('前往赛事设置文件',lambda:self.select_settings_category('rules')))
-        page.addWidget(note('自动保存目录：data/events/赛事编号/。完整JSON包含规则、名册、照片、比赛进度、榜单配置与淘汰赛程。跨电脑搬移建议导出完整JSON；Excel和图片用于公布成绩。'))
+        page.addWidget(note('自动保存目录为 data/events/赛事编号/。完整赛事 JSON 包含规则、名册、比赛进度、榜单配置与淘汰赛程，可用于跨电脑搬移。'))
+        page.addWidget(note('完整备份会嵌入已选用的照片、队徽、标题卡、背景和音乐。分享备份前请核对个人信息和素材授权。只公布成绩时可导出 Excel 或图片。'))
         self.location=QLabel();self.location.setWordWrap(True);self.location.setProperty('i18n_literal',True);page.addWidget(self.location);page.addStretch()
     def backup_event(self):
         path,_=QFileDialog.getSaveFileName(self,'备份完整赛事',str(self.export_dir()/(safe_name(self.model.event['name'])+'.json')),'JSON (*.json)')

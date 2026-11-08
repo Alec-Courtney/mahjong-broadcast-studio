@@ -1,4 +1,4 @@
-# Mahjong Overlay Studio
+# Mahjong Broadcast Studio
 
 [简体中文](README.md) · [English](README.en.md) · **日本語**
 
@@ -6,14 +6,30 @@
 
 ## クイックスタート
 
-Windows に Python 3.10 以降の対応バージョンをインストールし、プロジェクトフォルダーで起動用ファイルをダブルクリックします。
+### Windows ポータブル版をダウンロード
 
-| 起動用ファイル | 用途 |
-| --- | --- |
-| [`START-Windows.cmd`](START-Windows.cmd) | 配信操作画面と大会一覧を開きます。Mリーグの選手名簿を使った内蔵デモ（「【演示】M.League 团队积分赛」）で操作を試せます。 |
-| [`START-UI-Only.cmd`](START-UI-Only.cmd) | 配信操作画面を単独で起動し、専用のローカル作業領域を使用します。 |
+**[Windows x64 ZIP をダウンロード](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.0-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [プレビュー版のリリースノート](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.0-preview)
 
-初回起動時にプロジェクト専用の Python 環境を作成し、`PySide6-Essentials` と `mahjong` をインストールします。手動での点数入力、大会管理、OBS 用の出力ウィンドウ、成績表は、この基本環境で利用できます。[基本依存関係](requirements.txt)
+1. ZIP 全体を書き込み可能なフォルダーに展開します。例えば `Documents\MahjongStudio` に置きます。
+2. `MahjongOverlayStudio.exe` をダブルクリックします。同じ場所に `_internal` を残してください。初回の操作は `START-HERE.txt` に記載しています。
+
+初回起動時に EXE と同じ場所に `data/` が作成され、大会、進行状況、全体設定が保存されます。取り込んだ素材は必要に応じて `assets/imported/` に保存されます。ポータブル版には手動での点数計算、大会管理、OBS 出力に必要なランタイムが同梱されています。牌認識デモはソース版で必要に応じて設定できます。
+
+### ソースから起動
+
+1. GitHub の **Code → Download ZIP** から取得し、ZIP 全体を短いパスのフォルダーに展開します。例えば `Documents\MahjongStudio` に置きます。
+2. 64 ビット版の Python 3.10〜3.15 をインストールします。動作確認には Python 3.13 を使用しました。[Python の公式ダウンロード](https://www.python.org/downloads/windows/)
+3. 展開したフォルダーで [`START-Windows.cmd`](START-Windows.cmd) をダブルクリックします。初回はインターネット経由で基本コンポーネントを取得します。手動での点数入力、大会管理、OBS への出力に利用できます。
+
+配信操作だけを独立した作業領域で試すには、ソースフォルダーの [`START-UI-Only.cmd`](START-UI-Only.cmd) を使います。
+
+初期画面は簡体字中国語です。「系统设置 → 界面语言」で「日本語」を選び、「保存」を押すと切り替わります。
+
+### 内蔵デモを試す
+
+1. 大会管理の大会一覧（「赛事管理 → 赛事库」）で **【演示】M.League 团队积分赛** を選び、「打开选中赛事」で開きます。
+2. 順位と結果（「排名与结果」）で個人・チームの順位や過去の成績を確認します。配信操作画面の点数推移（「点数走势」）で配信画面を試せます。
+3. OBS で試す場合は配信ウィンドウ（「显示播出窗口」）を表示し、ウィンドウキャプチャの対象に **麻将UI · 四家选手** を選びます。[OBS の設定手順](docs/OBS_WINDOW_CAPTURE.md)
 
 ## デモ大会をインポートする
 
@@ -23,7 +39,7 @@ Windows に Python 3.10 以降の対応バージョンをインストールし�
 - 個人リーグは16名で、終了した20半荘の成績、個人順位、選手の統計を確認できます。[個人リーグの JSON](demo-suite/individual-league-demo.json)
 - 個人トーナメントは16名・3ラウンドで、終了した28半荘の記録があります。対戦表から各ラウンドの勝ち上がりと優勝者を確認できます。[個人トーナメントの JSON](demo-suite/individual-knockout-demo.json)
 
-選手名、チーム名、選手写真は Mリーグ公式サイトに基づきます。点数、局の記録、統計は、点数計算エンジンでシミュレーションした対局に基づきます。[名簿と選手写真の出典](resources/demo/roster.json)
+独立したデモ大会で、選手名、チーム名、選手写真は Mリーグ公式サイトに基づきます。点数、局の記録、統計は、点数計算エンジンでシミュレーションした対局に基づきます。[デモの選手写真について](demo-suite/PHOTO_NOTICE.md)
 
 ## 手動で配信する
 

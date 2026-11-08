@@ -1,4 +1,4 @@
-# Mahjong Overlay Studio
+# Mahjong Broadcast Studio
 
 **简体中文** · [English](README.en.md) · [日本語](README.ja.md)
 
@@ -6,14 +6,28 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 
 ## 快速开始
 
-在 Windows 安装 Python 3.10 或更高的兼容版本，然后在项目目录双击对应脚本。
+### 下载 Windows 便携版
 
-| 入口 | 用途 |
-| --- | --- |
-| [`START-Windows.cmd`](START-Windows.cmd) | 启动导播台和赛事库。可打开内置的「【演示】M.League 团队积分赛」。 |
-| [`START-UI-Only.cmd`](START-UI-Only.cmd) | 启动独立导播台，使用单独的本地工作区。 |
+**[下载 Windows x64 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.0-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [预览版说明](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.0-preview)
 
-首次启动会创建本项目的 Python 环境并安装基础依赖 `PySide6-Essentials` 和 `mahjong`。手动计分、赛事管理、OBS 播出窗口和报表均可在基础环境中使用。[基础依赖](requirements.txt)
+1. 把整个 ZIP 解压到可写的个人文件夹，例如 `文档\MahjongStudio`。
+2. 双击 `MahjongOverlayStudio.exe`。保留同目录的 `_internal` 文件夹。包内附有 `START-HERE.txt`。
+
+程序首次运行时在 EXE 同级创建 `data/`，保存赛事、进度和全局设置。导入的素材按需存入同级的 `assets/imported/`。便携版自带手动计分、赛事管理和 OBS 画面输出所需的运行库。牌面识别 Demo 可从源码按需安装。
+
+### 从源码启动
+
+1. 在 GitHub 点击 **Code → Download ZIP**，把整个压缩包解压到个人目录。文件夹名称可以简短一些，例如 `文档\MahjongStudio`。
+2. 安装 64 位 Python 3.10–3.15。初次使用可选本项目验证过的 Python 3.13。[Python 官方下载](https://www.python.org/downloads/windows/)
+3. 在解压后的目录双击 [`START-Windows.cmd`](START-Windows.cmd)。首次运行联网下载基础组件，之后可直接双击启动。手动计分、赛事管理和 OBS 画面使用基础组件。
+
+只使用独立导播台时，可从源码目录双击 [`START-UI-Only.cmd`](START-UI-Only.cmd)。
+
+### 先试一场演示
+
+1. 点击 **赛事管理 → 赛事库**，选中 **【演示】M.League 团队积分赛**，点击 **打开选中赛事**。
+2. 在 **排名与结果** 查看个人榜、团队榜及历史成绩。回到导播台，可点击 **点数走势** 查看播出画面。
+3. 要试接 OBS，勾选 **显示播出窗口**，在 OBS 添加 **窗口捕获**，选择 **麻将UI · 四家选手**。[OBS 捕获步骤](docs/OBS_WINDOW_CAPTURE.md)
 
 ## 导入演示赛事
 
@@ -23,7 +37,7 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 - 个人积分赛包含 16 人和 20 个已归档半庄，可查看个人榜单、历场结果和技术统计。[个人赛 JSON](demo-suite/individual-league-demo.json)
 - 个人淘汰赛包含 16 人、3 轮和 28 个已归档半庄，可查看对阵、各轮晋级和最终结果。[淘汰赛 JSON](demo-suite/individual-knockout-demo.json)
 
-三套演示使用 M.League 官网的队伍、选手名和肖像。比分、逐局记录和技术统计来自计分引擎的模拟对局。[名册与肖像来源](resources/demo/roster.json)
+三套为独立演示，使用 M.League 官网的队伍、选手名和肖像。比分、逐局记录和技术统计来自计分引擎的模拟对局。[演示照片说明](demo-suite/PHOTO_NOTICE.md)
 
 ## 手动导播
 

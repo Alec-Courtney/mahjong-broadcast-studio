@@ -2,6 +2,7 @@
 
 ## 开始使用
 
+- [下载、首次启动和演示操作](../README.md#快速开始)
 - [导播台操作](LIVE_CONSOLE.md)
 - [赛事管理、赛程与榜单](EVENT_WORKSPACE_GUIDE.md)
 - [系统与赛事设置入口](SETTINGS_NAVIGATION.md)

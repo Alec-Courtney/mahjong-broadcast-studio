@@ -1,0 +1,2 @@
+# Keep CRLF in Windows scripts even when GitHub archives the repository.
+*.cmd -text whitespace=cr-at-eol

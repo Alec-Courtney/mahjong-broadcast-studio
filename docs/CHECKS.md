@@ -8,6 +8,13 @@
 
 日常检查覆盖听胡牌、自动化草稿、新帧与停帧保护、四位置识别、手牌修正、导播操作、数字步进和关键赛事隔离。广泛修改赛事、存储或公共控件后使用 `--full`；计分引擎另外运行 `node --test tests/original-engine.test.cjs`。
 
+## Windows 包的发布前核验
+
+1. 用干净源码运行 [`BUILD-Windows.cmd`](../BUILD-Windows.cmd)。已有构建目录时，先把它移到别处。运行后的程序目录可能保存赛事和导入素材。
+2. 从刚构建的目录制作候选 ZIP。解压到另一个目录测试启动、内置演示、完整赛事导入和 OBS 捕获。检查 ZIP 中的赛事和素材均来自发行清单，运行库来自构建所用的 CPython 和项目依赖。
+3. 检查包内的 `START-HERE.txt`、`LICENSE`、`licenses/` 和 `demo-suite/PHOTO_NOTICE.md`。对应运行库和选手肖像的使用范围分别按各自条款核对。[运行库许可](../resources/licenses/WINDOWS_RUNTIME_NOTICES.md) · [演示肖像说明](../demo-suite/PHOTO_NOTICE.md)
+4. 将候选 ZIP 作为 GitHub Releases 附件上传。更新三个 README 的下载链接后，从公开页面重新下载，核对 SHA-256 并用解压后的程序复查首次启动。
+
 ## 当前保留工具
 
 - `tests/render_inline_automation_review.py --theme light`：当前原生导播台的浅色验收；省略参数为深色。输出到 `previews/checks/operator-console/`。

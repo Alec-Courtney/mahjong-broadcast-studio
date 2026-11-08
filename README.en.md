@@ -1,4 +1,4 @@
-# Mahjong Overlay Studio
+# Mahjong Broadcast Studio
 
 [简体中文](README.md) · **English** · [日本語](README.ja.md)
 
@@ -6,14 +6,30 @@ A Windows desktop app for riichi mahjong broadcasts and OBS overlays, built with
 
 ## Quick start
 
-Install a compatible version of Python 3.10 or newer on Windows, then run a launcher from the project folder.
+### Download the portable Windows build
 
-| Launcher | Use |
-| --- | --- |
-| [`START-Windows.cmd`](START-Windows.cmd) | Open the broadcast desk and event library. You can try the built-in M.League roster demo (`【演示】M.League 团队积分赛`). |
-| [`START-UI-Only.cmd`](START-UI-Only.cmd) | Open the broadcast desk with a separate local workspace. |
+**[Download Windows x64 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.0-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [Preview release notes](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.0-preview)
 
-On first launch, the script creates a Python environment for the project and installs `PySide6-Essentials` and `mahjong`. Manual scoring, event management, OBS output windows, and reports work with these base dependencies. [Base requirements](requirements.txt)
+1. Extract the whole ZIP to a folder you can write to, such as `Documents\MahjongStudio`.
+2. Double-click `MahjongOverlayStudio.exe`. Keep `_internal` beside it and see `START-HERE.txt` for the first steps.
+
+On first launch, the app creates `data/` beside the executable for events, progress, and global settings. It saves imported media under `assets/imported/` as needed. The portable build includes the runtime for manual scoring, event management, and OBS output. The optional tile-recognition demo can be set up from source.
+
+### Run from source
+
+1. On GitHub, choose **Code → Download ZIP**. Extract the whole archive to a folder with a short path, such as `Documents\MahjongStudio`.
+2. Install 64-bit Python 3.10–3.15. Python 3.13 is the version tested here. [Official Python downloads](https://www.python.org/downloads/windows/)
+3. Double-click [`START-Windows.cmd`](START-Windows.cmd) in the extracted folder. The first launch downloads the base components. They cover manual scoring, event management, and OBS output.
+
+For a separate broadcast desk workspace, use [`START-UI-Only.cmd`](START-UI-Only.cmd) from the source folder.
+
+The interface supports Simplified Chinese and Japanese. Choose a language in **System Settings → Interface Language** (`系统设置 → 界面语言`).
+
+### Try the built-in demo
+
+1. Open **Event Management → Event Library** (`赛事管理 → 赛事库`), select **【演示】M.League 团队积分赛**, and click **Open Selected Event** (`打开选中赛事`).
+2. Visit **Rankings and Results** (`排名与结果`) for individual and team standings and match history. Back at the desk, use the score chart (`点数走势`) to try a broadcast view.
+3. To try OBS, enable the broadcast windows (`显示播出窗口`) and add a **Window Capture** source for **麻将UI · 四家选手**. [OBS capture steps](docs/OBS_WINDOW_CAPTURE.md)
 
 ## Import a demo event
 
@@ -23,7 +39,7 @@ In **Event Management → Event Library** (`赛事管理 → 赛事库`), click 
 - The individual league has 16 players and 20 archived hanchan, with player standings, match results, and player statistics. [Individual league JSON](demo-suite/individual-league-demo.json)
 - The individual knockout has 16 players, 3 rounds, and 28 archived hanchan. Follow the bracket through to the champion. [Knockout JSON](demo-suite/individual-knockout-demo.json)
 
-The demos use team names, player names, and portraits from the M.League website. The scoring engine simulates the matches and provides the scores, hand records, and statistics. [Roster and portrait sources](resources/demo/roster.json)
+These independent demos use team names, player names, and portraits from the M.League website. The scoring engine simulates the matches and provides the scores, hand records, and statistics. [Demo portrait notice](demo-suite/PHOTO_NOTICE.md)
 
 ## Manual broadcast workflow
 
