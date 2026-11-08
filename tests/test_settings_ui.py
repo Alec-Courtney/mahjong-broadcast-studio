@@ -12,15 +12,62 @@ from PySide6.QtWidgets import QMessageBox
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
-from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QPalette
-from PySide6.QtCore import QEvent, QObject
+from PySide6.QtWidgets import QApplication, QComboBox, QScrollArea, QSpinBox, QVBoxLayout, QWidget
+from PySide6.QtGui import QPalette, QWheelEvent
+from PySide6.QtCore import QEvent, QObject, QPoint, QPointF, Qt
 from console import Console, LayoutDialog
 from i18n import localize_widgets, set_language
 from model import Model
 from overlays import OverlayManager
+from settings_window import SettingsWindow
 
 APP = QApplication.instance() or QApplication([])
+
+
+class SettingsInputTests(unittest.TestCase):
+    def test_wheel_scrolls_settings_without_editing_and_still_adjusts_live_inputs(self):
+        def wheel(widget, delta):
+            local = widget.rect().center()
+            event = QWheelEvent(QPointF(local), QPointF(widget.mapToGlobal(local)),
+                                QPoint(), QPoint(0, delta), Qt.MouseButton.NoButton,
+                                Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.NoScrollPhase, False)
+            APP.sendEvent(widget, event)
+
+        settings = SettingsWindow()
+        desk = QWidget()
+        desk.setProperty('liveDeskInputs', True)
+        try:
+            settings.resize(360, 240)
+            body = QWidget()
+            body.setMinimumHeight(600)
+            fields = QVBoxLayout(body)
+            spin = QSpinBox()
+            spin.setValue(5)
+            combo = QComboBox()
+            combo.addItems(['甲', '乙'])
+            fields.addWidget(spin)
+            fields.addWidget(combo)
+            fields.addStretch()
+            scroll = QScrollArea()
+            scroll.setWidget(body)
+            QVBoxLayout(settings).addWidget(scroll)
+            settings.show()
+            APP.processEvents()
+            spin.setFocus()
+            wheel(spin, 120)
+            wheel(combo, -120)
+            self.assertEqual((spin.value(), combo.currentIndex()), (5, 0))
+            scroll.verticalScrollBar().setValue(0)
+            wheel(scroll.viewport(), -120)
+            self.assertGreater(scroll.verticalScrollBar().value(), 0)
+            live_spin = QSpinBox(desk)
+            live_spin.setValue(5)
+            wheel(live_spin, 120)
+            self.assertEqual(live_spin.value(), 6)
+        finally:
+            settings.deleteLater()
+            desk.deleteLater()
+            APP.sendPostedEvents(None, QEvent.Type.DeferredDelete)
 
 
 class SettingsTests(unittest.TestCase):
@@ -93,7 +140,11 @@ class SettingsTests(unittest.TestCase):
         APP.installEventFilter(shows)
         editor = None
         try:
-            editor = LayoutDialog(self.ui)
+            sample = Path(self.tmp.name) / 'recognition-sample.png'
+            sample.touch()
+            with patch.dict('recognition_settings._OFFLINE_SAMPLES',
+                            {'image': ('图片样例', sample, (0, 0, 1, 1))}, clear=True):
+                editor = LayoutDialog(self.ui)
             self.assertEqual(shows.widgets, [])
             editor.show()
             APP.processEvents()

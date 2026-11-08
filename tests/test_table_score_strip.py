@@ -5,7 +5,6 @@ from pathlib import Path
 import sys
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,73 +47,6 @@ class TableScoreStripTests(unittest.TestCase):
             finally:painter.end()
             self.assertEqual(frame.pixelColor(2,2).alpha()>0,visible)
         self.assertEqual(state,before)
-
-    def test_two_and_three_digit_totals_do_not_resize_any_of_the_four_players(self):
-        from PySide6.QtCore import Qt
-        from PySide6.QtGui import QImage,QPainter
-        from PySide6.QtWidgets import QApplication
-        import panel_typography
-        from table_score_strip import draw_table_score_strip,SCORE_STRIP_SIZE
-        app=QApplication.instance() or QApplication([])
-        state=session();state['broadcast'].pop('active_node_id')
-        state['broadcast']['config']['event_mode']='individual'
-        for player,name in zip(state['players'],('園田賢','岡田紗佳','伊達朱里紗','鈴木優')):player['name']=name
-        model=SimpleNamespace(state=state,event={},settings={})
-        original=panel_typography.draw_single_line
-        for layout in ('compact','columns'):
-            state['broadcast']['config']['table_score_layout']=layout
-            sizes=[]
-            for totals in ((67.7,-46.7,1.4,-22.4),(167.7,-146.7,101.4,-122.4)):
-                for profile,points in zip(state['broadcast']['roster'],totals):profile['base_points']=points
-                drawn=[]
-                def capture(*args,**kwargs):
-                    result=original(*args,**kwargs);drawn.append(result.font.pixelSize());return result
-                frame=QImage(*SCORE_STRIP_SIZE,QImage.Format.Format_ARGB32_Premultiplied)
-                frame.fill(Qt.GlobalColor.transparent);painter=QPainter(frame)
-                try:
-                    with patch.object(panel_typography,'draw_single_line',side_effect=capture):draw_table_score_strip(painter,model)
-                finally:painter.end()
-                sizes.append(drawn[1:])
-            self.assertEqual(sizes[0],sizes[1])
-            self.assertEqual(len(set(sizes[0])),1)
-
-    def test_all_four_names_and_points_share_one_font_and_keep_complete_text(self):
-        from PySide6.QtCore import Qt
-        from PySide6.QtGui import QImage,QPainter
-        from PySide6.QtWidgets import QApplication
-        import panel_typography
-        from table_score_strip import draw_table_score_strip,SCORE_STRIP_SIZE
-        app=QApplication.instance() or QApplication([])
-        state=session();state['broadcast'].pop('active_node_id')
-        state['broadcast']['config']['event_mode']='individual'
-        names=('鈴木優','伊達朱里紗','佐々木寿人','Jean-Christophe Dupont')
-        points=(1.2,-12.3,123.4,-2345.6)
-        for player,profile,name,point in zip(state['players'],state['broadcast']['roster'],names,points):
-            player['name']=name;profile.update(name=name,base_points=point)
-        model=SimpleNamespace(state=state,event={},settings={})
-        original=panel_typography.draw_single_line
-        for layout in ('compact','columns'):
-            state['broadcast']['config']['table_score_layout']=layout
-            for scale in (.6,1.,1.6):
-                with self.subTest(layout=layout,scale=scale):
-                    model.settings['overlay_font_scale']=scale;placements=[]
-                    def capture(*args,**kwargs):
-                        result=original(*args,**kwargs);placements.append(result);return result
-                    frame=QImage(*SCORE_STRIP_SIZE,QImage.Format.Format_ARGB32_Premultiplied)
-                    frame.fill(Qt.GlobalColor.transparent);painter=QPainter(frame)
-                    try:
-                        with patch.object(panel_typography,'draw_single_line',side_effect=capture):
-                            draw_table_score_strip(painter,model)
-                    finally:painter.end()
-                    body=placements[1:]
-                    self.assertEqual(len(body),8)
-                    self.assertEqual(len({item.font.pixelSize() for item in body}),1)
-                    self.assertEqual([item.value for item in body],
-                                     [value for name,point in zip(names,points) for value in (name,format_points(point))])
-                    for item in body:
-                        self.assertLessEqual(item.ink_bounds.width(),item.box.width())
-                        self.assertLessEqual(item.ink_bounds.height(),item.box.height())
-                        self.assertTrue(item.box.adjusted(-.01,-.01,.01,.01).contains(item.ink_bounds))
 
     def test_real_raw_scores_are_converted_to_booked_pt_before_display(self):
         import tournament

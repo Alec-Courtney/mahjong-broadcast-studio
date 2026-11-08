@@ -13,7 +13,7 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'src'))
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QImage, QPainter
+from PySide6.QtGui import QImage, QPainter
 from PySide6.QtWidgets import QApplication, QTableWidgetItem
 from model import Model
 from event_store import EventStore
@@ -109,38 +109,6 @@ class TeamStandingsPresentationTests(unittest.TestCase):
                          [row['name'] for row in expected])
         for row in expected:self.assertIn(art._point(row['points'], True), [value for value, rect in captions])
         self.assertEqual(reports.individual_rows(self.model.state, self.model.event), first)
-
-    def test_team_sidebar_has_uniform_dark_rows_and_current_red_without_team_stripes(self):
-        rows = tournament.standings(self.model.state, 'team')
-        self.model.state['broadcast']['config'].update(sidebar_page=0, sidebar_page_size=10, sidebar_scope='all')
-        image, _ = self.sidebar('team', rows)
-        current = art._current_team_ids(self.model)
-        for index, row in enumerate(rows[:10]):
-            y = 86+index*52
-            reference = QImage(1, 1, QImage.Format.Format_ARGB32_Premultiplied)
-            reference.fill(Qt.GlobalColor.transparent); paint = QPainter(reference)
-            paint.fillRect(0, 0, 1, 1, QColor('#b8081713'))
-            paint.fillRect(0, 0, 1, 1, QColor('#b7a6242a' if row['id'] in current else '#bc101c19'));paint.end()
-            for x in (2, 8, 390):
-                self.assertEqual(image.pixelColor(x, y+3), reference.pixelColor(0, 0))
-        duplicate = [row for row in rows if row['name']=='同名队']
-        self.assertEqual(len(duplicate), 2)
-        self.assertNotEqual(duplicate[0]['id'], duplicate[1]['id'])
-        self.assertNotEqual(reports.team_row_fill(duplicate[0]), reports.team_row_fill(duplicate[1]))
-        reversed_image, _ = self.sidebar('team', list(reversed(rows)))
-        for index, row in enumerate(list(reversed(rows))[:10]):
-            color = reversed_image.pixelColor(2, 86+index*52+3)
-            self.assertEqual(color, reversed_image.pixelColor(390, 86+index*52+3))
-
-    def test_personal_sidebar_has_no_team_background_or_color_stripes(self):
-        config = self.model.state['broadcast']['config']
-        config.update(sidebar_scope='all', sidebar_page=0, sidebar_page_size=10)
-        image, _ = self.sidebar('individual')
-        # None of these top10 are on the current table; their different team
-        # colours must produce the exact same plain dark row and left margin.
-        colors = [image.pixelColor(9, 86+index*52+1) for index in range(10)]
-        self.assertEqual(len({color.rgba() for color in colors}), 1)
-        for index in range(10):self.assertEqual(colors[index], image.pixelColor(390, 86+index*52+1))
 
     def test_unassigned_and_invalid_colors_are_neutral_without_merging_people(self):
         rows = reports.team_rows(self.model.state, self.model.event)

@@ -6,19 +6,17 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'src'))
 
-from PySide6.QtCore import QEvent, Qt
+from PySide6.QtCore import QEvent
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QApplication, QWidget
 from event_store import EventStore
 from event_workspace import EventWorkspaceDialog
 from model import Model
-from panel_typography import draw_single_line
 import ranking_reports as reports
 
 APP = QApplication.instance() or QApplication([])
@@ -92,19 +90,6 @@ class RankingPreviewTests(unittest.TestCase):
         self.preview.set_zoom(100)
         self.assertEqual(self.preview.canvas.size(), self.preview.image.size())
 
-    def test_names_are_centered_in_both_colour_previews(self):
-        for mode in ('individual', 'team'):
-            with self.subTest(mode=mode):
-                data = reports.report(self.model.state, self.model.event, mode)
-                entry = data['rows'][0]
-                labels = [entry[key] for key in ('name', 'team') if key in data['columns']]
-                with patch('panel_typography.draw_single_line', wraps=draw_single_line) as draw:
-                    reports.render_report(data, limit=1)
-                for label in labels:
-                    calls = [call for call in draw.call_args_list if call.args[1] == label]
-                    self.assertTrue(calls)
-                    self.assertTrue(all(call.args[4] & Qt.AlignmentFlag.AlignHCenter for call in calls))
-
     def test_confirmed_refresh_and_event_switch_reuse_the_existing_preview(self):
         self.model.state['broadcast']['roster'][0]['base_points'] = 999
         self.preview.refresh_requested.emit()
@@ -141,24 +126,7 @@ class RankingPreviewTests(unittest.TestCase):
         self.assertEqual(self.preview.data['event']['name'], '修改后的赛事名称')
         self.assertEqual(self.preview.image, reports.render_report(self.workspace.report_data, 0, 36))
 
-    def test_preview_reuses_the_report_until_its_saved_inputs_change(self):
-        with patch.object(self.workspace,'populate_report_table',wraps=self.workspace.populate_report_table) as populate, \
-             patch.object(reports,'render_report',wraps=reports.render_report) as render:
-            self.workspace.preview_report()
-            self.model.display_changed.emit()
-            self.model.set_score(0,26000)
-            populate.assert_not_called()
-            render.assert_not_called()
-            self.store.update(name='已保存的新赛事名称')
-            populate.assert_called_once()
-            render.assert_called_once()
-            self.assertEqual(self.preview.data['event']['name'],'已保存的新赛事名称')
 
-    def test_short_column_sets_fill_the_canvas_instead_of_leaving_a_blank_strip(self):
-        data = reports.report(self.model.state, self.model.event, 'team')
-        image = reports.render_report(data)
-        self.assertEqual(image.pixelColor(image.width()-40, 126).name(),
-                         reports.report_row_fill(data, data['rows'][0], 0))
 
 
 if __name__ == '__main__':

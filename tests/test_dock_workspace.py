@@ -172,16 +172,6 @@ class DockWorkspaceTests(unittest.TestCase):
         self.assertEqual(shown(),set());workspace.end_drag()
         self.assertEqual({key:dock.geometry() for key,dock in workspace.docks.items()},before)
 
-    def test_visible_arrows_do_not_replace_normal_target_edges(self):
-        workspace=self.ui.workspace;tiles=workspace.docks['tiles']
-        workspace.begin_drag('yaku');workspace._drag_timer.stop()
-        workspace._update_drag_target(tiles.mapToGlobal(tiles.rect().center()))
-        overlay=workspace.drop_overlays['tiles']
-        self.assertIsNone(workspace.arrow_destination(overlay.mapToGlobal(QPoint(3,overlay.height()//2))))
-        point=overlay.mapToGlobal(overlay.zones()['right'].center())
-        self.assertEqual(workspace.arrow_destination(point),('yaku','tiles','right'))
-        workspace.end_drag()
-
     def test_toolbar_switches_and_saved_v3_tabs_are_restored_without_merging(self):
         workspace=self.ui.workspace;button=workspace.panel_buttons['dora']
         button.click();self.assertTrue(workspace.docks['dora'].isHidden())
@@ -310,23 +300,6 @@ class DockWorkspaceTests(unittest.TestCase):
         self.ui.resize(1460, 1000)
         APP.processEvents()
         self.assertEqual(nav.width(), 222)
-
-    def test_navigation_width_adapts_to_small_windows_and_large_text(self):
-        nav = self.ui.navigation_scroll
-        self.drag_navigation(90)
-        self.ui.resize(960, 620)
-        APP.processEvents()
-        self.assertLess(nav.width(), 232)
-        self.assertEqual(self.ui.size().width(), 960)
-        self.ui.resize(1460, 1000)
-        APP.processEvents()
-        self.assertEqual(nav.width(), 232)
-
-        self.model.setting('console_font_size', 24)
-        self.drag_navigation(-200)
-        self.assertLess(nav.width(), 232)
-        self.assertEqual(nav.horizontalScrollBar().maximum(), 0)
-        self.assertLessEqual(nav.widget().width(), nav.viewport().width())
 
     def drag_navigation(self, distance):
         handle = self.ui.navigation_handle

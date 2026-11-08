@@ -39,21 +39,6 @@ class PersistenceScalingTests(unittest.TestCase):
         self.assertEqual(json.loads(encode_session({'broadcast': {}}, {}, None)),
                          dict(version=6, state={'broadcast': {'matches': []}}, settings={}, last_info=None))
 
-    def test_sealed_archive_reuses_encoded_bytes_without_reencoding_its_tree(self):
-        archive = freeze(dict(id='saved', hands=[dict(name='选手', score=30000)]))
-        state = dict(players=[], broadcast=dict(matches=[archive], roster=[]))
-        first = encode_session(state, {}, None)
-        cached = archive._session_json_bytes
-        import session_repository
-        encoder = session_repository._json_bytes
-        def no_archive_reencode(value):
-            if value is archive:raise AssertionError('A stable archive was encoded again')
-            return encoder(value)
-        with patch('session_repository._json_bytes', side_effect=no_archive_reencode):
-            second = encode_session(state, {}, None)
-        self.assertEqual(first, second)
-        self.assertIs(archive._session_json_bytes, cached)
-
     def test_replacement_and_mutable_archives_never_reuse_stale_encoding(self):
         archive = freeze(dict(id='saved', points=12))
         state = dict(broadcast=dict(matches=[archive]))

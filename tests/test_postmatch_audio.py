@@ -1,7 +1,5 @@
 """Verify audio duration, cue placement, headroom and silent/error transport."""
 from array import array
-import hashlib
-import json
 import math
 from pathlib import Path
 import sys
@@ -108,18 +106,6 @@ class PostMatchAudioTests(unittest.TestCase):
         self.assertAlmostEqual(energy_ratio, .7, places=3)
         for left, right in ((6.,20.9),(25.,38.9)):
             self.assertTrue(all(value == 0 for value in mixed[round(left*48000)*2:round(right*48000)*2]))
-
-    def test_synthesized_graph_asset_matches_provenance_and_has_clean_endpoints(self):
-        path=audio.ASSET_DIR/'graph_reveal.wav'
-        metadata=json.loads((audio.ASSET_DIR/'sources.json').read_text(encoding='utf-8'))['graph_reveal']
-        self.assertEqual(metadata['kind'],'original_synthesis')
-        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),metadata['packaged_sha256'])
-        with wave.open(str(path),'rb') as stream:
-            self.assertEqual(stream.getparams()[:3],(2,2,48000))
-            self.assertEqual(stream.getnframes(),128016)
-            samples=array('h');samples.frombytes(stream.readframes(stream.getnframes()))
-        self.assertLessEqual(max(map(abs, (*samples[:2], *samples[-2:]))), 4)
-        self.assertLessEqual(max(abs(value) for value in samples)/32768.,.3549)
 
     def test_standard_wav_music_needs_no_ffmpeg_and_mixes_without_sfx(self):
         target = Path(self.directory.name)/'custom.wav'

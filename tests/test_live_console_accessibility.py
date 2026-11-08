@@ -52,15 +52,8 @@ class LiveConsoleAccessibilityTests(unittest.TestCase):
                 reveal(widget,APP)
                 self.assertTrue(visibility(widget,self.ui)['visible'],name)
 
-    def test_large_desk_keeps_all_live_controls_accessible_without_hidden_tabs(self):
+    def test_live_controls_are_reachable_on_large_and_small_desks(self):
         self.assert_accessible(1460,1000)
-        palette=self.ui.workspace.docks['tiles']
-        self.assertLess(palette.width(),self.ui.width()*.6)
-        self.assertEqual(palette.x(),self.ui.workspace.docks['yaku'].x())
-        quick=self.ui.workspace.docks['quick']
-        self.assertLessEqual(self.ui.workspace.docks['players'].y()-quick.geometry().bottom(),12)
-
-    def test_small_desk_scrolls_vertically_to_every_live_control_without_side_clipping(self):
         self.assert_accessible(960,620)
 
     def test_four_score_editors_update_the_corresponding_seats(self):
@@ -75,15 +68,35 @@ class LiveConsoleAccessibilityTests(unittest.TestCase):
                 self.assertEqual(self.model.state['players'][index]['score'],expected)
 
     def test_round_honba_and_pot_inputs_update_the_live_state(self):
+        self.ui.resize(960,620)
+        self.model.setting('console_font_size',24)
+        for widget in (self.ui.round,self.ui.honba,self.ui.pot,self.ui.quick_actions['draw']):
+            reveal(widget,APP)
+            self.assertTrue(visibility(widget,self.ui)['visible'])
         self.ui.round.setCurrentIndex(self.ui.round.findData(4))
         self.ui.honba.setValue(3);self.ui.pot.setValue(2)
         self.assertEqual((self.model.state['roundIndex'],self.model.state['honba'],self.model.state['pot']),(4,3,2000))
 
-    def test_dora_target_and_tile_button_add_the_displayed_bonus_tile(self):
-        count=len(self.model.dora_tiles);self.ui.focus_tile_target('dora')
-        self.ui.tile_buttons['4m'].click()
-        self.assertEqual(len(self.model.dora_tiles),count+1);self.assertEqual(self.model.dora_tiles[-1],'4m')
-        self.assertTrue(self.ui.target_buttons['dora'].isChecked())
+    def test_detached_tile_palette_sends_tiles_to_the_selected_editor(self):
+        dock = self.ui.workspace.docks['tiles']
+        dock.setFloating(True)
+        dock.resize(300, 250)
+        settle(APP)
+        before = list(self.model.dora_tiles)
+        self.ui.focus_tile_target('dora')
+        QTest.mouseClick(self.ui.tile_buttons['4m'], Qt.MouseButton.LeftButton)
+        self.assertEqual(self.model.dora_tiles, before + ['4m'])
+        self.ui.focus_tile_target('waits')
+        QTest.mouseClick(self.ui.tile_buttons['0p'], Qt.MouseButton.LeftButton)
+        self.assertEqual(self.ui.wait_draft()['waits'], ['5p'])
+        self.assertEqual(self.model.state['players'][0]['waits'], [])
+        self.ui.focus_tile_target('win_tile')
+        QTest.mouseClick(self.ui.tile_buttons['0p'], Qt.MouseButton.LeftButton)
+        self.assertEqual(self.ui.win_tile.text(), '0p')
+        self.ui.focus_tile_target('ura')
+        QTest.mouseClick(self.ui.tile_buttons['1z'], Qt.MouseButton.LeftButton)
+        self.assertEqual(self.ui.ura_indicators.text(), '1z')
+        self.assertEqual(self.model.state['phase'], 'playing')
 
     def test_wait_editor_submits_only_to_its_selected_player(self):
         self.ui.select(2);self.ui.focus_tile_target('waits');self.ui.tile_buttons['3m'].click()
@@ -276,7 +289,9 @@ class LiveConsoleAccessibilityTests(unittest.TestCase):
         self.ui.clear_draft();self.assertTrue(self.ui.called_tile_hint.isHidden())
 
     def test_ron_controls_settle_the_selected_winner_and_loser(self):
-        self.ui.winner.setCurrentIndex(2);self.ui.loser.setCurrentIndex(3)
+        self.ui.winner.buttons[2].click();self.ui.loser.buttons[3].click()
+        self.assertEqual(self.ui.selected,2)
+        self.assertFalse(self.ui.loser.buttons[2].isEnabled())
         self.ui.han.setValue(3);self.ui.ron.click()
         self.assertIn(self.model.state['players'][2]['name'],self.ui.win_preview_label.text())
         self.assertIn(self.model.state['players'][3]['name'],self.ui.win_preview_label.text())

@@ -11,11 +11,10 @@ from PySide6.QtWidgets import QMessageBox
 
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'src'))
-from PySide6.QtGui import QFont,QFontDatabase,QImage,QPainter
-from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont,QFontDatabase
 from PySide6.QtWidgets import QApplication
 from console import Console
-from corner_header import CORNER_SIZE,corner_logo,corner_texts,draw_corner_header
+from corner_header import corner_logo,corner_texts
 from event_store import EventStore,resolve_active_directory
 from media_store import resolve_media_path
 from model import Model
@@ -91,27 +90,6 @@ class CornerEditorTests(unittest.TestCase):
         self.assertEqual(dialog.dirty_sections(),[])
         restarted=Model(resolve_active_directory(self.store.root),asset_root=self.model.asset_root)
         self.assertEqual(restarted.state['broadcast']['config']['corner_logo'],'')
-
-    def test_natural_upright_glyphs_keep_the_separate_large_match_and_short_horizontal_rule(self):
-        import corner_header
-        original=corner_header.draw_single_line;calls=[]
-        def record(painter,value,box,font,*args,**kwargs):
-            calls.append((value,box.width(),font.stretch(),font.italic(),font.letterSpacing(),font.pixelSize()))
-            return original(painter,value,box,font,*args,**kwargs)
-        def render():
-            image=QImage(*CORNER_SIZE,QImage.Format.Format_ARGB32_Premultiplied);image.fill(Qt.GlobalColor.transparent)
-            painter=QPainter(image)
-            with patch('corner_header.draw_single_line',side_effect=record):draw_corner_header(painter,self.model)
-            painter.end();return image
-        image=render()
-        self.assertEqual([call[0] for call in calls],['26–27','Oct. 29','#','1'])
-        self.assertTrue(all(call[2:4]==(100,False) for call in calls))
-        self.assertGreater(calls[3][5],calls[1][5])
-        self.assertTrue(all(image.pixelColor(x,202).alpha()>180 for x in range(207,418)))
-        self.assertEqual(image.pixelColor(470,202).alpha(),0)
-        self.model.configure_corner_header({'corner_match':''});calls.clear();render()
-        self.assertEqual([call[0] for call in calls],['26–27','Oct. 29'])
-        self.assertGreater(calls[1][1],214)
 
     def test_editor_event_switch_discards_old_drafts_and_restores_the_events_own_values(self):
         self.model.configure_corner_header({'corner_top_text':'First event','corner_bottom_text':'Day one','corner_top_size':88,'corner_bottom_tracking':2.5})

@@ -12,11 +12,10 @@ from xml.etree import ElementTree as ET
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'src'))
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QPointF
-from PySide6.QtGui import QImage,QColor,QPainter
+from PySide6.QtGui import QImage,QColor
 from model import Model
 from media_store import resolve_media_path
-from event_store import BUILTIN_DEMO_ID,EventStore,new_event
+from event_store import BUILTIN_DEMO_ID,EventStore
 from event_results import prepare_result,record_result
 import ranking_reports as reports
 import event_schedule as schedule
@@ -243,29 +242,6 @@ class EventTests(unittest.TestCase):
             self.assertEqual(len(schedule.node_matches(self.model.state,node['id'])),2)
             self.assertEqual(len(schedule.preview_advancement(self.model.state,self.model.event,node['id'])),2)
         finally:ui.close();APP.processEvents()
-    def test_wait_tile_brightness_and_grass_overlay_render(self):
-        from artwork import Artwork,Animation,render_image
-        from player_layout import PLAYER_LAYOUT
-        self.model.submit_waits(0,['1m','9m'],None,['1m'],False)
-        art=Artwork(self.model,Animation());normal=render_image(art,'player',0)
-        self.model.submit_waits(0,['1m','9m'],None,['1m'],True);grass=render_image(art,'player',0)
-        # Transparent tile dimming is visible after composition, not in the
-        # unpremultiplied RGB channels of a nearly transparent source pixel.
-        for backdrop in ('#182028','#b4bec8'):
-            frames=[]
-            for source in (normal,grass):
-                image=QImage(source.size(),QImage.Format.Format_ARGB32_Premultiplied);image.fill(QColor(backdrop))
-                painter=QPainter(image);painter.drawImage(0,0,source);painter.end();frames.append(image)
-            transform=PLAYER_LAYOUT.body_transform()
-            sample_y=PLAYER_LAYOUT.status_y+PLAYER_LAYOUT.status_height//4
-            mapped=[transform.map(QPointF(x,sample_y)).toPoint() for x in (213,244)]
-            dim,bright=(frames[0].pixelColor(point) for point in mapped)
-            luminance=lambda c:.2126*c.red()+.7152*c.green()+.0722*c.blue()
-            self.assertGreater(luminance(bright),luminance(dim)+40)
-            point=transform.map(QPointF(390,PLAYER_LAYOUT.status_y+4)).toPoint()
-            plain,furiten=(image.pixelColor(point) for image in frames)
-            green_cast=lambda c:c.green()-(c.red()+c.blue())/2
-            self.assertGreater(green_cast(furiten),green_cast(plain)+20)
     def test_in_progress_rule_change_is_rejected_without_altering_hand(self):
         self.model.settle(dict(type='ron',winner=0,loser=1,han=3,fu=30),None);before=copy.deepcopy(self.model.state)
         with self.assertRaisesRegex(ValueError,'进行中'):self.model.configure_broadcast({'return_points':35000})

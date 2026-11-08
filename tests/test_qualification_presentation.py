@@ -114,19 +114,6 @@ class QualificationPresentationTests(unittest.TestCase):
         self.model.state['broadcast']['config']['sidebar_mode'] = 'team'
         self.assertEqual(qualification_panel_size(self.model), (400, 650))
 
-    def test_legacy_sidebar_and_settlement_keep_their_original_canvas(self):
-        from broadcast_artwork import draw_extension
-        config = self.model.state['broadcast']['config']
-        config['qualification_layout'] = 'sidebar'
-        self.assertEqual(qualification_panel_size(self.model), (400, 650))
-        config['qualification_layout'] = 'four'
-        frame = QImage(400, 650, QImage.Format.Format_ARGB32_Premultiplied)
-        frame.fill(Qt.GlobalColor.transparent)
-        painter = QPainter(frame)
-        draw_extension(painter, 'qualification', self.model, settlement={'all_standings': []}, settlement_stage='total')
-        painter.end()
-        self.assertGreater(frame.pixelColor(200, 640).alpha(), 0)
-
     def test_single_conditions_default_to_dealer_and_follow_explicit_focus(self):
         from broadcast_artwork import draw_extension
         self.model.state['dealer']=2

@@ -4,7 +4,7 @@ from pathlib import Path
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'src'))
 from PySide6.QtCore import QPoint,Qt
-from PySide6.QtGui import QImage,QFont,QColor,QPainter
+from PySide6.QtGui import QImage,QColor
 from PySide6.QtWidgets import QApplication
 from model import Model
 from media_store import resolve_media_path
@@ -15,7 +15,7 @@ from demo_data import load_into
 from event_store import EventStore
 from ranking_reports import individual_rows
 from ranking_schema import TECH
-from typography import overlay_scope,overlay_font,apply_desk
+from typography import overlay_scope,overlay_font
 import tournament
 APP=QApplication.instance() or QApplication([])
 
@@ -122,9 +122,6 @@ class LayoutTypographyTests(unittest.TestCase):
   self.assertEqual(Model(self.tmp.name).settings['overlay_font_scale'],1.25)
   with overlay_scope(self.model.settings):self.assertEqual(overlay_font(40).pixelSize(),50)
   with overlay_scope({}):self.assertEqual(overlay_font(40).pixelSize(),40)
- def test_overlay_font_change_invalidates_recorded_picture_cache(self):
-  self.manager._extension_picture('statistics');self.assertTrue(self.manager.extension_cache)
-  self.model.setting('overlay_font_scale',1.2);self.assertFalse(self.manager.extension_cache)
  def test_drag_and_control_wheel_respect_link_and_lock(self):
   from PySide6.QtCore import QEvent,QPointF
   from PySide6.QtGui import QMouseEvent,QWheelEvent

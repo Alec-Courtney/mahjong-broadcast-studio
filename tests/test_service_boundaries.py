@@ -272,6 +272,10 @@ class ServiceBoundaryTests(unittest.TestCase):
         self.assertEqual((self.model.state, self.model.undo), (state, undo))
         target = self.directory / 'card-profiles.json'
         self.model.export_data(target)
+        portable = json.loads(target.read_text(encoding='utf-8'))
+        for key in ('player_card_style', 'saikouisen_card_style'):
+            portable['settings'][key].pop('typography_version')
+        target.write_text(json.dumps(portable), encoding='utf-8')
         restarted = Model(self.model.path)
         restarted.import_data(target)
         self.assertEqual(restarted.settings['theme'], 'saikouisen')

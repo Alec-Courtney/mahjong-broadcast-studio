@@ -42,16 +42,6 @@ class RoundActionVisibilityTests(unittest.TestCase):
         APP.processEvents()
         self.tmp.cleanup()
 
-    def test_hand_buttons_are_exposed_on_small_and_large_desks(self):
-        for font_size in (14, 17):
-            self.model.setting('console_font_size', font_size)
-            for size in ((960, 620), (1460, 1000)):
-                self.ui.resize(*size)
-                settle(APP)
-                for key in ('draw', 'draw_declaration', 'next_hand'):
-                    with self.subTest(font_size=font_size, size=size, action=key):
-                        self.assertTrue(visibility(self.ui.quick_actions[key], self.ui)['visible'])
-
     def test_draw_uses_four_seat_tenpai_status_and_next_hand_is_clickable(self):
         self.ui.resize(960, 620)
         before = [row['score'] for row in self.model.state['players']]

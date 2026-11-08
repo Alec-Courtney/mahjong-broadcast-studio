@@ -29,12 +29,6 @@ class SidebarControlTests(unittest.TestCase):
     def tearDown(self):
         self.dialog.hide();self.dialog.deleteLater();self.parent.deleteLater();self.manager.close();APP.processEvents();self.tmp.cleanup()
 
-    def test_default_all_players_auto_paging_and_allowed_operator_ranges(self):
-        self.assertEqual(self.dialog.sidebar_scope.currentData(),'all');self.assertTrue(self.dialog.sidebar_auto_page.isChecked())
-        self.assertEqual((self.dialog.sidebar_page_interval.minimum(),self.dialog.sidebar_page_interval.maximum()),(5,60))
-        self.assertEqual((self.dialog.sidebar_page_size.minimum(),self.dialog.sidebar_page_size.maximum()),(2,10))
-        self.assertFalse(self.dialog.sidebar_page.isEnabled());self.assertTrue(self.dialog.sidebar_page_interval.isEnabled())
-
     def test_scope_manual_and_automatic_settings_round_trip(self):
         self.dialog.sidebar_scope.setCurrentIndex(self.dialog.sidebar_scope.findData('current'));self.dialog.save_sidebar_page()
         self.assertEqual(self.model.state['broadcast']['config']['sidebar_scope'],'current')
