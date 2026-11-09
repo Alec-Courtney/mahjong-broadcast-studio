@@ -74,6 +74,8 @@ class SettingsDialog(RecognitionSettingsPage, SettingsWindow):
             self._appearance()
         self._broadcast()
         self._card_style()
+        self.card_editor.editing_style.currentIndexChanged.connect(self._card_style_selected)
+        self.player_style.currentIndexChanged.connect(self._broadcast_style_selected)
         self._windows()
         self._fonts()
         self._recognition()
@@ -326,6 +328,12 @@ class SettingsDialog(RecognitionSettingsPage, SettingsWindow):
                             preview=self.card_editor.preview)
         layout.addWidget(self.card_editor)
         layout.addStretch()
+
+    def _card_style_selected(self, *_):
+        selected(self.player_style, self.card_editor.editing_style.currentData())
+
+    def _broadcast_style_selected(self, *_):
+        selected(self.card_editor.editing_style, self.player_style.currentData())
 
     def _fonts(self):
         import artwork

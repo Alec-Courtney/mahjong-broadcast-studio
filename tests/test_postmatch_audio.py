@@ -107,6 +107,34 @@ class PostMatchAudioTests(unittest.TestCase):
         for left, right in ((6.,20.9),(25.,38.9)):
             self.assertTrue(all(value == 0 for value in mixed[round(left*48000)*2:round(right*48000)*2]))
 
+    def test_playback_uses_local_recordings_and_falls_back_individually(self):
+        folder = Path(self.directory.name) / 'local-cues'
+        graph = folder / 'postmatch_audio' / 'graph_reveal.wav'
+        layout = folder / 'postmatch_audio' / 'layout_sweep.wav'
+        player = audio.PostMatchAudio(cache_dir=folder / 'cache')
+        options = dict(chart_hold=0., stats_hold=0., music_enabled=False, sfx_volume=1.)
+        with patch.object(audio, 'LOCAL_REFERENCE_RESOURCES', folder):
+            bundled = player.prepare(**options)
+            self.assertIsInstance(bundled, Path, player.error)
+            stereo = array('h', [8192, -8192, -8192, 8192])
+            audio._write_pcm(graph, stereo * (round(2.667 * audio.SAMPLE_RATE) // 2))
+            graph_only = player.prepare(**options)
+            self.assertIsInstance(graph_only, Path, player.error)
+            self.assertNotEqual(graph_only, bundled)
+            audio._write_pcm(layout, stereo * (round(1.6 * audio.SAMPLE_RATE) // 2))
+            recovered = player.prepare(**options)
+            self.assertIsInstance(recovered, Path, player.error)
+            self.assertNotEqual(recovered, graph_only)
+            with wave.open(str(recovered), 'rb') as track:
+                for start in (2., 6.087):
+                    track.setpos(round(start * audio.SAMPLE_RATE))
+                    self.assertEqual(track.readframes(2), stereo.tobytes())
+            layout.write_bytes(b'invalid recording')
+            self.assertEqual(player.prepare(**options), graph_only)
+            graph.write_bytes(b'invalid recording')
+            self.assertEqual(player.prepare(**options), bundled)
+            self.assertEqual(player.error, '')
+
     def test_standard_wav_music_needs_no_ffmpeg_and_mixes_without_sfx(self):
         target = Path(self.directory.name)/'custom.wav'
         with patch.object(audio.shutil, 'which', return_value=None):

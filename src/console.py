@@ -559,7 +559,7 @@ class Console(QMainWindow):
   panel=self.broadcast_panel();panel.show();panel.refresh_language();localize_widgets(panel);panel.raise_();panel.activateWindow()
  def error(self,message):self.status.setText(tr(message));QTimer.singleShot(6000,self.status,self.status.clear)
  def model_changed(self,before,after,kind):
-  if kind in ('manual_result','commentary'):
+  if kind in ('manual_result','commentary','delete_match_record'):
    # Another table's result must not rebuild an operator's in-progress inputs.
    self.refresh_quick_actions();return
   if kind=='import':
@@ -1213,7 +1213,7 @@ class Console(QMainWindow):
   if hasattr(self,'automation'):self.automation.close()
   self.workspace.dispose()
   if getattr(self,'event_workspace',None):
-   if getattr(self.event_workspace,'output',None):self.event_workspace.output._skip_close_save=True;self.event_workspace.output.close()
+   if getattr(self.event_workspace,'output',None):self.event_workspace.output.close()
    self.event_workspace.close()
   if getattr(self,'broadcast_dialog',None) and self.broadcast_dialog.isWindow():self.broadcast_dialog.close()
   if getattr(self,'corner_dialog',None):self.corner_dialog.close()

@@ -6,6 +6,7 @@ import copy
 import json
 import math
 import uuid
+from datetime import datetime
 from functools import lru_cache
 
 from event_penalties import net_results, penalty_totals, validate_penalties
@@ -230,11 +231,20 @@ def validate_broadcast(s):
         raise ValueError('本局标识无效')
     if not isinstance(b['hands'], list) or not isinstance(b['matches'], list) or len(b['hands']) > 10000 or len(b['matches']) > 10000:
         raise ValueError('赛事记录格式无效')
+    if not isinstance(b.get('result_discarded',False),bool):
+        raise ValueError('半庄成绩删除状态无效')
     mids = set()
     for m in b['matches']:
         if not isinstance(m, dict) or not isinstance(m.get('id'), str) or m['id'] in mids:
             raise ValueError('半庄记录ID重复或无效')
         mids.add(m['id'])
+        if 'recorded_at' in m:
+            try:
+                value = m['recorded_at']
+                if not isinstance(value, str) or len(value) > 64 or datetime.fromisoformat(value).utcoffset() is None:
+                    raise ValueError()
+            except (ValueError, TypeError):
+                raise ValueError('半庄记录时间无效') from None
         references=getattr(m,'_validated_archive_references',None)
         if references is not None:
             if not references.issubset(ids):raise ValueError('半庄选手不在名册中')
@@ -442,6 +452,7 @@ def _match_results(s, scores=None):
 
 def archive_match(s, committed=False):
     b = ensure_broadcast(s)
+    if committed:b.pop('result_discarded',None)
     snapshot = dict(id=s['id'], title=s.get('title', ''), committed=committed, hands=copy.deepcopy(b['hands']), results=_match_results(s),
                     seats=[p['id'] for p in s['players']], initial_scores=b['initial_scores'][:],
                     initial_players=copy.deepcopy(b['initial_players']), partial=b['partial'], config=copy.deepcopy(b['config']))
@@ -449,9 +460,17 @@ def archive_match(s, committed=False):
     index = next((i for i, m in enumerate(b['matches']) if m['id'] == s['id']), None)
     snapshot['profiles']=[dict(id=p['id'],name=p['name'],team=p.get('team',''),team_id=p.get('team_id',''),color=p.get('team_color','#377e72'),photo=p.get('photo',''),team_logo=p.get('team_logo','')) for p in s['players']]
     if index is None:
+        if committed:
+            from event_metadata import now
+            snapshot['recorded_at'] = now()
         b['matches'].append(snapshot)
     else:
         previous=b['matches'][index]
+        if 'recorded_at' in previous:
+            snapshot['recorded_at'] = previous['recorded_at']
+        elif committed and not previous.get('committed'):
+            from event_metadata import now
+            snapshot['recorded_at'] = now()
         if previous.get('committed') and previous.get('config'):snapshot['config']=copy.deepcopy(previous['config'])
         if previous.get('bracket_node_id'):snapshot['bracket_node_id']=previous['bracket_node_id']
         if 'penalties' in previous:snapshot['penalties']=previous['penalties']
@@ -742,7 +761,7 @@ def statistics(s, scope='all'):
             continue
         baseline = p.get('stats', p.get('baseline_stats', {})) if scope != 'match' else {}
         rows[p['id']] = dict(id=p['id'], name=p['name'], color=p.get('color', '#377e72'), team=p.get('team', ''), **{k: baseline.get(k, 0) for k in STAT_FIELDS})
-    hands = list(b['hands'])
+    hands = list(b['hands']) if scope == 'match' or not b.get('result_discarded') else []
     if scope != 'match':
         for m in b['matches']:
             if m['id'] != s['id']:

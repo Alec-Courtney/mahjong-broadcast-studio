@@ -1396,6 +1396,14 @@ class OverlayManager:
    self._clear_settlement();self._capture_settlement(before,after)
   elif kind in ('match_penalty','roster_management'):
    self._capture_settlement(before,after)
+  elif kind=='delete_match_record':
+   active=self.stage in ('settlement_hand','settlement_total','settlement_final')
+   self._clear_settlement()
+   self._capture_settlement(after,after)
+   self._last_final_archive=signature
+   self._standings_change=None
+   if active and not self._can_settle():
+    self.pending_win=False;self.pending_next=False;self.set_stage('table')
   elif kind in ('clear','restore','next_hand','start_match','new_match','import'):self._clear_settlement(restore_geometry=kind!='import')
   previous=before.get('broadcast',{}).get('config',{});current=after.get('broadcast',{}).get('config',{})
   if self.settlement_data and not current.get('settlement_enabled',True):

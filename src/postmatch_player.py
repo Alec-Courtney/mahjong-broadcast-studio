@@ -455,7 +455,7 @@ class PostMatchPlayback(QObject):
 
     def on_model_changed(self, before, after, kind):
         # Display settings may change during a frozen programme; changing the hand ends it.
-        if kind in ('import', 'clear', 'restore', 'start_match', 'new_match', 'next_hand'):
+        if kind in ('import', 'clear', 'restore', 'start_match', 'new_match', 'next_hand', 'delete_match_record'):
             if self.active or self.preparing or self.music_active or self.state == 'music_paused':
                 self.stop()
 

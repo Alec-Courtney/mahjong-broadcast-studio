@@ -103,6 +103,27 @@ class RankingPreviewTests(unittest.TestCase):
         self.assertIn('1 / 1', self.preview.page_label.text())
         self.assertEqual(self.preview.image, reports.render_report(self.workspace.report_data))
 
+    def test_broadcast_window_can_close_after_another_workspace_saves(self):
+        self.workspace.show_report()
+        output = self.workspace.output
+        errors = []
+        self.main.error = errors.append
+        try:
+            self.assertTrue(output.isVisible())
+            other = Model(self.model.path)
+            other.set_score(0, 31000)
+            session = self.model.path / 'session.json'
+            saved = session.read_bytes()
+            self.assertTrue(output.close())
+            self.assertFalse(output.isVisible())
+            self.assertEqual(errors, [])
+            self.assertEqual(session.read_bytes(), saved)
+            self.workspace.show_report()
+            self.assertIs(self.workspace.output, output)
+            self.assertTrue(output.isVisible())
+        finally:
+            output.deleteLater()
+
     def test_team_quota_does_not_highlight_individual_places(self):
         event = copy.deepcopy(self.model.event)
         event['qualification_count'] = 2

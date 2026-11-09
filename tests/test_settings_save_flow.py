@@ -104,6 +104,29 @@ class SettingsSaveFlowTests(unittest.TestCase):
         self.assertEqual(Model(self.model.path).settings['settings_font_size'], 18)
         self.assertEqual(self.dialog.dirty_sections(), [])
 
+    def test_output_style_and_other_drafts_apply_and_persist_per_event(self):
+        self.main.open_event_workspace(1)
+        workspace = self.main.event_workspace
+        workspace.ensure_event_settings()
+        workspace.select_settings_category('output')
+        editor = workspace.output_editor
+        editor.card_editor.editing_style.setCurrentIndex(1)
+        editor.show_melds.setChecked(False)
+        editor.bg.setCurrentIndex(editor.bg.findData('blue'))
+        editor.overlay_font_scale.setValue(125)
+        editor.split_fullscreen.setChecked(True)
+        first_id = self.model.event['id']
+        self.assertTrue(editor.save_changes(), editor.error.text())
+        expected = dict(theme='saikouisen', show_melds=False, capture_bg='blue',
+                        overlay_font_scale=1.25, split_fullscreen_windows=True)
+        for key,value in expected.items():
+            self.assertEqual(self.model.settings[key], value)
+            self.assertEqual(Model(self.model.path).settings[key], value)
+        self.store.create('独立样式赛事', 'individual_league')
+        self.assertEqual(self.model.settings['theme'], 'mleague')
+        self.store.open(first_id)
+        for key,value in expected.items():self.assertEqual(self.model.settings[key], value)
+
     def test_live_font_save_does_not_save_other_drafts_or_add_score_undo(self):
         undo = copy.deepcopy(self.model.undo)
         hold = self.model.settings['final_scores_hold']

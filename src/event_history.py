@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QDialog, QHeaderView, QLabel, QSplitter, QTabWidge
 
 from desk_theme import apply_theme
 from event_penalties import net_results
+from event_results import recorded_time
 from i18n import tr
 import ranking_reports as reports
 from ui_widgets import button, choice, item, note, row, table
@@ -62,6 +63,8 @@ class EventHistoryDialog(QDialog):
         detail = QWidget()
         details = QVBoxLayout(detail)
         details.setContentsMargins(8, 0, 0, 0)
+        self.record_time = note('')
+        details.addWidget(self.record_time)
         self.final_table = table(['名次', '选手', '队伍', '最终持点', '入账积分（pt）'])
         self.final_table.horizontalHeader().setStretchLastSection(False)
         self.final_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
@@ -91,6 +94,7 @@ class EventHistoryDialog(QDialog):
         self.final_table.setRowCount(0)
         self.hand_table.setRowCount(0)
         self.final_table.setVisible(match is not None)
+        self.record_time.setText(tr('记录时间')+'：'+recorded_time(match) if match else '')
         self.penalties_button.setEnabled(bool(match and match.get('penalties')))
         self.hand_table.setVisible(bool(match and match['hands']))
         if match is None:

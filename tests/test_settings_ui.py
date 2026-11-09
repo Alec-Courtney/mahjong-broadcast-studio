@@ -190,24 +190,53 @@ class SettingsTests(unittest.TestCase):
         self.dialog.reject()
         self.assertEqual(before, (self.model.state, self.model.settings, self.model.undo))
 
-    def test_both_card_styles_save_independently_without_switching_broadcast(self):
+    def test_both_card_styles_save_independently_and_selected_style_applies_on_save(self):
         editor = self.dialog.card_editor
         editor.font_size.setValue(21)
         editor.gap.setValue(9)
         editor.editing_style.setCurrentIndex(1)
         editor.font_size.setValue(17)
         editor.gap.setValue(4)
+        self.assertEqual(self.dialog.player_style.currentData(), 'saikouisen')
+        self.assertEqual(self.model.settings['theme'], 'mleague')
         state, undo = copy.deepcopy(self.model.state), copy.deepcopy(self.model.undo)
         self.dialog.apply()
         self.assertEqual(self.dialog.error.text(), '')
-        self.assertEqual(self.model.settings['theme'], 'mleague')
+        self.assertEqual(self.model.settings['theme'], 'saikouisen')
         self.assertEqual(self.model.settings['player_card_style']['text']['team']['size'], 21)
         self.assertEqual(self.model.settings['saikouisen_card_style']['text']['team']['size'], 17)
         self.assertEqual(self.model.state, state)
         self.assertEqual(self.model.undo, undo)
         restored = Model(self.tmp.name).settings
+        self.assertEqual(restored['theme'], 'saikouisen')
         self.assertEqual(restored['player_card_style'], editor.value('mleague'))
         self.assertEqual(restored['saikouisen_card_style'], editor.value('saikouisen'))
+
+    def test_style_only_selection_is_dirty_persistent_and_renders_on_live_capture(self):
+        from PySide6.QtGui import QImage, QPainter
+        import time
+        editor = self.dialog.card_editor
+        editor.editing_style.setCurrentIndex(1)
+        self.assertIn('settings', self.dialog.dirty_sections())
+        self.assertEqual(self.model.settings['theme'], 'mleague')
+        self.assertTrue(self.dialog.apply(), self.dialog.error.text())
+        self.assertEqual(self.model.settings['theme'], 'saikouisen')
+        self.assertEqual(self.model.settings['player_style_version'], 1)
+        self.assertEqual(self.dialog.dirty_sections(), [])
+        image = QImage(500, 500, QImage.Format.Format_ARGB32_Premultiplied)
+        painter = QPainter(image)
+        try:
+            with patch('legacy_player_artwork.draw_player') as legacy:
+                self.manager.art.player(painter, 0, time.monotonic())
+                self.assertTrue(legacy.called)
+        finally:painter.end()
+        self.assertEqual(Model(self.tmp.name).settings['theme'], 'saikouisen')
+        self.dialog.reload_drafts()
+        self.assertEqual(editor.editing_style.currentData(), 'saikouisen')
+        self.dialog.player_style.setCurrentIndex(0)
+        self.assertEqual(editor.editing_style.currentData(), 'mleague')
+        self.assertTrue(self.dialog.apply())
+        self.assertEqual(Model(self.tmp.name).settings['theme'], 'mleague')
 
     def test_incomplete_color_input_stays_editable_and_blocks_save(self):
         editor = self.dialog.card_editor

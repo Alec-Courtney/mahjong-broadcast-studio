@@ -1,8 +1,8 @@
-"""Independent write boundary for results from other tables.
+"""Independent write boundary for event results, penalties and deletions.
 
-Other-table corrections must survive a director's table undo/redo. Their
-records are rebased into table snapshots, without creating or clearing a live
-table undo action. Persistence succeeds before the new state is published.
+Other-table corrections and record deletions survive table undo/redo. Result
+changes are rebased into table snapshots without creating a table undo action.
+Persistence succeeds before the new state is published.
 """
 from __future__ import annotations
 
@@ -75,9 +75,17 @@ class EventRecordService:
             raise ValueError('此入口只保存其他桌补录成绩')
         prior = next((item for item in model.state['broadcast']['matches'] if item['id'] == record['id']), None)
         record = dict(record)
+        replacement = record.pop('_replaces_record', None)
+        if replacement and (replacement != record['id'] or prior is None):
+            raise ValueError('待更正半庄记录已删除，请重新打开成绩记录')
         record.pop('penalties', None)
         if prior and 'penalties' in prior:
             record['penalties'] = prior['penalties']
+        record.pop('recorded_at', None)
+        if prior is None:
+            record['recorded_at'] = now()
+        elif 'recorded_at' in prior:
+            record['recorded_at'] = prior['recorded_at']
         record = freeze(copy.deepcopy(record))
         before = copy_state(model.state)
         after = copy_state(before)
@@ -96,6 +104,64 @@ class EventRecordService:
         model.changed.emit(before, after, 'manual_result')
         model.display_changed.emit()
         return record['id']
+
+    def delete_match(self, match_id, expected_record=None):
+        """Remove a confirmed result from the ledger and every table snapshot."""
+        from event_metadata import validate_event
+        from ranking_reports import confirmed_matches
+
+        model = self.model
+        match = next((item for item in confirmed_matches(model.state) if item['id'] == match_id), None)
+        if match is None:
+            raise ValueError('该半庄记录已删除或尚未确认，请重新选择')
+        if expected_record is not None and match != expected_record:
+            raise ValueError('该半庄记录已改变，请核对后重新删除')
+        before = copy_state(model.state)
+        after = copy_state(before)
+        event = copy.deepcopy(model.event)
+        node_id = match.get('bracket_node_id')
+        if node_id and event:
+            nodes = event['bracket']['nodes']
+            descendants = {node_id}
+            while True:
+                linked = {node['id'] for node in nodes if any(
+                    source.get('node') in descendants and str(index) not in node.get('source_overrides', {})
+                    for index, source in enumerate(node['sources']))}
+                if linked.issubset(descendants):
+                    break
+                descendants.update(linked)
+            descendants.discard(node_id)
+            if any(node['status'] != 'pending' for node in nodes if node['id'] in descendants) or any(
+                    record.get('bracket_node_id') in descendants for record in confirmed_matches(before)):
+                raise ValueError('下游淘汰桌已经开赛，不能删除上游半庄记录')
+            node = next((node for node in nodes if node['id'] == node_id), None)
+            if node is not None:
+                node.update(status='running', winners=[])
+                node.pop('result_signature', None)
+                node.pop('ranking_rule', None)
+
+        def remove(state):
+            state['broadcast']['matches'] = [record for record in state['broadcast']['matches']
+                                              if record['id'] != match_id]
+            if state['id'] == match_id:
+                state['broadcast']['result_discarded'] = True
+
+        remove(after)
+        tournament.validate_broadcast(after)
+        model.engine.validate(after)
+        if event:
+            event['updated_at'] = now()
+            validate_event(event, after)
+        undo, redo = copy.deepcopy((model.undo, model.redo))
+        for state, _ in undo + redo:
+            remove(state)
+        # Playback transitions also carry result ledgers for standings changes.
+        transition = copy.deepcopy(model.last_transition)
+        if transition:
+            remove(transition[0])
+            remove(transition[1])
+        model._publish(before, after, copy.deepcopy(model.settings), model.last_info,
+                       undo, redo, transition, 'delete_match_record', event=event, display=True)
 
     def penalty_match(self, match_id):
         from ranking_reports import confirmed_matches

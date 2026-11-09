@@ -170,7 +170,9 @@ class MatchPenaltyTests(unittest.TestCase):
                 dialog.void()
             self.assertTrue(dialog.void_button.isEnabled())
             results.reload()
-            self.assertEqual(results.table.item(0, 3).text(), '−12.5 pt')
+            self.assertIn('−12.5 pt · 误和', results.table.item(0, 3).text())
+            self.assertIn(match['results'][0]['name'], results.table.item(0, 3).text())
+            self.assertEqual(results.table.columnCount(), 7)
             history = EventHistoryDialog(workspace, self.model.state, self.model.event)
             self.assertTrue(history.penalties_button.isEnabled())
             self.assertEqual(history.final_table.item(0, 4).text(),

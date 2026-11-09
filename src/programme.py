@@ -236,7 +236,7 @@ class ProgrammeController(QObject):
 
     def on_model_changed(self,before,after,kind):
         if self.manager.closing:return
-        if kind not in ('import','clear','restore','start_match','new_match','next_hand'):return
+        if kind not in ('import','clear','restore','start_match','new_match','next_hand','delete_match_record'):return
         self._switching=True
         try:
             self.manager.opening.stop();self.manager.postmatch.stop();self.music.set_enabled(False)
