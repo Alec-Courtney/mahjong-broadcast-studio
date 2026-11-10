@@ -1466,12 +1466,15 @@ class EventWorkspaceDialog(SettingsWindow):
         page.addLayout(row(self.report_previous, self.report_page_label, self.report_next, 1))
         page.addLayout(row(button('补录其他桌成绩',self.manual_result),button('成绩记录与更正',self.show_confirmed_results),
             button('查看历史成绩', lambda: self.show_event_history()),1))
+        self.team_results_button=button('选择半庄生成队伍结果图',self.show_team_results)
+        page.addLayout(row(self.team_results_button,1))
         self.report_notes=QLabel();self.report_notes.setWordWrap(True);self.report_notes.setProperty('i18n_literal',True);self.report_notes.setObjectName('muted');page.addWidget(self.report_notes)
         page.addWidget(note('放大彩色预览支持缩放和翻页。拖动表头调整顺序，双击表头修改名称。列设置和表头名称随赛事保存。团队 Excel 包含两张榜，图片导出为当前榜单的整张 PNG。'));page.addStretch()
     def refresh_reports(self,*_,force=False):
         event = self.model.event
         if not event:return
         is_team=self.is_team_event()
+        self.team_results_button.setVisible(is_team)
         mode=(self.report_mode.currentData() or 'individual') if is_team else 'individual'
         if self.report_mode.count() != (2 if is_team else 1):
             with QSignalBlocker(self.report_mode):
@@ -1577,6 +1580,11 @@ class EventWorkspaceDialog(SettingsWindow):
             self.run(lambda:(self.store.update(report_headers=labels),self.refresh_reports()),'表头名称已保存，界面和导出同步使用新名称')
     def export_dir(self):
         directory=self.model.path/'exports';directory.mkdir(exist_ok=True);return directory
+    def show_team_results(self):
+        if not self.is_team_event():return
+        dialog=EventHistoryDialog(self,self.model.state,self.model.event,select_matches=True)
+        try:dialog.exec()
+        finally:dialog.deleteLater()
     def export_xlsx(self):
         path,_=QFileDialog.getSaveFileName(self,'导出彩色 Excel',str(self.export_dir()/(safe_name(self.model.event['name'])+'-积分榜.xlsx')),'Excel (*.xlsx)')
         if path:self.run(lambda:reports.export_xlsx(self.model.state,self.model.event,path),'彩色 Excel 已导出')

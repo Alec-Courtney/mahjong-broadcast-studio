@@ -60,6 +60,26 @@ class DockWorkspaceTests(unittest.TestCase):
         QTest.mouseRelease(dock,Qt.MouseButton.LeftButton,modifiers,pos=dock.mapFromGlobal(point))
         APP.processEvents()
 
+    def test_closed_floating_history_reopens_from_the_top_toolbar(self):
+        workspace = self.ui.workspace
+        dock = workspace.docks['history']
+        control = workspace.panel_buttons['history']
+        before = copy.deepcopy(self.model.state)
+        self.assertEqual(control.text(), '历史局收支')
+        dock.setFloating(True)
+        APP.processEvents()
+        self.assertTrue(control.isChecked())
+        dock.close()
+        APP.processEvents()
+        self.assertFalse(control.isChecked())
+        self.assertTrue(dock.isHidden())
+        control.click()
+        APP.processEvents()
+        self.assertTrue(dock.isVisible())
+        self.assertTrue(dock.isFloating())
+        self.assertTrue(control.isChecked())
+        self.assertEqual(self.model.state, before)
+
     def test_native_edge_preview_and_docking_work_without_using_an_arrow(self):
         workspace=self.ui.workspace;before=copy.deepcopy(self.model.state)
         original=workspace.docks['dora'].geometry()
@@ -124,6 +144,8 @@ class DockWorkspaceTests(unittest.TestCase):
 
     def test_visual_drop_places_wide_yaku_only_below_the_tile_panel(self):
         workspace=self.ui.workspace;tiles=workspace.docks['tiles'];yaku=workspace.docks['yaku']
+        # Leave the bottom area free for this deliberately wide drag source.
+        workspace.docks['history'].hide()
         self.ui.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea,yaku);APP.processEvents()
         self.assertGreater(yaku.width(),tiles.width())
         before=copy.deepcopy(self.model.state);self.native_drag('yaku')

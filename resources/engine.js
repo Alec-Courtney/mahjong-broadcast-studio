@@ -575,11 +575,63 @@
     return applyEvent(state, event).lastResult;
   }
 
+  function reviseSettlement(inputState, values) {
+    // Operator-entered payments are authoritative; yaku remain descriptive.
+    requireValid(inputState);
+    assert(inputState.manualDisplay && inputState.phase !== 'playing' && inputState.lastResult, '请先选择已结算的小局');
+    assert(values && Array.isArray(values.afterScores) && values.afterScores.length === 4 && values.afterScores.every(pointValue), '手动收支须为四个有效的百点整数');
+    assert(integer(values.potAfter) && values.potAfter >= 0 && values.potAfter <= 1000000000 && values.potAfter % 1000 === 0, '局后供托须为非负千点整数');
+    var state = copy(inputState), r = state.lastResult, after = values.afterScores.slice();
+    var sameScores = after.every(function (score, i) { return score === state.players[i].score; });
+    var samePot = state.pot === values.potAfter;
+    state.pot = values.potAfter;
+    var next = nextAfter(state, {type: r.kind, winner: r.winner, tenpai: r.tenpai}, after);
+    next.pot = state.pot;
+    var awarded = Math.max(0, r.potBefore - state.pot);
+    if (sum(r.potAwards.map(function (award) { return award.amount; })) !== awarded) {
+      r.potAwards = r.kind !== 'draw' && awarded ? [{player: r.winner, amount: awarded}] : [];
+      r.terminalPotAwards = [];
+    }
+    r.deltas = after.map(function (score, i) { return score - r.beforeScores[i]; });
+    r.afterScores = after.slice();
+    r.displayDeltas = r.deltas.slice();
+    r.potAfter = state.pot;
+    r.next = next;
+    r.manualPayment = true;
+    r.detail += ' · 手动收支';
+    // Reconstruct actual transfers for statistics and payment explanations.
+    var ordinary = r.deltas.map(function (delta, i) {
+      return delta - sum(r.potAwards.filter(function (a) { return a.player === i; }).map(function (a) { return a.amount; }));
+    });
+    var remaining = ordinary.slice();
+    r.payments = [];
+    remaining.forEach(function (value, from) {
+      if (value >= 0) return;
+      remaining.forEach(function (_, to) {
+        var amount = Math.min(-remaining[from], Math.max(0, remaining[to]));
+        if (amount <= 0) return;
+        r.payments.push({from: from, to: to, amount: amount, base: amount, honba: 0});
+        remaining[from] += amount;
+        remaining[to] -= amount;
+      });
+    });
+    r.basePoints = r.kind === 'draw' ? 0 : Math.max(0, ordinary[r.winner]);
+    state.finalRanking = next.finished ? (sameScores && samePot && state.finalRanking || rankingSnapshot(state, after)) : null;
+    state.players.forEach(function (player, i) { player.score = after[i]; });
+    state.phase = next.finished ? 'finished' : 'result';
+    var newTotal = sum(after) + state.pot;
+    state.accountingAdjustment = (state.accountingAdjustment || 0) + newTotal - state.accountingTotal;
+    state.accountingTotal = newTotal;
+    requireValid(state);
+    return state;
+  }
+
   return {
     version: '1.0.0',
     createState: createState,
     applyEvent: applyEvent,
     previewSettlement: previewSettlement,
+    reviseSettlement: reviseSettlement,
     computeStandings: computeStandings,
     validateState: validateState,
     tileFromIndicator: tileFromIndicator,

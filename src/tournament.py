@@ -289,6 +289,21 @@ def _validate_hands(hands,ids):
                 raise ValueError('逐局点数格式无效')
             for score in h[k]:
                 _integer(score, '逐局点数', -1000000000)
+        if 'context' in h:
+            from hand_history import validate_context
+            validate_context(h['context'])
+        if 'event' in h and (not isinstance(h['event'],dict) or h['event'].get('type') != h['kind']):
+            raise ValueError('逐局结算事件格式无效')
+        info=h.get('win_info')
+        if info is not None and (not isinstance(info,dict) or not isinstance(info.get('yaku',[]),list)
+                or any(not isinstance(name,str) for name in info.get('yaku',[]))):
+            raise ValueError('逐局役种格式无效')
+        if 'manual_deltas' in h:
+            values=h['manual_deltas']
+            if not isinstance(values,list) or len(values)!=4 or any(type(value) is not int or abs(value)>1000000000 or value%100 for value in values):
+                raise ValueError('逐局手动收支格式无效')
+            _integer(h.get('manual_pot_after'), '局后供托', 0)
+            if h['manual_pot_after']%1000:raise ValueError('局后供托须为千点整数')
 
 
 def sync_profiles(s):
@@ -310,7 +325,7 @@ def sync_profiles(s):
             r['color'] = p.get('team_color', r.get('color', '#377e72'))
 
 
-def record_hand(s):
+def record_hand(s, *, context=None, event=None, win_info=None):
     b = ensure_broadcast(s)
     r = s.get('lastResult')
     if not r:
@@ -328,6 +343,8 @@ def record_hand(s):
     if index is None:
         b['hands'].append(record)
     else:
+        for key in ('context','event','win_info','manual_deltas','manual_pot_after'):
+            if key in b['hands'][index]:record[key]=copy.deepcopy(b['hands'][index][key])
         old_profiles={p['id']:p for p in b['hands'][index]['players']}
         for player in record['players']:
             old=old_profiles.get(player['id'],{})
@@ -335,6 +352,14 @@ def record_hand(s):
                 if key in old:player[key]=old[key]
                 elif key=='team_logo':player.pop(key,None)
         b['hands'][index] = record
+    if context is not None:
+        record.update(context=copy.deepcopy(context),event=copy.deepcopy(event),win_info=copy.deepcopy(win_info))
+        record.pop('manual_deltas',None);record.pop('manual_pot_after',None)
+    snapshot=record.get('context')
+    if snapshot is not None:
+        record.update(round_index=snapshot['round_index'],honba=snapshot['honba'],
+                      label=_label(dict(roundIndex=snapshot['round_index'],honba=snapshot['honba'])))
+        for i,player in enumerate(record['players']):player['riichi']=int(snapshot['riichi'][i])
 
 
 def on_update(before, after, kind):
@@ -347,13 +372,13 @@ def on_update(before, after, kind):
             b['initial_players']=copy.deepcopy(after['players'])
             b['initial_label']='记录起点'
         if after['roundIndex'] or after['honba'] or (changed_scores and len(set(b['initial_scores']))>1):b['partial']=True
-    if kind in ('ron','tsumo','draw') and not b['hands'] and before.get('lastResult'):
+    if kind in ('ron','tsumo','draw') and not before.get('broadcast',{}).get('hands') and before.get('lastResult'):
         b['initial_scores']=after['lastResult']['beforeScores'][:];b['partial']=True
     if kind in ('next_hand', 'clear'):
         b['current_hand'] = uuid.uuid4().hex
     elif kind in ('ron', 'tsumo', 'draw'):
         record_hand(after)
-    elif after.get('lastResult') and any(h['id'] == b['current_hand'] for h in b['hands']):
+    elif kind != 'hand_correction' and after.get('lastResult') and any(h['id'] == b['current_hand'] for h in b['hands']):
         record_hand(after)
     if kind not in ('new_match', 'clear') and any(m['id'] == after['id'] and m['committed'] for m in b['matches']):
         archive_match(after, committed=True)

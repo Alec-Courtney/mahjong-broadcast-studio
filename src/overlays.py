@@ -1404,7 +1404,7 @@ class OverlayManager:
    self._standings_change=None
    if active and not self._can_settle():
     self.pending_win=False;self.pending_next=False;self.set_stage('table')
-  elif kind in ('clear','restore','next_hand','start_match','new_match','import'):self._clear_settlement(restore_geometry=kind!='import')
+  elif kind in ('clear','restore','next_hand','start_match','new_match','import','hand_correction'):self._clear_settlement(restore_geometry=kind!='import')
   previous=before.get('broadcast',{}).get('config',{});current=after.get('broadcast',{}).get('config',{})
   if self.settlement_data and not current.get('settlement_enabled',True):
    active=self.stage in ('settlement_hand','settlement_total','settlement_final')
@@ -1440,10 +1440,10 @@ class OverlayManager:
    self._riichi_payment_active=False;self.final_pt_deadline=None;self._auto_final_pending=False;self.stage='table';self.pending_win=False;self.pending_next=True;self.animation.begin(before,after,self.speed,self.model.settings.get('riichi_payment_mode','immediate'),theme=self.model.settings.get('theme','mleague'));self.timer.start()
   elif kind=='riichi' and any(display_score(display_after,i,self.model.settings.get('riichi_payment_mode'))!=display_score(display_before,i,self.model.settings.get('riichi_payment_mode')) for i in range(4)):
    self.animation.begin(display_before,display_after,self.speed,self.model.settings.get('riichi_payment_mode','immediate'),preserve_other_tracks=True,theme=self.model.settings.get('theme','mleague'));self._riichi_payment_active=had_riichi_holds;self.timer.start()
-  elif kind in ('clear','restore','next_hand','start_match','new_match','import'):
-   if kind in ('clear','restore','next_hand','start_match','new_match'):self.model.settings['final_cards_visible']=False
+  elif kind in ('clear','restore','next_hand','start_match','new_match','import','hand_correction'):
+   if kind in ('clear','restore','next_hand','start_match','new_match','hand_correction'):self.model.settings['final_cards_visible']=False
    self._riichi_payment_active=False;self.final_pt_deadline=None;self._auto_final_pending=False;self._final_card_change=None;self.animation.finish();self.animation.clear_presentation();self.pending_win=False;self.pending_next=False;self.model.settings['show_yaku']=False;self.art.win_started=None;self.set_stage('players_in' if kind=='next_hand' else 'table')
-   if kind=='restore':self._restore_settlement_data()
+   if kind in ('restore','hand_correction'):self._restore_settlement_data()
   elif any(p['score']!=display_before['players'][i]['score'] for i,p in enumerate(display_after['players'])):self.animation.finish();self._riichi_payment_active=False
   elif self.animation.active:self.animation.after=display_after
   self.extra_until=max(getattr(self,'extra_until',0),time.monotonic()+.85/self.speed);self.timer.start();self.on_display()
@@ -1491,7 +1491,7 @@ class OverlayManager:
   if self._riichi_payment_active:self.animation.finish();self._riichi_payment_active=False
  def _update_riichi_queue(self,before,after,kind):
   changed_ids=[p.get('id') for p in before.get('players',[])]!=[p.get('id') for p in after.get('players',[])]
-  if changed_ids or kind in ('clear','restore','next_hand','start_match','new_match','import','ron','tsumo','draw'):
+  if changed_ids or kind in ('clear','restore','next_hand','start_match','new_match','import','ron','tsumo','draw','hand_correction'):
    self._clear_riichi_presentation(update_art=False);return
   if not self._riichi_allowed():self._clear_riichi_presentation(update_art=False);return
   if kind=='riichi':

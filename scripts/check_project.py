@@ -12,6 +12,8 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 sys.path[:0] = [str(ROOT / 'tests'), str(ROOT / 'src')]
 
 DAILY = (
+    'test_team_match_report',
+    'test_hand_history',
     'test_manual_without_recognition',
     'test_hand_calculation',
     'test_automation_api',

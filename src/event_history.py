@@ -1,5 +1,5 @@
 """Read-only standings and half-match records from a saved event."""
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtWidgets import QDialog, QHeaderView, QLabel, QSplitter, QTabWidget, QVBoxLayout, QWidget
 
 from desk_theme import apply_theme
@@ -11,12 +11,13 @@ from ui_widgets import button, choice, item, note, row, table
 
 
 class EventHistoryDialog(QDialog):
-    def __init__(self, workspace, state, event, simulated=False):
+    def __init__(self, workspace, state, event, simulated=False, select_matches=False):
         super().__init__(workspace)
         self.state = state
         self.settings = workspace.model.settings
         self.event_metadata = event
         self.matches = reports.confirmed_matches(state)[::-1]
+        self.selection_mode = False
         self.setProperty('settingsWindow', True)
         self.setWindowTitle('历史赛事成绩')
         self.resize(1120, 710)
@@ -37,8 +38,71 @@ class EventHistoryDialog(QDialog):
         tabs.addTab(self.match_page(), '半庄记录')
         tabs.addTab(self.ranking_page(), '赛事排名')
         layout.addWidget(tabs, 1)
+        self.selection_controls = QWidget()
+        controls = QVBoxLayout(self.selection_controls)
+        controls.setContentsMargins(0, 0, 0, 0)
+        controls.addWidget(note('勾选需要汇总的半庄。图片按原记录顺序排列，顶部只合计所选场次，积分包含生效判罚。'))
+        self.selection_count = QLabel()
+        self.selection_count.setProperty('i18n_literal', True)
+        self.generate_button = button('生成队伍结果图', self.generate_team_report)
+        self.generate_button.setObjectName('primary')
+        controls.addLayout(row(button('全选', lambda: self.check_matches(True)),
+                               button('清空', lambda: self.check_matches(False)),
+                               self.selection_count, 1, self.generate_button))
+        layout.addWidget(self.selection_controls)
+        self.selection_controls.hide()
+        self.select_button = button('选择半庄生成队伍结果图', self.enable_match_selection)
+        self.select_button.setVisible(event['kind'] == 'team_league')
+        layout.addLayout(row(self.select_button, 1))
+        self.export_error = note('')
+        layout.addWidget(self.export_error)
         layout.addLayout(row(1, button('关闭', self.close)))
+        self.match_table.itemChanged.connect(self.update_selection_count)
+        if select_matches:
+            self.enable_match_selection()
         apply_theme(self, workspace.model.settings)
+
+    def enable_match_selection(self):
+        if self.event_metadata['kind'] != 'team_league' or self.selection_mode:
+            return
+        self.selection_mode = True
+        self.select_button.hide()
+        self.selection_controls.show()
+        with QSignalBlocker(self.match_table):
+            for index, match in enumerate(self.matches):
+                cell = self.match_table.item(index, 0)
+                cell.setFlags(cell.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                cell.setData(Qt.ItemDataRole.UserRole, match['id'])
+                cell.setCheckState(Qt.CheckState.Unchecked)
+        self.update_selection_count()
+
+    def selected_match_ids(self):
+        return [match['id'] for index, match in enumerate(self.matches)
+                if self.match_table.item(index, 0).checkState() == Qt.CheckState.Checked]
+
+    def update_selection_count(self, *_):
+        count = len(self.selected_match_ids()) if self.selection_mode else 0
+        self.selection_count.setText(f'已选 {count} / {len(self.matches)} 场')
+        self.generate_button.setEnabled(count > 0)
+
+    def check_matches(self, checked):
+        with QSignalBlocker(self.match_table):
+            for index in range(len(self.matches)):
+                self.match_table.item(index, 0).setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
+        self.update_selection_count()
+
+    def generate_team_report(self):
+        from team_match_preview import TeamMatchReportDialog
+
+        try:
+            dialog = TeamMatchReportDialog(self, self.selected_match_ids())
+            self.export_error.clear()
+            try:
+                dialog.exec()
+            finally:
+                dialog.deleteLater()
+        except (ValueError, OSError) as error:
+            self.export_error.setText(str(error))
 
     def match_page(self):
         page = QWidget()

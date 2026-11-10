@@ -254,6 +254,8 @@ class Console(QMainWindow):
   model.changed.connect(self.model_changed);model.display_changed.connect(self.refresh_display)
   quick=PanelCollection();self.build_quick_actions(quick);self.workspace.add_panel('quick','直播快捷操作',self.quick_bar)
   self.build_commentary_panel();self.workspace.add_panel('commentary','术语解释',self.commentary_bar)
+  from hand_history_panel import HandHistoryPanel
+  self.hand_history=HandHistoryPanel(self);self.workspace.add_panel('history','逐局收支',self.hand_history)
   self.workspace.attach_menu(self.panel_menu);self.workspace.initialize()
   from hotkeys import ShortcutController
   actions={key:widget.click for key,widget in self.quick_actions.items() if key in ('riichi','tenpai','focus_ron','focus_tsumo','draw','next_hand','replay','commentary_show','commentary_hide')}
@@ -577,7 +579,7 @@ class Console(QMainWindow):
     tenpai.setChecked(after['players'][i]['tenpai']);self.draw_buttons[i].setChecked(after['players'][i]['tenpai'])
    self.undo.setEnabled(bool(self.model.undo));self.redo.setEnabled(bool(self.model.redo));self.refresh_quick_actions();self.preview();return
   self.refresh()
-  if kind not in ('next_hand','clear','new_match','start_match','import','restore'):
+  if kind not in ('next_hand','clear','new_match','start_match','import','restore','hand_correction'):
    activated=next((i for i,(a,b) in enumerate(zip(before['players'],after['players'])) if (b['riichi'] and not a['riichi']) or (b.get('tenpai') and not a.get('tenpai'))),None)
    if activated is not None:
     self.select(activated);self.set_tile_target('waits');self.workspace.ensure_visible(self.target_boxes['waits'])
@@ -1185,6 +1187,7 @@ class Console(QMainWindow):
   for i,m in enumerate(p['melds']):
    source='自家' if m['kind']=='ankan' else {3:'上家',2:'对家',1:'下家'}.get((m.get('from',self.selected)-self.selected)%4,'');kind={'chi':'吃','pon':'碰','daiminkan':'明杠','ankan':'暗杠','kakan':'加杠'}[m['kind']];line=QHBoxLayout();line.setSpacing(4);label=QLabel(kind+' · '+source);label.setWordWrap(True);line.addWidget(label);line.addWidget(meld_preview(m));line.addStretch();remove=button('删除',lambda _,j=i:self.run(lambda:self.model.remove_meld(self.selected,j)));remove.setEnabled(playing);line.addWidget(remove);self.meld_rows.addLayout(line)
   self.undo.setEnabled(bool(self.model.undo));self.redo.setEnabled(bool(self.model.redo));self.replay_button.setEnabled(bool(self.model.last_transition));self.ready=True;self.refresh_display();self.refresh_draft();self.set_tile_target(self.tile_target);self.yaku_changed()
+  self.hand_history.refresh()
  def closeEvent(self,event):
   if self._closing:event.accept();return
   from settings_context import settings_windows

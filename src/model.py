@@ -29,7 +29,7 @@ class Engine:
   broadcast=a.get('broadcast',_UNCHANGED) if isinstance(a,dict) else _UNCHANGED
   # The payment engine owns only the live table. Sending complete historical
   # archives to JavaScript made every preview/validation copy the whole event.
-  if broadcast is not _UNCHANGED and name in ('applyEvent','previewSettlement','validateState','computeStandings'):
+  if broadcast is not _UNCHANGED and name in ('applyEvent','previewSettlement','reviseSettlement','validateState','computeStandings'):
    a={key:value for key,value in a.items() if key!='broadcast'}
   args=[QJSValue(name),QJSValue(json.dumps(a,ensure_ascii=False))]
   if b is not None:args.append(QJSValue(json.dumps(b,ensure_ascii=False)))
@@ -201,7 +201,7 @@ class Model(QObject):
     raise ValueError('当前半庄进行中，请完成并确认后再修改计分规则')
   # Terminal pot awards freeze tied ranks. Only an explicit later score edit
   # invalidates that snapshot; a replay, rename or display edit must preserve it.
-  if before.get('phase')==after.get('phase')=='finished' and kind not in ('ron','tsumo','draw') and any(p['score']!=q['score'] for p,q in zip(before['players'],after['players'])):
+  if before.get('phase')==after.get('phase')=='finished' and kind not in ('ron','tsumo','draw','hand_correction') and any(p['score']!=q['score'] for p,q in zip(before['players'],after['players'])):
    after['finalRanking']=None
   tournament.on_update(before,after,kind);self.engine.validate(after)
   from media_store import manage_photos
@@ -308,8 +308,24 @@ class Model(QObject):
   self.update(change,'clear',info=None)
  def settle(self,event,info):
   def change(s):
+   from hand_history import settlement_context
+   context=settlement_context(s)
    s.update(self.engine.apply(s,event))
+   tournament.record_hand(s,context=context,event=event,win_info=info)
   self.update(change,event['type'],info=info,display=True)
+ def preview_hand_correction(self,hand_id,patch,expected_state=None):
+  if expected_state is not None and self.state is not expected_state:
+   raise ValueError('对局记录已变化，请关闭详情后重新核对')
+  from hand_history import revise
+  candidate=copy_state(self.state)
+  info=revise(candidate,self.engine,hand_id,patch)
+  tournament.on_update(self.state,candidate,'hand_correction')
+  self.engine.validate(candidate);tournament.validate_broadcast(candidate)
+  return candidate,info
+ def correct_hand(self,hand_id,patch,expected_state=None):
+  candidate,info=self.preview_hand_correction(hand_id,patch,expected_state)
+  self.update(lambda s:(s.clear(),s.update(candidate)),'hand_correction',info=info,
+              reset_transition=True,display=True)
  def preview(self,event):
   """Preview a new payment, or the replacement of this hand's last payment."""
   result=self.engine.preview(self.state,event)
@@ -329,7 +345,10 @@ class Model(QObject):
   self.playing()
   def change(s):
    tenpai=declared_tenpai if declared_tenpai is not None else [i for i,p in enumerate(s['players']) if p['tenpai']]
-   s.update(self.engine.apply(s,{'type':'draw','tenpai':tenpai}))
+   from hand_history import settlement_context
+   context=settlement_context(s);event={'type':'draw','tenpai':tenpai}
+   s.update(self.engine.apply(s,event))
+   tournament.record_hand(s,context=context,event=event)
   self.update(change,'draw',info=None)
  def meld(self,player,kind,tiles,source,called=0):
   self.playing();self.update(lambda s:s.update(self.engine.apply(s,{'type':'meld','player':player,'meld':{'kind':kind,'tiles':tiles,'from':source,'calledIndex':called}})))

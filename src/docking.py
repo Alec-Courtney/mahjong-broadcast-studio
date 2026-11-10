@@ -271,7 +271,7 @@ class DockWorkspace(QObject):
             widget.layout().setSpacing(5)
             if identity in ('quick', 'tiles'):
                 widget.layout().setContentsMargins(5, 3, 5, 3)
-            if identity == 'tiles':
+            if identity in ('tiles','history'):
                 widget.layout().setAlignment(Qt.AlignmentFlag(0))
         widget.setProperty('panelBody', True)
         if identity == 'players':
@@ -283,6 +283,8 @@ class DockWorkspace(QObject):
             dock.setMinimumHeight(138)
         elif identity == 'quick':
             scroll.setMaximumHeight(widget.layout().itemAt(0).sizeHint().height() + 6)
+        elif identity == 'history':
+            dock.setMinimumHeight(230)
         self.docks[identity], self.scrolls[identity] = dock, scroll
         self.window.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
         for signal in (dock.topLevelChanged, dock.dockLocationChanged,
@@ -296,7 +298,7 @@ class DockWorkspace(QObject):
         self.panel_toolbar=QToolBar('面板切换',self.window);self.panel_toolbar.setObjectName('operatorPanelSwitches')
         self.panel_toolbar.setMovable(False);self.panel_toolbar.setFloatable(False)
         self.window.addToolBar(Qt.ToolBarArea.TopToolBarArea,self.panel_toolbar)
-        names={'players':'选手','round':'局况','dora':'宝牌','waits':'听牌','score':'计分','meld':'副露','yaku':'役种','tiles':'牌面','quick':'节目','commentary':'术语'}
+        names={'players':'选手','round':'局况','dora':'宝牌','waits':'听牌','score':'计分','meld':'副露','yaku':'役种','tiles':'牌面','quick':'节目','commentary':'术语','history':'历史局收支'}
         for key,dock in self.docks.items():
             control=QToolButton(self.panel_toolbar);control.setText(names.get(key,dock.windowTitle()));control.setCheckable(True)
             control.clicked.connect(lambda shown,target=key:self.show_panel(target) if shown else self.docks[target].hide())
@@ -342,6 +344,7 @@ class DockWorkspace(QObject):
             self.window.splitDockWidget(d['yaku'], d['tiles'], vertical)
             self.window.addDockWidget(top, d['quick'])
             self.window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, d['commentary'])
+            self.window.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, d['history'])
             for dock in d.values():
                 dock.show()
             d['commentary'].hide()
@@ -609,7 +612,8 @@ class DockWorkspace(QObject):
         available = self.window.height() - header - self.window.statusBar().height()
         if hasattr(self,'panel_toolbar'):available-=self.panel_toolbar.sizeHint().height()
         top = max(64,self.docks['quick'].minimumSizeHint().height())
-        middle = max(350, available - top - 10)
+        history = min(280, max(240, round(available * .28)))
+        middle = max(300, available - top - history - 15)
         tiles = 366 if self.window.height() >= 900 else min(240, round(middle * .40))
         player_content = self.scrolls['players'].widget().minimumSizeHint().height() + 40
         players = min(390, player_content, max(140, round(middle * .56)))
@@ -620,8 +624,8 @@ class DockWorkspace(QObject):
         meld = max(70, middle - players - round_height - dora - 15)
         score = min(520, max(210, round(middle * .64)))
         waits = middle - score - 5
-        keys = ('quick', 'players', 'round', 'dora', 'score', 'meld', 'waits', 'yaku', 'tiles')
-        heights = (top, players, round_height, dora, score, meld, waits, middle - tiles - 5, tiles)
+        keys = ('quick', 'players', 'round', 'dora', 'score', 'meld', 'waits', 'yaku', 'tiles', 'history')
+        heights = (top, players, round_height, dora, score, meld, waits, middle - tiles - 5, tiles, history)
         self.window.resizeDocks([self.docks[key] for key in keys], heights, Qt.Orientation.Vertical)
 
     def dispose(self):
