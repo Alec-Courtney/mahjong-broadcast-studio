@@ -8,10 +8,13 @@ COLUMNS = {
     'top_rate': ('Top率', 100, 'percent'), 'top_two_rate': ('连对率', 100, 'percent'),
     'avoid_fourth_rate': ('避四率', 100, 'percent'), 'max_score': ('最高分', 110, 'int'),
     'leader_gap': ('距第一名', 114, 'decimal'), 'cutoff_gap': ('距晋级线', 114, 'decimal'),
+    'planned': ('计划场次', 110, 'int'), 'remaining': ('剩余场次', 110, 'int'),
+    'progress': ('完成进度', 110, 'percent'),
 }
-PERSONAL = ['rank', 'name', 'team', 'points', 'games', 'average_rank', 'first', 'second',
+PERSONAL = ['rank', 'team', 'name', 'points', 'games', 'average_rank', 'first', 'second',
             'third', 'fourth', 'top_rate', 'top_two_rate', 'avoid_fourth_rate', 'max_score']
 TEAM = ['rank', 'team', 'points', 'leader_gap', 'cutoff_gap', 'games', 'first', 'second', 'third', 'fourth']
+PLAN_COLUMNS = ['planned', 'remaining', 'progress']
 ML_TECH = ['hands','average_win','call_rate','riichi_rate','win_rate','deal_in_rate','average_deal_in']
 TECH = {
     'hands':('总局数',100,'int'),'calls':('副露局数',106,'int'),'riichi':('立直局数',106,'int'),
@@ -37,14 +40,14 @@ def default_columns(kind,mode='individual'):
 
 
 def preset_columns(kind,preset):
-    identity=['rank','name']+(['team'] if kind=='team_league' else [])
+    identity=['rank']+(['team'] if kind=='team_league' else [])+['name']
     if preset=='ml':return default_columns(kind)+ML_TECH
     if preset=='technical':return identity+['hands','call_rate','riichi_rate','average_win','average_deal_in','win_rate','deal_in_rate','riichi_win_rate','call_win_rate','tsumo_rate','draw_tenpai_rate']
     return default_columns(kind)
 
 
 def allowed_columns(kind, mode='individual'):
-    return list(TEAM if mode == 'team' else default_columns(kind)+list(TECH))
+    return list(TEAM if mode == 'team' else default_columns(kind)+list(TECH))+PLAN_COLUMNS
 
 
 def columns(event, mode='individual'):
@@ -57,7 +60,7 @@ def validate_columns(mapping):
     if not isinstance(mapping, dict) or any(key not in ('individual', 'team') for key in mapping):
         raise ValueError('榜单列配置无效')
     for mode, values in mapping.items():
-        allowed = TEAM if mode == 'team' else PERSONAL+list(TECH)
+        allowed = (TEAM if mode == 'team' else PERSONAL+list(TECH))+PLAN_COLUMNS
         if not isinstance(values, list) or not values or len(set(values)) != len(values) or any(k not in allowed for k in values):
             raise ValueError('榜单列须非空、不重复且为支持的字段')
         if 'rank' not in values or ('team' if mode == 'team' else 'name') not in values:
@@ -67,7 +70,7 @@ def validate_columns(mapping):
 def validate_headers(mapping):
     if not isinstance(mapping,dict) or any(k not in ('individual','team') for k in mapping):raise ValueError('表头名称配置无效')
     for mode,labels in mapping.items():
-        if not isinstance(labels,dict) or any(k not in (TEAM if mode=='team' else PERSONAL+list(TECH)) for k in labels):raise ValueError('表头字段无效')
+        if not isinstance(labels,dict) or any(k not in (TEAM if mode=='team' else PERSONAL+list(TECH))+PLAN_COLUMNS for k in labels):raise ValueError('表头字段无效')
         if any(not isinstance(v,str) or not v.strip() or len(v)>60 or '\n' in v or '\r' in v for v in labels.values()):raise ValueError('表头名称须为1至60个字符的单行文字')
 
 

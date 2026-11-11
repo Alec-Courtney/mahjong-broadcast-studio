@@ -1109,6 +1109,7 @@ class EventWorkspaceDialog(SettingsWindow):
         finally:
             self._saving_identity=False
         if refresh:self._refresh_identity_section(section)
+        self.refresh_reports()
 
     def follow_team_colors(self):
         if not self.is_team_event():return
@@ -1457,6 +1458,8 @@ class EventWorkspaceDialog(SettingsWindow):
         self.report_preset=choice([('赛事成绩','results'),('ML 完整数据','ml'),('技术统计','technical')]);page.addLayout(row('个人榜预设',self.report_preset,button('应用预设',self.apply_report_preset),1))
         self.report_table=table([]);self.report_table.setProperty('i18n_literal',True);self.report_table.setMinimumHeight(300);self.report_table.horizontalHeader().setSectionsMovable(True);self.report_table.horizontalHeader().sectionMoved.connect(self.column_moved);self.report_table.horizontalHeader().sectionDoubleClicked.connect(self.rename_header);page.addWidget(self.report_table,1)
         self.report_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.report_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.report_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.report_page = 1
         self.report_previous = button('上一页', lambda: self.set_report_page(self.report_page-1))
         self.report_next = button('下一页', lambda: self.set_report_page(self.report_page+1))
@@ -1515,7 +1518,6 @@ class EventWorkspaceDialog(SettingsWindow):
                 for index,entry in enumerate(data['rows']):
                     for column,key in enumerate(columns):
                         cell=item(reports.display(key,entry.get(key)),editable=False)
-                        if key not in ('name','team'):cell.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         reports.style_table_item(cell,data,entry,key,index)
                         self.report_table.setItem(index,column,cell)
                 self.report_table.resizeColumnsToContents()
@@ -1755,7 +1757,7 @@ class EventWorkspaceDialog(SettingsWindow):
             if roster_changed and not self._saving_all and not getattr(self,'_saving_identity',False):
                 self.refresh_identity_from_model()
             self.refresh_current_match()
-            if (self.isVisible() and self.pages.currentIndex()==3) or (getattr(self,'report_preview',None) and self.report_preview.isVisible()):self.refresh_reports()
+            self.refresh_reports()
             if self.isVisible():
                 if self.pages.currentIndex()==4:self.refresh_bracket()
         if getattr(self,'output',None) and self.output.isVisible():
@@ -1763,13 +1765,18 @@ class EventWorkspaceDialog(SettingsWindow):
             elif self.output_mode=='bracket':self.refresh_bracket()
     def refresh_identity_from_model(self):
         dirty=self.dirty_sections()
-        if 'teams' not in dirty:
+        live_teams=self._live_team_values()
+        teams_changed=live_teams!=self._teams_baseline
+        if teams_changed and 'teams' not in dirty:
             self._load_team_table();self.mark_saved('teams')
-        elif self.is_team_event():
-            self.saved_teams=known_teams(self.model.state,self.model.event)
-        if 'roster' not in dirty:
+        elif teams_changed and self.is_team_event():
+            self.saved_teams=live_teams['teams']
+        live_roster={p['id']:p for p in self.model.state['broadcast']['roster']}
+        roster_changed=(live_roster!=self.roster_original
+                        or self.model.event.get('player_plans',{})!=self._roster_plans_baseline)
+        if roster_changed and 'roster' not in dirty:
             self._load_roster_table();self.mark_saved('roster')
-        else:
+        elif teams_changed:
             self.refresh_roster_team_labels()
     def on_display_changed(self):
         signature=tuple(self.model.settings.get(key) for key in ('console_theme','console_font_family','settings_font_size'))
@@ -1779,9 +1786,13 @@ class EventWorkspaceDialog(SettingsWindow):
         else:
             self.refresh_heading()
             self.refresh_current_match()
+            # Plans and other metadata saves emit display_changed without a
+            # state change. Refresh their editors as well as the report cache.
+            if not self._saving_all and not getattr(self,'_saving_identity',False):
+                self.refresh_identity_from_model()
             self.refresh_team_sidebar_preview()
             if not self._saving_all and 'general' not in self.dirty_sections():self.load_general();self.mark_saved('general')
-            if (self.isVisible() and self.pages.currentIndex()==3) or (getattr(self,'report_preview',None) and self.report_preview.isVisible()):self.refresh_reports()
+            self.refresh_reports()
     def closeEvent(self,event):
         super().closeEvent(event)
         if event.isAccepted() and getattr(self,'report_preview',None):self.report_preview.close()

@@ -14,6 +14,7 @@ from event_store import EventStore
 from event_workspace import EventWorkspaceDialog
 from model import Model
 from overlays import OverlayManager
+import ranking_reports as reports
 
 APP=QApplication.instance() or QApplication([])
 
@@ -115,6 +116,81 @@ class EventWorkspaceDraftTests(unittest.TestCase):
         window.start_selected_match()
         self.assertEqual([player['id'] for player in self.model.state['players']], seats)
         self.assertEqual(window.dirty_sections(), [])
+
+    def test_metadata_only_plan_changes_refresh_clean_tables_and_hidden_reports(self):
+        window=self.workspace
+        player=self.model.state['broadcast']['roster'][0]['id']
+        team=window.selected_id(window.teams)
+        self.store.update(player_plans={player:8},team_plans={team:24})
+        self.assertEqual(window.roster.item(0,6).text(),'8')
+        self.assertEqual(window.teams.item(0,2).text(),'24')
+        row=next(row for row in window.report_data['rows'] if row['id']==player)
+        self.assertEqual(row['planned'],8)
+        self.assertEqual(window.dirty_sections(),[])
+
+    def test_saved_roster_and_team_fields_reach_reports_seats_and_disk(self):
+        window=self.workspace
+        player=self.model.state['broadcast']['roster'][0]['id']
+        team=window.selected_id(window.teams)
+        window.roster.item(0,0).setText('同步后的选手')
+        window.roster.item(0,4).setText('125.5')
+        window.roster.item(0,5).setText('4')
+        window.roster.item(0,6).setText('8')
+        window.roster.item(0,7).setText('4')
+        window.save_roster()
+        self.assertFalse(window._save_failed,window.status.text())
+        row=next(row for row in window.report_data['rows'] if row['id']==player)
+        self.assertEqual((row['name'],row['points'],row['played'],row['first']),('同步后的选手',125.5,4,4))
+        self.assertEqual((row['planned'],row['remaining'],row['progress'],row['games']),(8,4,.5,4))
+        window.teams.item(0,1).setText('同步后的队伍')
+        window.teams.item(0,2).setText('20')
+        window.teams.item(0,5).setText('300')
+        window.teams.item(0,6).setText('6')
+        window.teams.item(0,8).setText('#123456')
+        window.save_teams()
+        self.assertFalse(window._save_failed,window.status.text())
+        row=next(row for row in window.report_data['rows'] if row['id']==player)
+        self.assertEqual((row['team'],row['color']),('同步后的队伍','#123456'))
+        self.assertEqual(self.model.state['players'][0]['name'],'同步后的选手')
+        self.assertEqual(self.model.state['players'][0]['team'],'同步后的队伍')
+        self.assertIn('同步后的选手',window.table_seats[0].currentText())
+        team_row=next(row for row in reports.team_rows(self.model.state,self.model.event) if row['id']==team)
+        self.assertEqual((team_row['points'],team_row['games'],team_row['remaining'],team_row['progress']),(300.,'6/20',14,.3))
+        restarted=Model(self.model.path)
+        self.assertEqual(reports.report(restarted.state,restarted.event)['rows'],window.report_data['rows'])
+        self.assertEqual(window.dirty_sections(),[])
+
+    def test_plan_refresh_keeps_other_table_draft_and_merges_separate_changes(self):
+        window=self.workspace
+        player=self.model.state['broadcast']['roster'][0]['id']
+        team=window.selected_id(window.teams)
+        window.roster.item(0,0).setText('保留的姓名草稿')
+        self.store.update(player_plans={player:8},team_plans={team:24})
+        self.assertEqual(window.roster.item(0,0).text(),'保留的姓名草稿')
+        self.assertEqual(window.teams.item(0,2).text(),'24')
+        window.save_roster()
+        self.assertFalse(window._save_failed,window.status.text())
+        self.assertEqual(self.model.event['player_plans'][player],8)
+        self.assertEqual(window.roster.item(0,6).text(),'8')
+        self.assertEqual(window.dirty_sections(),[])
+
+    def test_plans_are_optional_display_fields_and_do_not_limit_further_games(self):
+        player=self.model.state['broadcast']['roster'][0]['id']
+        roster=copy.deepcopy(self.model.state['broadcast']['roster'])
+        roster[0]['games']=6
+        self.model.set_roster(roster)
+        self.store.update(planned_games=24,player_plans={player:4})
+        data=self.workspace.report_data
+        row=next(row for row in data['rows'] if row['id']==player)
+        self.assertEqual((row['games'],row['planned'],row['remaining'],row['progress']),(6,4,0,1.5))
+        self.assertNotIn('planned',data['columns'])
+        self.assertEqual(data['columns'][:3],['rank','team','name'])
+        other=next(row for row in data['rows'] if row['id']!=player)
+        self.assertEqual((other['planned'],other['remaining'],other['progress']),(24,24,0))
+        self.store.update(report_columns={'individual':['rank','team','name','games','planned','remaining','progress']})
+        self.assertEqual(self.workspace.report_data['columns'][-3:],['planned','remaining','progress'])
+        self.model.matches.start_with_seats([p['id'] for p in self.model.state['players']])
+        self.assertEqual(self.model.state['phase'],'playing')
 
 
 if __name__=='__main__':unittest.main()

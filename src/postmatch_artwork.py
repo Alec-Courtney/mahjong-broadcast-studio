@@ -80,7 +80,7 @@ def prepare_postmatch_data(model):
     with overlay_scope(getattr(model, 'settings', {})):
         for row in data['rows']:
             row['_background_image'] = _card_background_image(model, row)
-            row['_portrait_image'] = identity_preview_image(model, row, width=239, height=194)
+            row['_portrait_image'] = identity_preview_image(model, row, width=239, height=194, padding=0)
             row['_names_image'] = _image_layer(int(CARD_WIDTH), int(CARD_HEIGHT),
                                                lambda painter: _card_names(painter, row, 0., 0.))
     return data
@@ -278,7 +278,7 @@ def _card(p, model, row, frame):
     p.drawImage(QPointF(x+frame['background_offset'], y), background);p.restore()
     p.save();_alpha(p, frame['portrait_opacity'])
     if '_portrait_image' in row:p.drawImage(QPointF(x+width-239, y), row['_portrait_image'])
-    else:paint_identity_media(p, model, row, QRectF(x+width-239, y, 239, height))
+    else:paint_identity_media(p, model, row, QRectF(x+width-239, y, 239, height), padding=0)
     p.restore()
     p.save();_alpha(p, frame['name_opacity'])
     if '_names_image' in row:p.drawImage(QPointF(x, y), row['_names_image'])

@@ -141,7 +141,7 @@ def _identity(p, model, row, x, y, w, h, show_photo=True, footer=False):
     photo_w = (min(w*.47, h*1.38) if w >= 400 else min(w*.38, h*.78)) if show_photo else 0
     if show_photo:
         dest = QRectF(x+w-photo_w, y, photo_w, h)
-        paint_identity_media(p, model, {**profile, **row}, dest)
+        paint_identity_media(p, model, {**profile, **row}, dest, padding=0)
     text_w = w-photo_w-40
     _text(p, row.get('name', ''), x+20, y+h*.17, text_w, h*.36,
           38 if h >= 140 else 26, bold=True, literal=True)
