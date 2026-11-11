@@ -10,8 +10,10 @@ from PySide6.QtGui import QColor, QFont, QImage, QPen
 
 from identity_media import load_identity_image
 from panel_typography import draw_single_line
+from live_badge import draw_live_badge, live_rect
 
-CORNER_SIZE = (540, 220)
+CORNER_TITLE_SIZE = (540, 220)
+CORNER_SIZE = (540, 302)
 CORNER_DEFAULTS = {
     'corner_logo': '',
     'corner_season': '26–27',
@@ -27,6 +29,11 @@ CORNER_DEFAULTS = {
     'corner_bottom_tracking': 1.2,
     'corner_logo_x': 0.,
     'corner_logo_y': 0.,
+    'corner_live_hold': 7.,
+    'corner_live_x': 350,
+    'corner_live_y': 240,
+    'corner_live_width': 168,
+    'corner_live_height': 54,
 }
 CORNER_SETTING_KEYS = frozenset(CORNER_DEFAULTS)
 
@@ -49,16 +56,26 @@ def validate_corner_config(config):
         raise ValueError('右上角 Logo 比例须为 50–125%')
     for key,low,high in (('corner_top_size',12,128),('corner_bottom_size',12,72),
                          ('corner_top_tracking',-4,20),('corner_bottom_tracking',-4,20),
-                         ('corner_logo_x',-80,80),('corner_logo_y',-80,80)):
+                         ('corner_logo_x',-80,80),('corner_logo_y',-80,80),
+                         ('corner_live_x',2,1080),('corner_live_y',3,1080),
+                         ('corner_live_width',40,540),('corner_live_height',14,180)):
         value=config.get(key,CORNER_DEFAULTS[key])
         if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or not low<=value<=high:
-            raise ValueError('赛事标识字号、字间距或Logo位置超出范围')
+            raise ValueError('赛事标识字号、字间距、Logo或LIVE版式超出范围')
+    hold=config.get('corner_live_hold',7.)
+    if isinstance(hold,bool) or not isinstance(hold,(int,float)) or not math.isfinite(hold) or not .5<=hold<=120:
+        raise ValueError('LIVE 红底停留时间须为 0.5–120 秒')
 
 
 def corner_options(config):
     result = {key:config.get(key, value) for key,value in CORNER_DEFAULTS.items()}
     validate_corner_config(result)
     return result
+
+
+def corner_canvas_size(config):
+    area=live_rect(config)
+    return max(540,math.ceil(area.right()+8)),max(220,math.ceil(area.bottom()+8))
 
 
 def corner_texts(config):
@@ -108,7 +125,7 @@ def _font(size, tracking=0.):
     return font
 
 
-def draw_corner_header(painter, model):
+def draw_corner_header(painter, model, *, live=None, include_live=True):
     values=corner_options(model.state.get('broadcast',{}).get('config',{}))
     colour=QColor(values['corner_colour'])
     painter.save()
@@ -141,5 +158,6 @@ def draw_corner_header(painter, model):
         if values['corner_match']:
             draw_single_line(painter,'#',QRectF(428,144,26,30),_font(31),Qt.AlignmentFlag.AlignHCenter,12)
             draw_single_line(painter,values['corner_match'],QRectF(455,140,72,68),_font(78),Qt.AlignmentFlag.AlignLeft,12)
+        if include_live:draw_live_badge(painter,live,live_rect(values))
     finally:
         painter.restore()

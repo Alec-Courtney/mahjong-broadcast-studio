@@ -443,7 +443,8 @@ class BroadcastDialog(SettingsWindow):
   from corner_header import CORNER_SETTING_KEYS
   signature=(self.model.path,{key:self.config().get(key) for key in CORNER_SETTING_KEYS})
   if signature!=getattr(self,'_corner_preview_signature',None):
-   self._corner_preview_signature=signature;self.corner_preview.invalidate()
+   from corner_header import corner_canvas_size
+   self._corner_preview_signature=signature;self.corner_preview.set_design_size(corner_canvas_size(self.config()));self.corner_preview.invalidate()
  def open_corner_editor(self):
   if callable(getattr(self.main,'open_corner_header',None)):return self.main.open_corner_header()
   from corner_editor import CornerHeaderDialog

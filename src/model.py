@@ -387,7 +387,15 @@ class Model(QObject):
   from media_store import manage_photos
   presentation={key:copy.deepcopy(after['broadcast']['config'][key]) for key in values}
   manage_photos(presentation,self.path,strict=True);after['broadcast']['config'].update(presentation)
-  candidate=copy.deepcopy(self.settings if settings is None else settings);validate_settings(candidate)
+  candidate=copy.deepcopy(self.settings if settings is None else settings)
+  if set(values)&CORNER_SETTING_KEYS:
+   from corner_header import corner_canvas_size
+   old_size=corner_canvas_size(before['broadcast']['config']);new_size=corner_canvas_size(after['broadcast']['config'])
+   geometry=candidate.get('windows',{}).get('corner_header')
+   if geometry and old_size!=new_size:
+    factor=geometry[2]/old_size[0]
+    candidate['windows']['corner_header']=[*geometry[:2],max(1,round(new_size[0]*factor)),max(1,round(new_size[1]*factor))]
+  validate_settings(candidate)
   # Copy the editable table/config part only. Immutable archived results remain
   # shared across all 60 undo entries rather than copied 60 more times.
   undo,redo=copy.deepcopy((self.undo,self.redo))

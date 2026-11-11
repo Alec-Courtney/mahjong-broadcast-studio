@@ -13,6 +13,8 @@ from tournament import final_settlement_summary
 from mahjong_values import display_score
 from player_layout import PLAYER_LAYOUT,PLAYER_CAPTURE_SIZE,PLAYER_CAPTURE_BOTTOM,restore_player_geometries
 from player_status_frame import status_mode, frame_phase
+from corner_header import corner_canvas_size, draw_corner_header
+from live_badge import draw_live_badge, live_frame, live_rect
 from sidebar_paging import sidebar_page_data, sidebar_render_model, is_team_event
 from riichi_effect import DESIGN_SIZE as RIICHI_SIZE, RiichiQueue, snapshot_riichi, draw_riichi
 from capture_surface import clear_capture,draw_locator,reference_canvas,reference_width,CaptureDpiMonitor,dpi_scaled_geometry,screen_pixel_ratio
@@ -48,8 +50,13 @@ class OverlayWindow(QWidget):
    shown=not self.manager.capture_suppressed(self.key) and (preview or self.manager.content_visible(self.key))
    clear_capture(p,QRectF(self.rect()),self.manager.model.settings if shown else {})
    if not shown:return
-   p.setRenderHint(QPainter.RenderHint.Antialiasing);p.scale(self.width()/self.base[0],self.height()/self.base[1])
+   scale_x=self.width()/self.base[0];scale_y=scale_x if self.kind=='corner_header' else self.height()/self.base[1]
+   p.setRenderHint(QPainter.RenderHint.Antialiasing);p.scale(scale_x,scale_y)
+   title_damage=QRectF(event.rect().x()/scale_x,event.rect().y()/scale_y,event.rect().width()/scale_x,event.rect().height()/scale_y) if self.kind=='corner_header' else None
    if preview:self.manager.draw_content(p,self.kind,self.index,static=True)
+   elif title_damage is not None and self.kind not in self.manager.extension_transitions and not QRectF(0,0,540,220).intersects(title_damage):
+    # A LIVE-only damage event below the title never replays the logo/text.
+    draw_live_badge(p,self.manager._live_frame(),live_rect(self.manager.model.state.get('broadcast',{}).get('config',{})))
    else:self.manager.paint_content(p,self.kind,self.index)
    p.resetTransform()
    if preview:draw_locator(p,QRectF(self.rect()),self.manager.window_label(self.kind,self.index))
@@ -200,6 +207,7 @@ class OverlayManager:
   self.sidebar_hide_deadline=None;self._sidebar_timeout_signature=None
   self.sidebar_hide_timer=QTimer();self.sidebar_hide_timer.setSingleShot(True);self.sidebar_hide_timer.setTimerType(Qt.TimerType.PreciseTimer);self.sidebar_hide_timer.timeout.connect(lambda:self.display_configuration.run_native(self._expire_sidebar_timeout))
   self.status_frame_timer=QTimer();self.status_frame_timer.setSingleShot(True);self.status_frame_timer.timeout.connect(self._wake_status_frames)
+  self.live_timer=QTimer();self.live_timer.setSingleShot(True);self.live_timer.setTimerType(Qt.TimerType.PreciseTimer);self.live_timer.timeout.connect(self._wake_live_badge)
   self.commentary_timer=QTimer();self.commentary_timer.setSingleShot(True);self.commentary_timer.timeout.connect(lambda:self.display_configuration.run_native(lambda:self.set_extension_visible('commentary',False)))
   version=model.settings.get('layout_version',0)
   if version<3:
@@ -555,6 +563,7 @@ class OverlayManager:
    return PLAYER_CAPTURE_SIZE
   if kind=='riichi_effect':return RIICHI_SIZE
   if kind=='commentary':return self._commentary_canvas_size()
+  if kind=='corner_header':return corner_canvas_size(self.model.state.get('broadcast',{}).get('config',{}))
   if kind=='qualification':
    from qualification_presentation import qualification_panel_size
    return (400,650) if self.settlement_window()=='qualification' else qualification_panel_size(self.model)
@@ -574,7 +583,9 @@ class OverlayManager:
   key=(kind,signature) if layout else kind
   if model is None and key in self.extension_cache:return self.extension_cache[key]
   picture=QPicture();record=QPainter(picture)
-  try:draw_extension(record,kind,model or self.model,layout=layout)
+  try:
+   if kind=='corner_header':draw_corner_header(record,model or self.model,include_live=False)
+   else:draw_extension(record,kind,model or self.model,layout=layout)
   finally:record.end()
   if model is None:self.extension_cache[key]=picture
   return picture
@@ -898,6 +909,8 @@ class OverlayManager:
    elif kind=='commentary':
     if static:draw_extension(p,kind,self.model,canvas_size=self.base_size(kind))
     else:self._paint_commentary(p)
+   elif kind=='corner_header' and not static:
+    p.drawPicture(0,0,self._extension_picture(kind));draw_live_badge(p,self._live_frame(),live_rect(self.model.state.get('broadcast',{}).get('config',{})))
    elif static:draw_extension(p,kind,self.model,layout=layout)
    elif kind=='chart':
     draw_extension(p,kind,self.model,progress=self.chart_progress(),flow_time=max(0.,time.monotonic()-self.chart_flow_started))
@@ -934,6 +947,11 @@ class OverlayManager:
   screen=QApplication.primaryScreen().availableGeometry();width=min(438,max(220,int((screen.width()-70)/4)));height=round(width*self.base_size('player')[1]/438);win_width=max(400,screen.width()-80);win_height=round(win_width*SIZES['yaku'][1]/SIZES['yaku'][0]);hud_scale=min(1.,screen.width()/1920)
   self._migrate_hud_defaults(screen)
   saved=self.model.settings['windows']
+  corner=saved.get('corner_header')
+  if corner and abs(corner[3]-round(corner[2]*220/540))<=1:
+   # Extend the transparent capture below the existing title at its saved scale.
+   width,height=self.base_size('corner_header');factor=corner[2]/540
+   saved['corner_header']=[*corner[:2],round(width*factor),round(height*factor)]
   if self.model.settings.get('hud_group_version',0)<1 or 'dora' in saved:
    old=saved.get('round')
    if old:
@@ -953,7 +971,7 @@ class OverlayManager:
   defaults['table_scores']=self._table_scores_default(screen,defaults['round'])
   cw=round(screen.width()*900/1920);ch=round(cw*EXTRA_SIZES['commentary'][1]/EXTRA_SIZES['commentary'][0])
   defaults['commentary']=(screen.x()+(screen.width()-cw)/2,screen.y()+24*screen.width()/1920,cw,ch)
-  bw,bh=EXTRA_SIZES['corner_header'];defaults['corner_header']=(screen.right()-(bw+30)*factor,screen.y()+24*factor,bw*factor,bh*factor)
+  bw,bh=self.base_size('corner_header');defaults['corner_header']=(screen.right()-(bw+30)*factor,screen.y()+24*factor,bw*factor,bh*factor)
   defaults['riichi_effect']=(screen.x(),screen.y(),RIICHI_SIZE[0]*factor,RIICHI_SIZE[1]*factor)
   legacy_defaults=defaults;defaults=self._canvas_defaults()
   version=self.model.settings.get('broadcast_canvas_version',0)
@@ -1020,9 +1038,11 @@ class OverlayManager:
    w.apply_topmost(self.model.settings.get('topmost',False));x,y,ww,hh=self.model.settings['windows'].get(key,defaults[key])
    min_width,min_height=(1,1) if key=='commentary' else (120,30)
    ww=max(min_width,min(4000,ww));hh=max(min_height,min(3000,hh))
+   if key=='corner_header':hh=round(ww*w.base[1]/w.base[0])
    if key not in player_keys and key in self.model.settings['windows'] and not any(s.availableGeometry().intersects(QRectF(x,y,ww,hh).toRect()) for s in QApplication.screens()):
     x,y=defaults[key][:2]
    w.setGeometry(round(x),round(y),round(ww),round(hh))
+   if key=='corner_header' and key in self.model.settings['windows']:self.model.settings['windows'][key]=list(w.geometry().getRect())
   bounds=self.player_capture_bounds().toAlignedRect()
   if not any(screen.availableGeometry().intersects(bounds) for screen in QApplication.screens()):
    dx,dy=round(defaults['player0'][0])-bounds.x(),round(defaults['player0'][1])-bounds.y()
@@ -1052,7 +1072,7 @@ class OverlayManager:
   values['qualification']=self._qualification_default(canvas)
   values['table_scores']=self._table_scores_default(canvas,values['round'])
   values['commentary']=(x+510*factor,y+24*factor,900*factor,900*factor*EXTRA_SIZES['commentary'][1]/EXTRA_SIZES['commentary'][0])
-  width,height=EXTRA_SIZES['corner_header'];values['corner_header']=(x+(1920-width-30)*factor,y+24*factor,width*factor,height*factor)
+  width,height=self.base_size('corner_header');values['corner_header']=(x+(1920-width-30)*factor,y+24*factor,width*factor,height*factor)
   values['riichi_effect']=canvas.getRect()
   values['four_conditions']=canvas.getRect()
   return values
@@ -1441,6 +1461,7 @@ class OverlayManager:
   elif kind=='riichi' and any(display_score(display_after,i,self.model.settings.get('riichi_payment_mode'))!=display_score(display_before,i,self.model.settings.get('riichi_payment_mode')) for i in range(4)):
    self.animation.begin(display_before,display_after,self.speed,self.model.settings.get('riichi_payment_mode','immediate'),preserve_other_tracks=True,theme=self.model.settings.get('theme','mleague'));self._riichi_payment_active=had_riichi_holds;self.timer.start()
   elif kind in ('clear','restore','next_hand','start_match','new_match','import','hand_correction'):
+   self.art.wait_motion.clear()
    if kind in ('clear','restore','next_hand','start_match','new_match','hand_correction'):self.model.settings['final_cards_visible']=False
    self._riichi_payment_active=False;self.final_pt_deadline=None;self._auto_final_pending=False;self._final_card_change=None;self.animation.finish();self.animation.clear_presentation();self.pending_win=False;self.pending_next=False;self.model.settings['show_yaku']=False;self.art.win_started=None;self.set_stage('players_in' if kind=='next_hand' else 'table')
    if kind in ('restore','hand_correction'):self._restore_settlement_data()
@@ -1548,6 +1569,7 @@ class OverlayManager:
    now=time.monotonic();ratio=self.speed/new_speed
    for starts in (self.art.status_start,self.art.frame_start,self.art.meld_start,self.art.dora_start,self.art.remaining_start):
     for key,started in starts.items():starts[key]=now-(now-started)*ratio
+   for motion in self.art.wait_motion.values():motion.started=now-(now-motion.started)*ratio
    for key in ('yaku_started','stage_started'):setattr(self,key,now-(now-getattr(self,key))*ratio)
    if self.art.win_started is not None:self.art.win_started=now-(now-self.art.win_started)*ratio
    if self.chart_started is not None:self.chart_started=now-(now-self.chart_started)*ratio
@@ -1575,6 +1597,11 @@ class OverlayManager:
    if w.kind=='player':
     base=SIZES['player']
     if w.base!=base:w.base=base;w.resize(w.width(),round(w.width()*base[1]/base[0]))
+   if w.kind=='corner_header':
+    base=self.base_size(w.kind)
+    if w.base!=base:
+     factor=w.width()/w.base[0];w.base=base;w.resize(round(base[0]*factor),round(base[1]*factor))
+    elif w.height()!=round(w.width()*base[1]/base[0]):w.resize(w.width(),round(w.width()*base[1]/base[0]))
    show=self.content_visible(key)
    inactive_fullscreen=key in FULLSCREEN_PARTS and not self.model.settings.get('split_fullscreen_windows',False) and not self.capture_previewing(key)
    if key.startswith('player') or key in ('standings','round') or inactive_fullscreen:
@@ -1598,6 +1625,7 @@ class OverlayManager:
   self._sync_commentary_geometry()
   self._sync_bottom_geometry()
   self._schedule_status_frames(time.monotonic())
+  self._schedule_live_badge(time.monotonic())
   if getattr(self,'postmatch',None):self.postmatch.sync_display()
   if getattr(self,'opening',None):self.opening.sync_display()
   self.fullscreen_capture.sync_settings()
@@ -1611,6 +1639,24 @@ class OverlayManager:
   if hasattr(self,'programme'):self.programme.sync()
   if self.chart_flow_active():self.timer.start()
   if self.riichi_queue.busy:self.timer.start()
+ def _live_frame(self,now=None):
+  now=time.monotonic() if now is None else now
+  hold=self.model.state.get('broadcast',{}).get('config',{}).get('corner_live_hold',7.)
+  return live_frame(now-self.art.created_at,hold)
+ def _schedule_live_badge(self,now):
+  self.live_timer.stop()
+  if self.closing or not self.content_visible('corner_header') or self.capture_previewing('corner_header') or self.capture_suppressed('corner_header'):return
+  frame=self._live_frame(now)
+  self.live_timer.start(16 if frame.moving else max(1,math.ceil(frame.delay*1000)))
+ def _wake_live_badge(self):
+  if self.closing:return
+  now=time.monotonic();self._schedule_live_badge(now)
+  if not self.live_timer.isActive():return
+  window=self.windows['corner_header']
+  area=live_rect(self.model.state.get('broadcast',{}).get('config',{})).adjusted(-2,-3,2,3)
+  factor=window.width()/window.base[0]
+  damage=QRectF(area.x()*factor,area.y()*factor,area.width()*factor,area.height()*factor)
+  window.update(damage.toAlignedRect())
  def _schedule_status_frames(self,now):
   """Render moving frames; sleep through their holds and wake at the next orbit."""
   self.status_frame_timer.stop()
@@ -1672,14 +1718,14 @@ class OverlayManager:
    self._save_display_settings(final_points_mode=self._final_target);self.set_stage('final_points_in',now);self.on_display();self.model.display_changed.emit()
   elif self.stage=='final_points_in' and age>=.45:self.set_stage('table',now);self.on_display()
   for key,w in self.windows.items():
-   if not key.startswith('player') and key not in ('riichi_effect','round') and (self.content_visible(key) or self.capture_previewing(key)):w.update()
+   if not key.startswith('player') and key not in ('riichi_effect','round') and (key!='corner_header' or key in self.extension_transitions) and (self.content_visible(key) or self.capture_previewing(key)):w.update()
   if self.content_visible('round') or self.capture_previewing('round'):self.hud_capture.update()
   if self.capture_previewing('players') or self.player_capture_visible():self.players_capture.update()
   if self.riichi_queue.busy or self.fullscreen_panel():self.fullscreen_capture.update()
   status_moving=self._schedule_status_frames(now)
   if not self.riichi_queue.busy and not status_moving and not self._sidebar_visibility_active(now) and not self._commentary_visibility_active(now) and not self.chart_flow_active() and not self.animation.active and self.stage in ('table','final','settlement_hand','settlement_total','settlement_final') and now>getattr(self,'extra_until',0) and not self.extension_transitions and self._standings_change is None and self.chart_started is None and self.final_pt_deadline is None and self._final_card_change is None and self._sidebar_transition is None:self.timer.stop()
  def finish(self):
-  self.animation.finish();self._riichi_payment_active=False;self.art.status_start.clear();self.art.meld_start.clear();self.art.dora_start.clear();self.art.remaining_start.clear();self.art.remaining_from.clear()
+  self.animation.finish();self._riichi_payment_active=False;self.art.status_start.clear();self.art.meld_start.clear();self.art.dora_start.clear();self.art.remaining_start.clear();self.art.remaining_from.clear();self.art.wait_motion.clear()
   if self.model.last_info and (self.pending_win or self.stage in ('players_out','win') or self.model.settings['show_yaku']):
    self.pending_win=False;self.set_stage('win');now=time.monotonic();self.stage_started=now-self.art.win_content_duration()/self.speed;self.art.win_started=self.stage_started;self.yaku_started=self.stage_started
   elif self.pending_next and self.stage=='table':self.set_stage('draw_hold')
@@ -1815,7 +1861,7 @@ class OverlayManager:
   if self.closing:return
   if persist:self.save_geometry()
   for monitor in getattr(self,'_capture_dpi_monitors',[]):monitor.dispose()
-  self.closing=True;self.timer.stop();self.commentary_timer.stop();self.status_frame_timer.stop();self.sidebar_timer.stop();self.sidebar_hide_timer.stop();self.sidebar_hide_deadline=None
+  self.closing=True;self.timer.stop();self.commentary_timer.stop();self.status_frame_timer.stop();self.live_timer.stop();self.sidebar_timer.stop();self.sidebar_hide_timer.stop();self.sidebar_hide_deadline=None
   for signal,callback in ((self.model.changed,self.on_change),(self.model.display_changed,self.on_display),
                           (self.model.changed,self.postmatch.on_model_changed),(self.model.changed,self.opening.on_model_changed),
                           (self.model.changed,self.programme.on_model_changed)):

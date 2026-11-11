@@ -17,7 +17,7 @@ from qualification_presentation import qualification_panel_size, FOUR_PANEL_SIZE
 from table_score_strip import SCORE_STRIP_SIZE, draw_table_score_strip
 from identity_media import paint_identity_media
 from chart_effects import chart_y, line_gradient
-from corner_header import CORNER_SIZE, draw_corner_header
+from corner_header import CORNER_SIZE, corner_canvas_size, draw_corner_header
 from commentary_style import commentary_style_options
 from player_layout import PLAYER_LAYOUT
 
@@ -887,6 +887,7 @@ def _draw_extension(painter, kind, model, layout=None, progress=1., settlement=N
     size = (400, 650) if kind == 'qualification' and settlement is not None and settlement_stage == 'total' else (
         qualification_panel_size(model) if kind == 'qualification' else EXTRA_SIZES[kind])
     if kind=='commentary':size=canvas_size or (size[0],commentary_layout(model,size[0])['height'])
+    if kind=='corner_header':size=corner_canvas_size(_config(model))
     painter.setClipRect(QRectF(0, 0, *size))
     try:
         if kind == 'standings':
