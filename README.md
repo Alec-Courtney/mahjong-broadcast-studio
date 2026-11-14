@@ -8,7 +8,7 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 
 ### 下载 Windows 便携版
 
-**[下载 Windows x64 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.1-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [预览版说明](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.1-preview)
+**[下载 Windows x64 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.2-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [预览版说明](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.2-preview) · [本版更新](docs/releases/v0.1.2-preview.md)
 
 1. 把整个 ZIP 解压到可写的个人文件夹，例如 `文档\MahjongStudio`。
 2. 双击 `MahjongOverlayStudio.exe`。保留同目录的 `_internal` 文件夹。包内附有 `START-HERE.txt`。
@@ -27,7 +27,7 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 
 1. 点击 **赛事管理 → 赛事库**，选中 **【演示】M.League 团队积分赛**，点击 **打开选中赛事**。
 2. 在 **排名与结果** 查看个人榜、团队榜及历史成绩。回到导播台，可点击 **点数走势** 查看播出画面。
-3. 要试接 OBS，勾选 **显示播出窗口**，在 OBS 添加 **窗口捕获**，选择 **麻将UI · 四家选手**。[OBS 捕获步骤](docs/OBS_WINDOW_CAPTURE.md)
+3. 要试接 OBS，点击 **显示播出窗口**，按钮亮色描边表示开启。在 OBS 添加 **窗口捕获**，选择 **麻将UI · 四家选手**。[OBS 捕获步骤](docs/OBS_WINDOW_CAPTURE.md)
 
 ## 导入演示赛事
 

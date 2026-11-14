@@ -46,6 +46,8 @@ QPushButton[operatorChoice="true"]:checked{background:%(primary)s;color:white;bo
 QPushButton[operatorChoice="true"]:checked:hover{background:%(primary)s;border-color:%(text)s}
 QPushButton[operatorChoice="true"]:disabled{background:%(panel)s;color:%(muted)s;border:1px solid %(border)s}
 QPushButton[currentSeat="true"]{background:%(selected)s;border:2px solid %(accent)s;font-weight:600}
+QPushButton[displayToggle="true"]:!checked:hover{border:1px solid %(border)s}
+QPushButton[displayToggle="true"]:checked,QPushButton[displayToggle="true"]:checked:hover{background:%(field)s;border:2px solid %(accent)s}
 QPushButton[calledTile="true"]{border:2px solid %(accent)s}
 QPushButton#tileChoice:hover{border:2px solid %(accent)s}
 QPushButton#tileChoice:pressed{border:3px solid %(primary)s}

@@ -8,7 +8,7 @@
 
 ### Windows ポータブル版をダウンロード
 
-**[Windows x64 ZIP をダウンロード](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.1-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [プレビュー版のリリースノート](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.1-preview)
+**[Windows x64 ZIP をダウンロード](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.2-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [プレビュー版のリリースノート](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.2-preview) · [変更点の詳細（中国語）](docs/releases/v0.1.2-preview.md)
 
 1. ZIP 全体を書き込み可能なフォルダーに展開します。例えば `Documents\MahjongStudio` に置きます。
 2. `MahjongOverlayStudio.exe` をダブルクリックします。同じ場所に `_internal` を残してください。初回の操作は `START-HERE.txt` に記載しています。

@@ -31,7 +31,7 @@ ACTIONS = (
     ('commentary_hide', '隐藏术语', 'F8'),
     ('overlays', '显示或隐藏画面', 'F9'),
     ('undo', '对局撤销', 'Ctrl+Z'),
-    ('redo', '对局重做', 'Ctrl+Shift+Z'),
+    ('redo', '恢复已撤销操作', 'Ctrl+Shift+Z'),
     ('submit_win', '确认和牌', ''),
 )
 DEFAULT_HOTKEYS = {action: key for action, _, key in ACTIONS}

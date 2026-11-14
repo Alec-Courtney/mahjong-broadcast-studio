@@ -24,6 +24,7 @@ DAILY = (
     'test_recognition_settings',
     'test_recognition_source_editor',
     'test_live_console_accessibility',
+    'test_round_actions_visibility',
     'test_quantity_controls',
     'test_player_wait_controls',
     'test_desk_meld_preview',

@@ -3,13 +3,13 @@ import copy,uuid,time,math
 from functools import lru_cache
 from pathlib import Path
 from PySide6.QtCore import Qt,QSize,QSignalBlocker,QTimer,QEvent,Signal
-from PySide6.QtGui import QIcon,QPixmap,QImage,QPainter,QValidator
+from PySide6.QtGui import QColor,QIcon,QPixmap,QImage,QPainter,QPainterPath,QPen,QValidator
 from PySide6.QtWidgets import (QApplication,QMainWindow,QWidget,QLabel,QPushButton,QCheckBox,QComboBox,QSpinBox,QLineEdit,QVBoxLayout,QHBoxLayout,QBoxLayout,QGridLayout,QLayout,QGroupBox,QDialog,QDialogButtonBox,QFileDialog,QFrame,QSizePolicy,QMenu,QGraphicsOpacityEffect,QToolBar,QScrollArea,QStyle,QStyleOptionSpinBox,QStyleOptionComboBox)
 from mahjong_values import WINDS,TILES,YAKU,tile_name,normalize_waits,display_score,tile_sort_key
 from artwork import tile,fmt,WAIT_TILE_FACE_RECT
 from i18n import LANGUAGES,tr,set_language,localize_widgets,LanguageController
 
-from desk_theme import stylesheet, apply_theme
+from desk_theme import stylesheet, apply_theme, palette as desk_palette
 from docking import DockWorkspace, NavigationResizeHandle, PanelCollection
 from color_input import ColorInput
 from capture_surface import reference_width
@@ -24,6 +24,22 @@ def button(name,fn=None,checkable=False):
  b=QPushButton(name);b.setCheckable(checkable)
  if fn:b.clicked.connect(fn)
  return b
+def display_button(name):
+ b=button(name,checkable=True);b.setProperty('displayToggle',True);return b
+@lru_cache(maxsize=4)
+def history_arrow_icon(direction,theme):
+ colors=desk_palette({'console_theme':theme});icon=QIcon()
+ for mode in (QIcon.Mode.Normal,QIcon.Mode.Disabled):
+  image=QImage(96,96,QImage.Format.Format_ARGB32_Premultiplied);image.fill(Qt.GlobalColor.transparent)
+  painter=QPainter(image);painter.setRenderHint(QPainter.RenderHint.Antialiasing);painter.scale(4,4)
+  if direction=='redo':painter.translate(24,0);painter.scale(-1,1)
+  color=QColor(colors['muted'] if mode==QIcon.Mode.Disabled else colors['text'])
+  if mode==QIcon.Mode.Disabled:color.setAlphaF(.55)
+  painter.setPen(QPen(color,2.,Qt.PenStyle.SolidLine,Qt.PenCapStyle.RoundCap,Qt.PenJoinStyle.RoundJoin));painter.setBrush(Qt.BrushStyle.NoBrush)
+  path=QPainterPath();path.moveTo(21,18);path.cubicTo(21,7,10,4,4,12);painter.drawPath(path)
+  path=QPainterPath();path.moveTo(4,5);path.lineTo(4,12);path.lineTo(11,12);painter.drawPath(path)
+  painter.end();icon.addPixmap(QPixmap.fromImage(image),mode)
+ return icon
 def box(title):
  g=QGroupBox(title);v=QVBoxLayout(g);v.setSpacing(9);return g,v
 def row(*items):
@@ -258,16 +274,18 @@ class Console(QMainWindow):
   self.resize(min(1520,screen.width()-40),min(1050,screen.height()-60));self.setMinimumSize(960,620);apply_theme(self,model.settings)
   set_language(model.settings.get('language','zh_CN'));self.language_controller=LanguageController(QApplication.instance());self.language_controller.track(self)
   self.lock=QCheckBox('锁定播出窗口');self.lock.setChecked(model.settings['locked'])
-  self.overlays=QCheckBox('显示播出窗口');self.overlays.setChecked(model.settings['show_overlays'])
-  self.undo=button('撤销',lambda:self.run(lambda:model.history('undo')));self.redo=button('重做',lambda:self.run(lambda:model.history('redo')))
+  self.overlays=display_button('显示播出窗口');self.overlays.setChecked(model.settings['show_overlays'])
+  self.undo=button('',lambda:self.run(lambda:model.history('undo')));self.redo=button('',lambda:self.run(lambda:model.history('redo')))
+  for control in (self.undo,self.redo):control.setIconSize(QSize(22,22));control.setMinimumWidth(36)
   self.language=combo(LANGUAGES);self.language.setProperty('i18nLiteral',True);self.language.setCurrentIndex(self.language.findData(model.settings.get('language','zh_CN')));self.language.currentIndexChanged.connect(self.change_language)
   self.event_label=QLabel();self.event_label.setProperty('i18nLiteral',True);self.event_label.setMaximumWidth(380)
+  self.shortcut_button=button('快捷键',lambda:self.shortcuts.open_dialog())
   self.workspace_menu_button=button('工作区');self.workspace_menu=QMenu(self.workspace_menu_button)
   self.workspace_menu.addAction('重新载入当前工作区',self.reload_workspace);self.workspace_menu_button.setMenu(self.workspace_menu)
   if not model.event_store:
    self.workspace_menu.addAction('独立播出设置',lambda:self._open_settings_dialog(output=True))
   header=QWidget();header.setObjectName('consoleHeader');header_layout=QHBoxLayout(header);header_layout.setContentsMargins(12,8,12,8)
-  header_layout.addLayout(row(self.event_label,1,self.workspace_menu_button,self.overlays,self.undo,self.redo));self.setMenuWidget(header)
+  header_layout.addLayout(row(self.event_label,1,self.shortcut_button,self.workspace_menu_button,self.overlays,self.undo,self.redo));self.setMenuWidget(header)
   # These preferences remain available in Settings; the live header stays short.
   self.language.setParent(header);self.language.hide();self.lock.setParent(header);self.lock.hide()
   self.workspace=DockWorkspace(self,model)
@@ -479,7 +497,6 @@ class Console(QMainWindow):
    # retained for keyboard actions but intentionally hidden by this workspace.
    (self.hand_actions if key in ('draw','draw_declaration','next_hand') else first).addWidget(control)
   first.addStretch()
-  self.shortcut_button=button('快捷键',lambda:self.shortcuts.open_dialog());self.shortcut_button.setParent(self.shortcut_controls);self.shortcut_button.hide()
   from programme import PAGE_BUTTONS
   self.programme_scroll=QScrollArea(self.quick_bar);self.programme_scroll.setWidgetResizable(True);self.programme_scroll.setFrameShape(QScrollArea.Shape.NoFrame)
   self.programme_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff);self.programme_scroll.setFixedHeight(64)
@@ -497,7 +514,7 @@ class Console(QMainWindow):
   self.quick_bottom=combo([('选手信息','players'),('个人积分','individual'),('队伍积分','team')]);self.quick_bottom.setToolTip('底部显示');self.quick_bottom.setMaximumWidth(118)
   self.quick_bottom.activated.connect(lambda _:self.run(lambda:self.manager.set_bottom_mode(self.quick_bottom.currentData())))
   self.presentation_layout.addWidget(self.quick_scene);self.presentation_layout.addWidget(self.quick_bottom)
-  self.quick_table_scores=QCheckBox('上方积分');self.quick_conditions=QCheckBox('条件')
+  self.quick_table_scores=display_button('上方积分');self.quick_conditions=display_button('条件')
   self.quick_table_scores.toggled.connect(lambda visible:self.run(lambda:self.manager.set_extension_visible('table_scores',visible)))
   self.quick_conditions.toggled.connect(lambda visible:self.run(self.manager.show_conditions if visible else self.manager.hide_conditions))
   self.presentation_layout.addWidget(self.quick_table_scores);self.presentation_layout.addWidget(self.quick_conditions)
@@ -505,7 +522,7 @@ class Console(QMainWindow):
   self.corner_bottom_text=QLineEdit();self.corner_bottom_text.setMaxLength(80);self.corner_bottom_text.setMinimumWidth(0);self.corner_bottom_text.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed)
   self.corner_layout.addWidget(QLabel('下段文字'));self.corner_layout.addWidget(self.corner_bottom_text)
   self.corner_apply_button=button('应用文字',self.save_corner_text);self.corner_logo_button=button('Logo 设置',self.open_corner_header);self.corner_layout.addWidget(self.corner_apply_button);self.corner_layout.addWidget(self.corner_logo_button);self.refresh_corner_panel(force=True)
-  self.presentation_layout.addWidget(self.show_melds);self.presentation_layout.addWidget(self.show_yaku)
+  self.presentation_layout.addWidget(self.show_melds)
   self.quick_postmatch_play=self.programme_buttons['ending']
   self.quick_postmatch_pause=self.programme_pause
   self.quick_postmatch_stop=self.programme_stop
@@ -579,6 +596,13 @@ class Console(QMainWindow):
   for widget,value in [(self.quick_scene,self.model.settings.get('broadcast_scene','table'))]:
    blocker=QSignalBlocker(widget);widget.setCurrentIndex(max(0,widget.findData(value)));del blocker
   if hasattr(self,'shortcuts'):self.shortcuts.refresh()
+  self.refresh_history_controls()
+ def refresh_history_controls(self):
+  theme=self.model.settings.get('console_theme','dark')
+  for key,label in (('undo','撤销'),('redo','恢复已撤销操作')):
+   control=getattr(self,key);control.setIcon(history_arrow_icon(key,theme));control.setAccessibleName(tr(label))
+   binding=self.shortcuts.key_label(key) if hasattr(self,'shortcuts') else ''
+   control.setToolTip(tr(label)+('  ('+binding+')' if binding else '\n'+tr('未设置快捷键')))
  def change_language(self):
   language=self.language.currentData() or 'zh_CN'
   try:self.model.setting('language',language)
@@ -1150,7 +1174,7 @@ class Console(QMainWindow):
   self.meld_draft_preview=MeldPreviewWidget(parent=g);self.meld_draft_preview.tile_clicked.connect(self.choose_called);self.meld_draft_preview.tile_removed.connect(self.remove_draft)
   self.draft_row.addWidget(self.meld_draft_preview);v.addLayout(self.draft_row)
   self.add_meld_button=button('添加副露',self.add_meld);v.addLayout(row(button('清空',self.clear_draft),self.add_meld_button));self.meld_rows=QVBoxLayout();v.addLayout(self.meld_rows);middle.addWidget(g)
-  self.show_melds=QCheckBox('显示副露区');self.show_melds.setChecked(self.model.settings.get('show_melds',True));v.insertWidget(0,self.show_melds);self.show_melds.toggled.connect(lambda value:self.run(lambda:self.model.setting('show_melds',value)) if self.ready else None)
+  self.show_melds=display_button('显示副露区');self.show_melds.setChecked(self.model.settings.get('show_melds',True));v.insertWidget(0,self.show_melds);self.show_melds.toggled.connect(lambda value:self.run(lambda:self.model.setting('show_melds',value)) if self.ready else None)
   self.meld_kind.currentIndexChanged.connect(self.change_meld_kind)
   self.meld_from.currentIndexChanged.connect(self.refresh_draft)
  def change_meld_kind(self,*_):
@@ -1207,7 +1231,7 @@ class Console(QMainWindow):
    self.model.meld(self.selected,kind,self.draft.copy(),source,self.called_index);self.clear_draft()
   self.run(add)
  def build_yaku(self,right):
-  g,v=box('役种');self.show_yaku=QCheckBox('和牌画面');self.show_yaku.setChecked(self.model.settings['show_yaku']);self.yaku_grid=QGridLayout();self.yaku_grid.setSpacing(3)
+  g,v=box('役种');self.show_yaku=QCheckBox('和牌画面',g);self.show_yaku.setChecked(self.model.settings['show_yaku']);self.show_yaku.hide();self.yaku_grid=QGridLayout();self.yaku_grid.setSpacing(3)
   v.addLayout(row('和牌张',self.win_tile,'里指示牌',self.ura_indicators,self.win_fill_button));v.addWidget(self.win_assist_hint)
   for i,(name,closed,opened) in enumerate(YAKU[:30]):
    b=button(name,lambda _,n=name:self.role_clicked(n),True);b.setMinimumWidth(0);b.setStyleSheet(CHOICE_BUTTON_STYLE);b.setProperty('operatorChoice',True);self.yaku_buttons[name]=b;self.yaku_grid.addWidget(b,i//5,i%5)
