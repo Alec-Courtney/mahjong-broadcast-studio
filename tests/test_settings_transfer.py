@@ -38,6 +38,8 @@ class SettingsTransferTests(unittest.TestCase):
 
     def test_global_file_stays_global_and_preserves_the_target_live_animation(self):
         self.source.setting('console_dock_animations', True)
+        self.source.setting('console_meld_tile_scale', 80)
+        self.source.setting('console_wait_tile_scale', 120)
         self.source.setting('console_theme', 'light')
         self.source.setting('speed', 2.5)
         self.target.setting('speed', 1.25)
@@ -53,6 +55,8 @@ class SettingsTransferTests(unittest.TestCase):
         self.target_store.open(first)
         self.assertEqual(self.target.settings['speed'], 1.25)
         self.assertTrue(Model(self.target.path).settings['console_dock_animations'])
+        self.assertEqual(self.target.settings['console_meld_tile_scale'], 80)
+        self.assertEqual(self.target.settings['console_wait_tile_scale'], 120)
 
     def test_event_file_brings_media_and_animation_to_new_device_without_copying_results(self):
         image = QImage(40, 30, QImage.Format.Format_ARGB32)

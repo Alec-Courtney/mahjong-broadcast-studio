@@ -25,6 +25,7 @@ HUD_HEIGHT=108+ROUND_HEADER
 GAIN_COLOR='#00e450'
 LOSS_COLOR='#f51e28'
 TILE_FACE_RECT=QRectF(2.25,3.,20.5,30.)
+WAIT_TILE_FACE_RECT=QRectF(1.5,2.,22.,32.)
 DORA_SCALE=2.1
 DORA_STEP=64
 DORA_X=10
@@ -228,38 +229,42 @@ def asset_svg(name):
   _SVGS[name]=renderer
  return _SVGS[name]
 
-def tile(p,code,x,y,scale=1.,side=False):
+def tile(p,code,x,y,scale=1.,side=False,*,face_rect=None):
  p.save();p.translate(x,y);p.scale(scale,scale)
  if side:p.translate(0,25);p.rotate(-90)
  bounds=QRectF(0,0,25,36)
  if not code or code=='back':asset_svg('Back.svg').render(p,bounds)
  else:
   asset_svg('Front.svg').render(p,bounds)
-  asset_svg(TILE_NAMES[code]).render(p,TILE_FACE_RECT)
+  asset_svg(TILE_NAMES[code]).render(p,TILE_FACE_RECT if face_rect is None else face_rect)
  p.restore()
 
 def meld_width(m,scale=1.):
  # The fourth tile of an added kan is stacked, so it takes no extra width.
  count=3 if m['kind']=='kakan' else len(m['tiles'])
  return (count*27+(11 if m['kind']!='ankan' else 0))*scale
-def meld(p,m,x,y,scale=1.,tile_progress=None):
- kind=m['kind'];tiles=list(m['tiles']);called=m.get('calledIndex');cursor=x
+def meld_tiles(m):
+ """Design-space faces shared by broadcast painting and desk hit targets."""
+ kind=m['kind'];tiles=list(m['tiles']);called=m.get('calledIndex');cursor=0;result=[]
  if kind=='chi' and called is not None:
   claimed=tiles.pop(called);tiles.sort(key=tile_sort_key);tiles.insert(called,claimed)
  if kind=='ankan':
   for i in (0,3):
-   if tiles[i][0]=='0':tiles[1],tiles[i]=tiles[i],tiles[1]
+   if i<len(tiles) and len(tiles)>1 and tiles[i][0]=='0':tiles[1],tiles[i]=tiles[i],tiles[1]
  for i,t in enumerate(tiles):
   if kind=='kakan' and i==3:continue
   side=kind!='ankan' and i==called
   back=kind=='ankan' and i in (0,3)
-  progress=tile_progress(i) if tile_progress else 1.
-  p.save();p.setOpacity(p.opacity()*progress);tile(p,'back' if back else t,cursor,y+(11*scale if side else 0),scale,side);p.restore()
-  if kind=='kakan' and i==called:
-   progress=tile_progress(3) if tile_progress else 1.
-   p.save();p.setOpacity(p.opacity()*progress);tile(p,tiles[3],cursor,y-14*scale,scale,True);p.restore()
-  cursor+=(38 if side else 27)*scale
- return cursor
+  result.append((i,t,cursor,11 if side else 0,side,back))
+  if kind=='kakan' and i==called and len(tiles)>3:result.append((3,tiles[3],cursor,-14,True,False))
+  cursor+=38 if side else 27
+ return result
+
+def meld(p,m,x,y,scale=1.,tile_progress=None):
+ for index,code,dx,dy,side,back in meld_tiles(m):
+  progress=tile_progress(index) if tile_progress else 1.
+  p.save();p.setOpacity(p.opacity()*progress);tile(p,'back' if back else code,x+dx*scale,y+dy*scale,scale,side);p.restore()
+ return x+meld_width(m,scale)
 
 @dataclass(frozen=True)
 class PaymentTiming:
@@ -529,7 +534,7 @@ class Artwork:
   for position,code in enumerate(waits):
    p.save();p.setOpacity(base_alpha*frame.tiles_alpha)
    if code in player.get('waits_no_yaku',[]):p.setOpacity(p.opacity()*.32)
-   tile(p,code,start+position*32*scale+frame.tiles_x,y+(layout.status_height-36*scale)/2,scale);p.restore()
+   tile(p,code,start+position*32*scale+frame.tiles_x,y+(layout.status_height-36*scale)/2,scale,face_rect=WAIT_TILE_FACE_RECT);p.restore()
   if remaining is not None:
    p.setOpacity(base_alpha)
    rect(p,card_x+card_w-66,y+6+38*(1-frame.line_fraction),1.3,38*frame.line_fraction,'#d9ffffff')

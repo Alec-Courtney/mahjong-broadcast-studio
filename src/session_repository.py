@@ -103,6 +103,8 @@ def validate_settings(settings):
         raise ValueError('显示设置格式无效')
     from typography import validate
     validate(settings)
+    from desk_tiles import validate_tile_sizes
+    validate_tile_sizes(settings)
     from card_style import normalize_card_style, validate_card_style
     for key, theme in (('player_card_style', 'mleague'), ('saikouisen_card_style', 'saikouisen')):
         if key in settings:

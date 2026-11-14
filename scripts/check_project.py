@@ -25,6 +25,8 @@ DAILY = (
     'test_recognition_source_editor',
     'test_live_console_accessibility',
     'test_quantity_controls',
+    'test_player_wait_controls',
+    'test_desk_meld_preview',
     'test_obs_capture_surfaces',
     'test_event_workspaces.EventTests.test_two_events_restore_complete_settings_and_clear_undo',
     'test_tournament_model.TournamentModelTests.test_replace_settlement_undo_redo_reload',

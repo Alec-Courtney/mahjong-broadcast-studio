@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QCheckBox, QFileDialog, QFontComboBox, QFormLayout
 
 import artwork
 from application_preferences import capture_preferences
+from desk_tiles import TILE_SIZE_KEYS, TILE_SIZE_RANGE
 from i18n import LANGUAGES, tr
 from settings_drafts import merge_draft
 from settings_transfer import export_system_settings, import_system_settings
@@ -17,7 +18,7 @@ class SystemSettingsDialog(SettingsWindow):
         super().__init__(main)
         self.model = main.model
         self.setWindowTitle('系统设置')
-        self.resize(630, 390)
+        self.resize(630, 490)
         layout = QVBoxLayout(self)
         layout.addWidget(note('这些设置在切换赛事时继续使用。'))
         form = QFormLayout()
@@ -29,17 +30,23 @@ class SystemSettingsDialog(SettingsWindow):
         self.console_font.setProperty('i18n_literal', True)
         self.console_font_size = integer(9, 24)
         self.settings_font_size = integer(9, 24)
+        for key in TILE_SIZE_KEYS:
+            control = integer(*TILE_SIZE_RANGE, step=10)
+            control.setSuffix(' %')
+            setattr(self, key, control)
         self.dock_animations = QCheckBox('启用导播面板停靠动画')
         for control in (self.console_font_size, self.settings_font_size):
             control.setSuffix(' px')
         for label, control in (
             ('后台主题', self.theme), ('界面语言', self.language), ('导播台字体', self.console_font),
             ('导播台字号', self.console_font_size), ('设置页面字号', self.settings_font_size),
+            ('副露牌面尺寸', self.console_meld_tile_scale), ('听牌牌面尺寸', self.console_wait_tile_scale),
         ):
             form.addRow(label, control)
         form.addRow('', self.dock_animations)
         layout.addLayout(form)
         layout.addWidget(note('字号即时保存。面板停靠动画只用于导播操作界面。'))
+        layout.addWidget(note('牌面尺寸即时保存，仅调整导播台显示；80%为原大小，100%为默认大小。'))
         layout.addStretch()
         layout.addLayout(row(button('导出全局设置', self.export_file), button('导入全局设置', self.import_file), 1))
         self.error = QLabel()
@@ -55,6 +62,8 @@ class SystemSettingsDialog(SettingsWindow):
         self.track_settings('system', lambda: (self.values(), pending_spin_edits(self)), self.apply)
         for key in ('console_font_size', 'settings_font_size'):
             getattr(self, key).valueChanged.connect(lambda value, field=key: self.save_font_size(field, value))
+        for key in TILE_SIZE_KEYS:
+            getattr(self, key).valueChanged.connect(lambda value, field=key: self.save_live_size(field, value, '牌面尺寸已即时保存'))
 
     def live_values(self):
         return self.model.preferences.read() or capture_preferences(self.model.settings)
@@ -63,6 +72,7 @@ class SystemSettingsDialog(SettingsWindow):
         return dict(console_theme=self.theme.currentData(), language=self.language.currentData(),
                     console_font_family=self.console_font.currentFont().family(),
                     console_font_size=self.console_font_size.value(), settings_font_size=self.settings_font_size.value(),
+                    **{key: getattr(self, key).value() for key in TILE_SIZE_KEYS},
                     console_dock_animations=self.dock_animations.isChecked())
 
     def reload(self):
@@ -71,7 +81,7 @@ class SystemSettingsDialog(SettingsWindow):
         selected(self.language, self._live['language'])
         self.console_font.setCurrentFont(QFont(self._live['console_font_family'] or artwork.FONT))
         self.dock_animations.setChecked(self._live['console_dock_animations'])
-        for key in ('console_font_size', 'settings_font_size'):
+        for key in ('console_font_size', 'settings_font_size', *TILE_SIZE_KEYS):
             control = getattr(self, key)
             with QSignalBlocker(control):
                 control.setValue(self._live[key])
@@ -97,7 +107,7 @@ class SystemSettingsDialog(SettingsWindow):
     @saves_section('system')
     def apply(self):
         def save():
-            for control in (self.console_font_size, self.settings_font_size):
+            for control in (self.console_font_size, self.settings_font_size, *(getattr(self, key) for key in TILE_SIZE_KEYS)):
                 if not control.hasAcceptableInput():
                     raise ValueError('数字尚未填写完整，请检查后再保存')
                 control.interpretText()
@@ -111,9 +121,12 @@ class SystemSettingsDialog(SettingsWindow):
         return self.run(save, '全局设置已保存')
 
     def save_font_size(self, key, value):
+        self.save_live_size(key, value, '字号已即时保存')
+
+    def save_live_size(self, key, value, message):
         previous = self._live[key]
         if not self.run(lambda: self.model.save_preferences(dict(self.model.settings, **{key: value}),
-                                                            application_keys={key}), '字号已即时保存'):
+                                                            application_keys={key}), message):
             control = getattr(self, key)
             with QSignalBlocker(control):
                 control.setValue(previous)

@@ -279,14 +279,16 @@ class LiveConsoleAccessibilityTests(unittest.TestCase):
         self.ui.yaku_buttons['七对子'].click();self.assertFalse(self.ui.fu.isReadOnly())
         self.assertEqual(self.model.state,before)
 
-    def test_unframed_meld_candidates_keep_called_tile_selection_and_removal(self):
+    def test_final_style_meld_preview_keeps_called_tile_selection_and_removal(self):
         self.ui.focus_tile_target('meld');self.ui.tile_buttons['5p'].click()
-        self.ui.draft_row.itemAt(2).widget().click()
-        self.assertEqual(self.ui.called_index,2);self.assertIn('第3张',self.ui.called_tile_hint.text())
-        control=self.ui.draft_row.itemAt(0).widget()
-        control.customContextMenuRequested.emit(control.rect().center())
+        preview=self.ui.meld_draft_preview;reveal(preview,APP)
+        area=next(area for index,area in preview.tile_rects() if index==2)
+        QTest.mouseClick(preview,Qt.MouseButton.LeftButton,pos=area.center().toPoint())
+        self.assertEqual(self.ui.called_index,2)
+        area=next(area for index,area in preview.tile_rects() if index==0)
+        QTest.mouseClick(preview,Qt.MouseButton.RightButton,pos=area.center().toPoint())
         self.assertEqual(self.ui.draft,['5p','5p']);self.assertFalse(self.ui.add_meld_button.isEnabled())
-        self.ui.clear_draft();self.assertTrue(self.ui.called_tile_hint.isHidden())
+        self.ui.clear_draft();self.assertTrue(preview.isHidden())
 
     def test_ron_controls_settle_the_selected_winner_and_loser(self):
         self.ui.winner.buttons[2].click();self.ui.loser.buttons[3].click()

@@ -12,6 +12,8 @@ def default_settings():
         'console_font_size': 14,
         'settings_font_size': 14,
         'console_dock_animations': False,
+        'console_meld_tile_scale': 100,
+        'console_wait_tile_scale': 100,
         'locked': False,
         'topmost': False,
         'capture_bg': 'transparent',
