@@ -251,11 +251,13 @@ class DockWorkspaceTests(unittest.TestCase):
         controls = [self.ui.navigation_buttons['settings'], self.ui.quick_scene,
                     self.ui.quick_bottom, self.ui.quick_table_scores,
                     self.ui.quick_conditions, self.ui.quick_corner, self.ui.show_melds,
-                    self.ui.show_yaku, self.ui.font_smaller_button,
+                    self.ui.font_smaller_button,
                     self.ui.font_larger_button, self.ui.player_animation_button,
                     self.ui.corner_bottom_text,
                     self.ui.corner_apply_button, self.ui.corner_logo_button,
                     *self.ui.sidebar_preset_buttons.values()]
+        self.assertTrue(self.ui.show_yaku.isHidden())
+        self.assertFalse(self.ui.presentation_group.isAncestorOf(self.ui.show_yaku))
         for width, height in ((960, 620), (1460, 1000)):
             self.ui.resize(width, height)
             QTest.qWait(20)
