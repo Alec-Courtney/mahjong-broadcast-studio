@@ -1,10 +1,10 @@
 """Selected confirmed halves as a single team summary image, without baselines."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from event_penalties import net_results, penalty_totals
+from event_results import recorded_datetime
 from event_teams import is_rgb_color
 from ranking_order import match_seats, team_identity
 from ranking_reports import confirmed_matches
@@ -16,11 +16,8 @@ def decimal(value):
 
 
 def date_label(match):
-    try:
-        day = datetime.fromisoformat(match['recorded_at']).astimezone(timezone(timedelta(hours=8)))
-        return f"{day.month}/{day.day}（周{'一二三四五六日'[day.weekday()]}）"
-    except (KeyError, TypeError, ValueError):
-        return ''
+    day = recorded_datetime(match)
+    return f"{day.month}/{day.day}（周{'一二三四五六日'[day.weekday()]}）" if day else ''
 
 
 def build_report(state, event, match_ids):
@@ -35,7 +32,14 @@ def build_report(state, event, match_ids):
         raise ValueError('所选半庄已删除或尚未确认，请重新选择')
     teams, halves = {}, []
     registered = state['broadcast'].get('teams', {})
-    for number, match in enumerate(matches, 1):
+    # Number the full event before filtering the selection. Equal timestamps
+    # retain archive order; legacy records without a time remain at the end.
+    dated = [(match, recorded_datetime(match)) for match in matches]
+    dated.sort(key=lambda pair: (pair[1] is None, pair[1].timestamp() if pair[1] else 0))
+    daily_counts = {}
+    for match, recorded in dated:
+        day = recorded.date() if recorded else None
+        number = daily_counts[day] = daily_counts.get(day, 0) + 1
         if match['id'] not in selected:
             continue
         entries = net_results(match)

@@ -1,5 +1,6 @@
 """Selected-half team totals, preserved historical identities and exact PNG export."""
 import copy
+from datetime import datetime
 import os
 from pathlib import Path
 import sys
@@ -11,7 +12,7 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 
-from PySide6.QtCore import QEvent, Qt
+from PySide6.QtCore import QDateTime, QEvent, Qt
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QApplication, QDialog, QWidget
 from event_history import EventHistoryDialog
@@ -19,6 +20,7 @@ from event_results import prepare_result, record_result
 from event_store import EventStore
 from event_workspace import EventWorkspaceDialog
 from model import Model
+from match_record_time import MatchRecordTimeDialog
 from team_match_preview import TeamMatchReportDialog
 from team_match_report import build_report, date_label, export_png, render_report
 
@@ -48,6 +50,25 @@ class TeamMatchReportTests(unittest.TestCase):
         self.assertEqual([(h['id'], h['number']) for h in report['halves']], [('first', 1), ('third', 3)])
         self.assertEqual({t['id']: t['points'] for t in report['teams']}, dict(A=0, B=50, C=0, D=-50))
         self.assertEqual((self.state, self.event), before)
+
+    def test_daily_numbers_use_all_confirmed_records_in_time_order_before_selection(self):
+        times = ['2026-11-09T20:00:00', '2026-11-10T22:00:00', '2026-11-10T18:00:00',
+                 '2026-11-10T20:00:00', '2026-11-10T21:00:00', '2026-11-11T18:00:00']
+        matches = [dict(half(str(i)), recorded_at=datetime.fromisoformat(time).astimezone().isoformat())
+                   for i, time in enumerate(times)]
+        # An unfinished entry earlier that day must not consume a number.
+        matches.append(dict(half('pending'), committed=False, recorded_at=matches[2]['recorded_at']))
+        self.state['broadcast']['matches'] = matches
+        report = build_report(self.state, self.event, ['1', '3', '5'])
+        self.assertEqual([(h['id'], h['number']) for h in report['halves']], [('3', 2), ('1', 4), ('5', 1)])
+        self.assertEqual([h['date'] for h in report['halves']], ['11/10（周二）', '11/10（周二）', '11/11（周三）'])
+        self.assertEqual(report['teams'][0]['points'], 150)
+
+    def test_same_month_day_in_different_years_has_separate_numbers(self):
+        for match, time in zip(self.matches, ['2025-11-10T18:00:00', '2026-11-10T18:00:00', '2026-11-10T19:00:00']):
+            match['recorded_at'] = datetime.fromisoformat(time).astimezone().isoformat()
+        report = build_report(self.state, self.event, ['first', 'third'])
+        self.assertEqual([h['number'] for h in report['halves']], [1, 2])
 
     def test_player_and_team_penalties_are_deducted_once_and_voided_entries_ignored(self):
         self.matches[0]['penalties'] = [
@@ -110,8 +131,10 @@ class TeamMatchReportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_report(self.state, self.event, ['first'])
 
-    def test_date_converts_timezone_and_export_roundtrips_complete_image(self):
-        self.assertEqual(date_label(dict(recorded_at='2026-11-09T17:00:00+00:00')), '11/10（周二）')
+    def test_date_uses_system_record_date_and_export_roundtrips_complete_image(self):
+        value = '2026-11-09T17:00:00+00:00'
+        day = datetime.fromisoformat(value).astimezone()
+        self.assertEqual(date_label(dict(recorded_at=value)), f"{day.month}/{day.day}（周{'一二三四五六日'[day.weekday()]}）")
         self.assertEqual(date_label(dict(recorded_at='bad')), '')
         image = render_report(build_report(self.state, self.event, ['first', 'third']))
         self.assertGreater(image.height(), 700)
@@ -203,6 +226,41 @@ class TeamMatchReportWindowTests(unittest.TestCase):
         with patch.object(TeamMatchReportDialog, 'exec', new=execute):
             history.generate_button.click()
         self.assertEqual([h['id'] for h in captured[0].data['halves']], [self.records[0]['id']])
+
+    def test_edit_time_keeps_checks_and_refreshes_report_with_new_date(self):
+        history = self.history()
+        history.check_matches(True)
+        selected = history.selected_match_ids()
+        edited = history.matches[0]['id']
+        def execute(dialog):
+            dialog.time.setDateTime(QDateTime(datetime(2026, 11, 9, 18, 30, 15)))
+            dialog.save_button.click()
+            return dialog.result()
+        with patch.object(MatchRecordTimeDialog, 'exec', new=execute):
+            history.edit_time_button.click()
+        self.assertEqual(history.selected_match_ids(), selected)
+        self.assertEqual(history.match_table.currentRow(), 0)
+        self.assertIn('2026-11-09 18:30', history.record_time.text())
+        self.assertIn('已保存', history.export_error.text())
+        preview = TeamMatchReportDialog(history, selected)
+        self.windows.append(preview)
+        self.assertEqual(preview.data['halves'][0]['id'], edited)
+        self.assertEqual([h['number'] for h in preview.data['halves']], [1, 1])
+        self.assertEqual(preview.data['halves'][0]['date'], '11/9（周一）')
+
+    def test_time_editor_cancel_and_event_change_do_not_write(self):
+        history = self.history()
+        before = copy.deepcopy(self.model.state)
+        with patch.object(MatchRecordTimeDialog, 'exec', return_value=QDialog.DialogCode.Rejected):
+            history.edit_time_button.click()
+        self.assertEqual(self.model.state, before)
+        editor = MatchRecordTimeDialog(history, self.model, history.matches[0])
+        self.windows.append(editor)
+        self.store.create('切换后的赛事', 'team_league')
+        self.assertFalse(history.edit_time_button.isEnabled())
+        editor.save_button.click()
+        self.assertIn('赛事已切换', editor.error.text())
+        self.assertEqual(self.model.state['broadcast']['matches'], [])
 
     def test_reports_button_uses_history_selector_and_is_team_only(self):
         workspace = EventWorkspaceDialog(self.owner)

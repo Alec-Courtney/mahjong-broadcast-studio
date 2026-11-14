@@ -18,6 +18,7 @@ from event_results import prepare_result, record_result, recorded_time
 from event_store import EventStore
 from event_workspace import EventWorkspaceDialog, ResultsDialog
 from model import Model
+from match_record_time import MatchRecordTimeDialog
 import event_schedule as schedule
 import ranking_reports as reports
 import tournament
@@ -82,6 +83,75 @@ class MatchRecordManagementTests(unittest.TestCase):
         record_result(self.store, correction)
         self.assertNotIn('recorded_at', self.model.records.penalty_match(record['id']))
         self.assertEqual(recorded_time(record), '未记录')
+
+    def test_edit_manual_time_preserves_results_and_survives_correction_undo_and_restart(self):
+        match = self.manual()
+        self.model.field('honba', 2)
+        self.model.history('undo')
+        history_sizes = (len(self.model.undo), len(self.model.redo))
+        self.model.records.update_recorded_at(match['id'], LATER, expected_record=match)
+        self.assertEqual(dict(self.model.records.penalty_match(match['id']), recorded_at=TIME), match)
+        self.assertEqual((len(self.model.undo), len(self.model.redo)), history_sizes)
+        for direction in ('redo', 'undo'):
+            self.model.history(direction)
+            self.assertEqual(self.model.records.penalty_match(match['id'])['recorded_at'], LATER)
+        correction = prepare_result(self.model, self.seats, [40000, 30000, 19000, 11000], match_id=match['id'])
+        record_result(self.store, correction)
+        self.assertEqual(Model(self.model.path).records.penalty_match(match['id'])['recorded_at'], LATER)
+
+    def test_edit_live_time_survives_undoing_confirmation_and_reconfirmation(self):
+        match = self.finish()
+        self.model.records.update_recorded_at(match['id'], LATER)
+        for state, _ in self.model.undo:
+            record = next(record for record in state['broadcast']['matches'] if record['id'] == match['id'])
+            self.assertEqual(record['recorded_at'], LATER)
+        for state in self.model.last_transition[:2]:
+            self.assertEqual(next(record for record in state['broadcast']['matches'] if record['id'] == match['id'])['recorded_at'], LATER)
+        self.model.history('undo')
+        self.assertEqual(reports.confirmed_matches(self.model.state), [])
+        self.model.matches.confirm_finished()
+        self.model.set_score(0, self.model.state['players'][0]['score']+100)
+        self.assertEqual(self.model.records.penalty_match(match['id'])['recorded_at'], LATER)
+
+    def test_edit_time_rejects_invalid_stale_and_deleted_records(self):
+        match = self.manual()
+        before = self.snapshot()
+        saved = (self.model.path/'session.json').read_bytes()
+        for invalid in ('2026-11-09', 'bad', '', None):
+            with self.subTest(value=invalid), self.assertRaisesRegex(ValueError, '记录时间无效'):
+                self.model.records.update_recorded_at(match['id'], invalid)
+            self.assertEqual(self.snapshot(), before)
+            self.assertEqual((self.model.path/'session.json').read_bytes(), saved)
+        self.model.records.update_recorded_at(match['id'], LATER)
+        with self.assertRaisesRegex(ValueError, '已改变'):
+            self.model.records.update_recorded_at(match['id'], TIME, expected_record=match)
+        self.model.records.delete_match(match['id'])
+        with self.assertRaisesRegex(ValueError, '已删除'):
+            self.model.records.update_recorded_at(match['id'], TIME)
+
+    def test_time_edit_does_not_insert_future_lineup_into_earlier_table_snapshots(self):
+        self.model.configure_broadcast(dict(seats=self.seats[::-1]))
+        match = self.finish()
+        self.model.records.update_recorded_at(match['id'], LATER)
+        earlier = self.model.undo[0][0]
+        self.assertEqual([player['id'] for player in earlier['players']], self.seats)
+        self.assertNotIn(match['id'], [record['id'] for record in earlier['broadcast']['matches']])
+        while self.model.undo:
+            self.model.history('undo')
+        tournament.validate_broadcast(self.model.state)
+
+    def test_failed_time_edit_keeps_disk_state_history_and_notifications(self):
+        match = self.finish()
+        before = self.snapshot()
+        saved = (self.model.path/'session.json').read_bytes()
+        observed = []
+        self.model.changed.connect(lambda *_: observed.append('changed'))
+        with patch.object(self.model.repository, 'save', side_effect=OSError('disk full')):
+            with self.assertRaisesRegex(OSError, 'disk full'):
+                self.model.records.update_recorded_at(match['id'], LATER)
+        self.assertEqual(self.snapshot(), before)
+        self.assertEqual((self.model.path/'session.json').read_bytes(), saved)
+        self.assertEqual(observed, [])
 
     def test_delete_removes_team_points_penalties_and_games_and_keeps_other_record(self):
         self.store.create('团队删除测试', 'team_league')
@@ -250,6 +320,12 @@ class MatchRecordManagementTests(unittest.TestCase):
                 self.assertEqual(dialog.table.item(index//2, 3+(index%2)*2).text(), result['name'])
                 self.assertEqual(dialog.table.item(index//2, 4+(index%2)*2).text(), f"{result['points']:+.1f}".replace('-', '−'))
             self.assertEqual(dialog.table.item(0, 2).text(), recorded_time(first).replace(' ', '\n'))
+            def edit_time(editor):
+                editor.save_button.click()
+                return editor.result()
+            with patch.object(MatchRecordTimeDialog, 'exec', new=edit_time):
+                dialog.edit_time_button.click()
+            self.assertIn('已保存', dialog.status.text())
             self.assertEqual(dialog.table.columnCount(), 7)
             self.assertIn('−12.5 pt · 误和', dialog.table.item(3, 5).text())
             self.assertIn('现场复核确认', dialog.table.item(3, 5).toolTip())
@@ -268,6 +344,7 @@ class MatchRecordManagementTests(unittest.TestCase):
             self.assertEqual(dialog.table.rowCount(), 0)
             self.assertFalse(dialog.delete_button.isEnabled())
             self.assertFalse(dialog.penalties_button.isEnabled())
+            self.assertFalse(dialog.edit_time_button.isEnabled())
         finally:
             dialog.deleteLater()
             workspace._allow_close = True

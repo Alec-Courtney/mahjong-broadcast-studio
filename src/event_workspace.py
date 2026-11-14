@@ -266,9 +266,10 @@ class ResultsDialog(QDialog):
         self.status.setProperty('i18n_literal',True)
         layout.addWidget(self.status)
         self.edit_button=button('更正选中补录成绩',self.edit)
+        self.edit_time_button=button('修改记录时间',self.edit_record_time)
         self.penalties_button=button('选中半庄的判罚',self.penalties)
         self.delete_button=button('删除选中半庄记录',self.delete)
-        layout.addLayout(row(self.edit_button,self.penalties_button,self.delete_button,1,button('关闭',self.close)))
+        layout.addLayout(row(self.edit_button,self.edit_time_button,self.penalties_button,self.delete_button,1,button('关闭',self.close)))
         self.table.itemSelectionChanged.connect(self.select_record)
         self.table.currentCellChanged.connect(self.select_record)
         self.workspace.model.changed.connect(self.reload)
@@ -289,6 +290,7 @@ class ResultsDialog(QDialog):
                 self.table.clearSelection()
                 self.table.setRangeSelected(QTableWidgetSelectionRange(start,0,start+1,self.table.columnCount()-1),True)
         self.edit_button.setEnabled(bool(record and record.get('source')=='manual'))
+        self.edit_time_button.setEnabled(record is not None)
         self.penalties_button.setEnabled(record is not None)
         self.delete_button.setEnabled(record is not None)
 
@@ -360,6 +362,19 @@ class ResultsDialog(QDialog):
         dialog=ResultEntryDialog(self.workspace,record=record)
         try:
             if dialog.exec()==QDialog.DialogCode.Accepted:self.reload();self.workspace.refresh_reports();self.workspace.refresh_bracket()
+        finally:dialog.deleteLater()
+
+    def edit_record_time(self):
+        from match_record_time import MatchRecordTimeDialog
+
+        record=self.selected_record()
+        if not record:return
+        if self.workspace.model.event['id']!=self.event_id:
+            self.status.setText(tr('赛事已切换，请重新打开半庄记录'));return
+        dialog=MatchRecordTimeDialog(self,self.workspace.model,record)
+        try:
+            if dialog.exec()==QDialog.DialogCode.Accepted:
+                self.status.setText(tr('记录时间已保存，结果图将按新的记录时间计算当天序号。'))
         finally:dialog.deleteLater()
 
     def delete(self):

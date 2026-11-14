@@ -38,7 +38,7 @@ QGroupBox{background:%(panel)s;border:1px solid %(border)s;border-radius:6px;mar
 QGroupBox::title{subcontrol-origin:margin;left:12px;padding:0 5px;color:%(muted)s}
 QGroupBox[tileTarget="true"]{border:2px solid %(accent)s}
 QGroupBox[panelBody="true"]{margin-top:0;padding:6px;border-radius:4px}
-QPushButton,QComboBox,QSpinBox,QDoubleSpinBox,QLineEdit,QKeySequenceEdit{border:1px solid %(border)s;border-radius:4px;background:%(field)s;color:%(text)s;min-height:28px;padding:2px 7px}
+QPushButton,QComboBox,QSpinBox,QDoubleSpinBox,QDateTimeEdit,QLineEdit,QKeySequenceEdit{border:1px solid %(border)s;border-radius:4px;background:%(field)s;color:%(text)s;min-height:28px;padding:2px 7px}
 QPushButton:hover{background:%(hover)s;border-color:%(accent)s}
 QPushButton:checked{background:%(selected)s;border-color:%(accent)s}
 QPushButton:disabled{color:%(muted)s;background:%(panel)s}

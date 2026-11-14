@@ -69,6 +69,44 @@ class EventRecordService:
     def __init__(self, model):
         self.model = model
 
+    def update_recorded_at(self, match_id, recorded_at, expected_record=None):
+        """Edit record metadata independently of table undo and score changes."""
+        from ranking_order import match_seats
+        from ranking_reports import confirmed_matches
+
+        model = self.model
+        match = next((record for record in confirmed_matches(model.state) if record['id'] == match_id), None)
+        if match is None:
+            raise ValueError('该半庄记录已删除或尚未确认，请重新选择')
+        if expected_record is not None and match != expected_record:
+            raise ValueError('该半庄记录已改变，请重新打开时间编辑')
+        before = copy_state(model.state)
+        after = copy_state(before)
+        seats = match_seats(match)
+
+        def rebase(state):
+            archive = state['broadcast']['matches']
+            index = next((i for i, record in enumerate(archive) if record['id'] == match_id), None)
+            if index is not None:
+                archive[index] = freeze(dict(archive[index], recorded_at=recorded_at))
+            elif (state['id'] == match_id and [player['id'] for player in state['players']] == seats
+                    and len(archive) < 10000):
+                # Keep the edited time if confirmation is undone and repeated.
+                archive.append(freeze(dict(match, committed=False, recorded_at=recorded_at)))
+
+        rebase(after)
+        tournament.validate_broadcast(after)
+        model.engine.validate(after)
+        undo, redo = copy.deepcopy((model.undo, model.redo))
+        for state, _ in undo + redo:
+            rebase(state)
+        transition = copy.deepcopy(model.last_transition)
+        if transition:
+            rebase(transition[0])
+            rebase(transition[1])
+        model._publish(before, after, copy.deepcopy(model.settings), model.last_info,
+                       undo, redo, transition, 'match_record_time', display=True)
+
     def write_manual(self, record):
         model = self.model
         if record.get('source') != 'manual' or record['id'] == model.state['id']:

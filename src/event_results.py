@@ -5,16 +5,21 @@ from datetime import datetime
 import tournament
 
 
-def recorded_time(record):
-    """Display the saved confirmation time in the operator's local timezone."""
-    from i18n import tr
+def recorded_datetime(record):
+    """Use the same system-local date/time for records, editing and reports."""
     value = record.get('recorded_at')
     if value:
         try:
-            return datetime.fromisoformat(value).astimezone().strftime('%Y-%m-%d %H:%M')
+            return datetime.fromisoformat(value).astimezone()
         except (ValueError, TypeError):
             pass
-    return tr('未记录')
+    return None
+
+
+def recorded_time(record):
+    from i18n import tr
+    value = recorded_datetime(record)
+    return value.strftime('%Y-%m-%d %H:%M') if value else tr('未记录')
 
 
 def prepare_result(model, seats, scores, node_id='', match_id=None, title='补录半庄',initial_dealer=0):
