@@ -17,7 +17,8 @@ from session_repository import atomic_json, reject_constant
 
 
 APPLICATION_KEYS = ('console_theme', 'console_font_family', 'console_font_size',
-                    'settings_font_size', 'language', 'console_dock_animations')
+                    'settings_font_size', 'language', 'console_dock_animations',
+                    'console_meld_tile_scale', 'console_wait_tile_scale')
 
 
 def preference_defaults():
@@ -31,6 +32,8 @@ def capture_preferences(settings):
     values.update({key: copy.deepcopy(settings[key]) for key in APPLICATION_KEYS if key in settings})
     from typography import validate
     validate(values)
+    from desk_tiles import validate_tile_sizes
+    validate_tile_sizes(values)
     validate_console_theme(values['console_theme'])
     if values['language'] not in ('zh_CN', 'ja_JP'):
         raise ValueError('界面语言无效')

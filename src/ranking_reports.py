@@ -46,29 +46,63 @@ def team_row_fill(row, light=True):
 
 
 def report_row_fill(data, row, index=0):
-    if data.get('mode') == 'team' or data.get('event', {}).get('kind') == 'team_league':
-        return team_row_fill(row)
+    if data.get('mode') in ('individual', 'team'):
+        return '#ffffff'
     if 0 < row.get('rank', 0) <= data.get('event', {}).get('qualification_count', 0):
         return '#e8f3ec'
     return '#ffffff' if index % 2 == 0 else '#edf2ef'
 
 
+def report_cell_fill(data, row, key, index=0):
+    if data.get('mode') in ('individual', 'team') and key == 'team' and row.get('team'):
+        return row_team_color(row)
+    return report_row_fill(data, row, index)
+
+
+def report_cell_color(data, row, key):
+    if data.get('mode') in ('individual', 'team') and key == 'team' and row.get('team'):
+        from PySide6.QtGui import QColor
+        color = QColor(row_team_color(row))
+        luminance = sum(channel * weight for channel, weight in
+                        zip((color.redF(), color.greenF(), color.blueF()), (.2126, .7152, .0722)))
+        return '#ffffff' if luminance < .53 else '#111111'
+    value = row.get(key)
+    if key in ('points', 'leader_gap', 'cutoff_gap') and isinstance(value, (int, float)) and value < 0:
+        return '#b64444'
+    return '#111111'
+
+
 def style_table_item(cell, data, row, key, index=0):
     """Apply the exported report palette to one operator-table item."""
+    from PySide6.QtCore import Qt
     from PySide6.QtGui import QColor
-    cell.setBackground(QColor(report_row_fill(data, row, index)))
-    value = row.get(key)
-    negative = key in ('points', 'leader_gap', 'cutoff_gap') and isinstance(value, (int, float)) and value < 0
-    cell.setForeground(QColor('#b64444' if negative else '#203b34'))
+    cell.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+    cell.setBackground(QColor(report_cell_fill(data, row, key, index)))
+    cell.setForeground(QColor(report_cell_color(data, row, key)))
+    if key in ('games', 'planned', 'remaining', 'progress'):
+        planned = row.get('planned', 0)
+        cell.setToolTip(f"已打 {row['played']} 场 / 计划 {planned} 场，剩余 {row['remaining']} 场"
+                        if planned else f"已打 {row['played']} 场，未设置计划场次")
+
+
+def apply_plan(row, event, mode):
+    row['planned'] = event.get('team_plans' if mode == 'team' else 'player_plans', {}).get(
+        row['id'], event.get('planned_games', 0))
+    planned = row['planned']
+    row['remaining'] = max(0, planned - row['played']) if planned else None
+    row['progress'] = row['played'] / planned if planned else None
+    row['games'] = f"{row['played']}/{planned or '—'}" if mode == 'team' else row['played']
 
 
 def individual_rows(state, event):
     rows = {}
+    teams = state['broadcast'].get('teams', {})
     for player in state['broadcast']['roster']:
         baseline = player.get('result_baseline', {})
         counts = baseline.get('counts', [0] * 4)[:]
-        rows[player['id']] = dict(id=player['id'], name=player['name'], team=player.get('team', ''),
-            team_id=team_id(player), color=player.get('color', '#377e72'), hidden=player.get('hidden', False),
+        team = teams.get(team_id(player), {})
+        rows[player['id']] = dict(id=player['id'], name=player['name'], team=team.get('name', player.get('team', '')),
+            team_id=team_id(player), color=team.get('color', player.get('color', '#377e72')), hidden=player.get('hidden', False),
             points=float(player.get('base_points', 0)), played=player.get('games', 0),
             counts=counts, max_score=baseline.get('max_score'), status=player.get('status', 'active'))
     ledger = ScoreTimeline(rows.values())
@@ -88,8 +122,7 @@ def individual_rows(state, event):
         if not row['hands'] and row['played']:
             for key in ('hands','calls','riichi','wins','deal_ins','win_points','deal_in_points'):row[key]=None
         count = sum(row['counts']); row['known_games'] = count
-        row['planned'] = event.get('player_plans', {}).get(row['id'], event.get('planned_games', 0))
-        row['games'] = (f"{row['played']}/{row['planned'] or '—'}" if event.get('kind') != 'team_league' else row['played'])
+        apply_plan(row, event, 'individual')
         row['average_rank'] = sum((i + 1) * n for i, n in enumerate(row['counts'])) / count if count else None
         row['top_rate'] = row['counts'][0] / count if count else None
         row['top_two_rate'] = sum(row['counts'][:2]) / count if count else None
@@ -175,8 +208,7 @@ def team_rows(state, event):
     ranked = ledger.ranked(teams.values()); count = event.get('qualification_count', 0)
     cutoff = ranked[count - 1]['points'] if 0 < count < len(ranked) else None
     for row in ranked:
-        row['planned'] = event.get('team_plans', {}).get(row['id'], event.get('planned_games', 0))
-        row['games'] = f"{row['played']}/{row['planned'] or '—'}"
+        apply_plan(row, event, 'team')
         row['leader_gap'] = round(row['points'] - ranked[0]['points'], 4)
         row['cutoff_gap'] = round(row['points'] - cutoff, 4) if cutoff is not None else None
         row['known_games'] = sum(row['counts'])
@@ -200,7 +232,7 @@ def report(state, event, mode='individual'):
                '平均顺位和比率按已知顺位统计，历史缺失不补造；最高分为半庄最终持点。',
                '累计积分同分时，先达到者在前。同一半庄达到同分时按席位顺序。',
                ('团队场次每队每半庄计一次；顺位次数按成员出场计。距第一名/晋级线=本队积分−对应积分。' if mode == 'team' else
-                '场次数中“—”表示未设置总场次。')]
+                '个人榜场次数仅显示已打场次；计划、剩余场次和完成进度可在显示列中开启。')]
               +technical_notes[:2]+ [f"统计覆盖：{r['team'] if mode == 'team' else r['name']}，已知顺位 {r['known_games']}，已打 {r['played']} 场。"
                  for r in rows if r['known_games'] < r['played']]+technical_notes[2:])
 
@@ -216,70 +248,121 @@ def display(key, value):
     if kind == 'percent':return f'{value:.1%}'
     if kind == 'average':return f'{value:.2f}'
     if kind == 'score_average':return f'{value:,.1f}'
-    if kind == 'decimal':return f'{value:+.1f}' if value else '0.0'
+    if kind == 'decimal':return f'{value:.1f}' if value else '0.0'
     return str(value)
 
 
-def render_report(data, start=0, limit=40):
+def report_layout(data, start=0, limit=40):
+    """Size every page from the full field so columns stay aligned when paging."""
     from PySide6.QtCore import Qt, QRectF
-    from PySide6.QtGui import QImage, QPainter, QColor, QFont, QFontMetricsF
+    from PySide6.QtGui import QFont, QFontMetricsF
     import artwork
-    from panel_typography import draw_single_line
-    stop = None if limit is None else start + limit
-    keys = data['columns']; rows = data['rows'][start:stop]
-    font=QFont(artwork.FONT);font.setPixelSize(16);metrics=QFontMetricsF(font)
-    wrap_flags=int(Qt.AlignmentFlag.AlignLeft|Qt.TextFlag.TextWrapAnywhere)
-    widths=[]
+
+    keys = data['columns']
+    rows = data['rows'][start:None if limit is None else start+limit]
+    body = QFont(artwork.FONT); body.setPixelSize(24); body.setWeight(QFont.Weight.Normal)
+    heading = QFont(artwork.FONT); heading.setPixelSize(22); heading.setWeight(QFont.Weight.Normal)
+    # Small CJK glyphs can acquire uneven, heavy strokes with full grid fitting.
+    body.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
+    heading.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
+    metrics, headings = QFontMetricsF(body), QFontMetricsF(heading)
+    widths = []
     for key in keys:
-        label_width=metrics.horizontalAdvance(header(key,data['mode'],data['event']))+20
-        content_width=max((metrics.horizontalAdvance(str(r.get(key,'')))+22 for r in data['rows']),default=0) if key in ('name','team') else 0
-        widths.append(max(COLUMNS[key][1],min(280,label_width),min(360,content_width)))
-    widths=[int(w) for w in widths];width=max(760,sum(widths)+56)
-    # Short/custom column sets should fill the same report canvas as the title,
-    # rather than leaving a large empty strip beside the coloured table.
-    extra=width-56-sum(widths)
-    flexible=[index for index,key in enumerate(keys) if key in ('name','team')] or list(range(len(keys)))
-    for index in flexible:
-        addition=extra//len(flexible);widths[index]+=addition
-    if flexible:widths[flexible[-1]]+=extra%len(flexible)
-    header_height=max(42,int(max(metrics.boundingRect(QRectF(0,0,w-14,1000),wrap_flags,header(k,data['mode'],data['event'])).height() for k,w in zip(keys,widths)))+16)
-    heights=[]
-    for entry in rows:
-        needed=max((metrics.boundingRect(QRectF(0,0,w-18,1000),wrap_flags,str(entry.get(k,''))).height() for k,w in zip(keys,widths) if k in ('name','team')),default=24)
-        heights.append(max(44,int(needed)+14))
-    height=110+header_height+sum(heights)
+        content = max((metrics.horizontalAdvance(display(key, row.get(key))) for row in data['rows']), default=0)
+        label = headings.horizontalAdvance(header(key, data['mode'], data['event']))
+        widths.append(math.ceil(max(COLUMNS[key][1], min(360, content+16), min(320, label+16))))
+    margin = 10
+    width = max(760, sum(widths)+2*margin)
+    extra = width-2*margin-sum(widths)
+    flexible = [index for index, key in enumerate(keys) if key in ('team', 'name')] or [len(keys)-1]
+    for index in flexible:widths[index] += extra//len(flexible)
+    widths[flexible[-1]] += extra % len(flexible)
+    flags = int(Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWrapAnywhere)
+    header_height = math.ceil(max(headings.boundingRect(QRectF(0, 0, w-16, 1000), flags,
+        header(key, data['mode'], data['event'])).height() for key, w in zip(keys, widths)))+8
+    heights = [math.ceil(max([metrics.height()] + [metrics.boundingRect(QRectF(0, 0, w-16, 10000), flags,
+        str(row.get(key) or '')).height() for key, w in zip(keys, widths) if key in ('name', 'team')]))+10 for row in rows]
+    top = 58
+    footer = 26 if len(data['rows']) > len(rows) else 0
+    return dict(width=width, height=top+header_height+sum(heights)+footer+10,
+                widths=widths, header_height=header_height, heights=heights, top=top, margin=margin,
+                body_font=body, header_font=heading)
+
+
+def render_report(data, start=0, limit=40):
+    from PySide6.QtCore import Qt, QRectF, QLineF
+    from PySide6.QtGui import QImage, QPainter, QPainterPath, QColor, QFont, QFontMetricsF, QPen
+    import artwork
+    from panel_typography import draw_single_line, single_line_layout
+
+    layout = report_layout(data, start, limit)
+    number_font = QFont(layout['body_font'])
+    number_font.setHintingPreference(QFont.HintingPreference.PreferDefaultHinting)
+    width, height = layout['width'], layout['height']
+    keys = data['columns']; rows = data['rows'][start:None if limit is None else start+limit]
+    margin, top = layout['margin'], layout['top']
     image = QImage(width, height, QImage.Format.Format_ARGB32_Premultiplied)
-    if image.isNull():
-        raise OSError('无法创建榜单图片')
-    image.fill(QColor('#f5f8f7'))
-    painter = QPainter(image); painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    def text(value, rect, size=16, color='#203b34', bold=False, align=Qt.AlignmentFlag.AlignLeft,wrap=False):
-        font = QFont(artwork.FONT); font.setPixelSize(size); font.setBold(bold); painter.setFont(font); painter.setPen(QColor(color))
-        value = str(value);box = rect.adjusted(6, 0, -6, 0)
-        if wrap and QFontMetricsF(font).horizontalAdvance(value) > box.width():
-            painter.drawText(box, align | Qt.AlignmentFlag.AlignVCenter | Qt.TextFlag.TextWrapAnywhere, value)
+    if image.isNull():raise OSError('无法创建榜单图片')
+    image.fill(QColor('#ffffff'))
+    painter = QPainter(image)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    def text(value, rect, font, color='#111111', wrap=False):
+        box = rect.adjusted(8, 2, -8, -2)
+        painter.setFont(font); painter.setPen(QColor(color))
+        if wrap and QFontMetricsF(font).horizontalAdvance(str(value)) > box.width():
+            painter.drawText(box, Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWrapAnywhere, str(value))
+        elif font.hintingPreference() == QFont.HintingPreference.PreferNoHinting:
+            placement = single_line_layout(value, box, font, Qt.AlignmentFlag.AlignCenter, elide=False)
+            path = QPainterPath()
+            path.addText(placement.baseline, placement.font, str(value))
+            painter.save()
+            painter.setClipRect(box)
+            painter.fillPath(path, QColor(color))
+            painter.restore()
         else:
-            return draw_single_line(painter, value, box, font, align)
-    painter.fillRect(0, 0, width, 66, QColor('#124d3c'))
-    text(data['title'], QRectF(22, 0, width - 44, 66), 26, '#ffffff', True)
-    x = 28
-    for key, col_width in zip(keys, widths):
-        painter.fillRect(QRectF(x, 82, col_width, header_height), QColor('#24705a'))
-        text(header(key, data['mode'],data['event']), QRectF(x, 82, col_width, header_height), 15, '#ffffff', True, Qt.AlignmentFlag.AlignCenter,wrap=True); x += col_width
-    y=82+header_height
-    for index, (row,row_height) in enumerate(zip(rows,heights)):
-        x = 28
-        fill = report_row_fill(data, row, index)
-        for key, col_width in zip(keys, widths):
-            painter.fillRect(QRectF(x, y, col_width, row_height), QColor(fill))
-            value = row.get(key); color = '#b64444' if key in ('points', 'leader_gap', 'cutoff_gap') and value is not None and value < 0 else '#203b34'
-            text(display(key, value), QRectF(x, y, col_width, row_height), 16, color, key == 'rank',
-                 Qt.AlignmentFlag.AlignCenter, wrap=key in ('name','team'))
-            painter.setPen(QColor('#d4e0d9')); painter.drawLine(x, y + row_height-1, x + col_width, y + row_height-1); x += col_width
-        painter.fillRect(QRectF(28, y + 5, 3, row_height-10), QColor(row_team_color(row)));y+=row_height
-    if len(data['rows']) > len(rows):
-        text(f"{start + 1 if rows else 0}–{start + len(rows)} / {len(data['rows'])}", QRectF(width - 180, height - 27, 150, 22), 12, '#61746b', align=Qt.AlignmentFlag.AlignRight)
-    painter.end(); return image
+            draw_single_line(painter, value, box, font, Qt.AlignmentFlag.AlignCenter, elide=False)
+    try:
+        title_font = QFont(artwork.FONT); title_font.setPixelSize(34); title_font.setBold(True)
+        text(data['title'], QRectF(margin, 6, width-2*margin, 46), title_font)
+        x = margin
+        for key, col_width in zip(keys, layout['widths']):
+            rect = QRectF(x, top, col_width, layout['header_height'])
+            painter.fillRect(rect, QColor('#e5e5e5'))
+            text(header(key, data['mode'], data['event']), rect, layout['header_font'], wrap=True)
+            x += col_width
+        y = top+layout['header_height']
+        for index, (row, row_height) in enumerate(zip(rows, layout['heights'])):
+            x = margin
+            for key, col_width in zip(keys, layout['widths']):
+                rect = QRectF(x, y, col_width, row_height)
+                painter.fillRect(rect, QColor(report_cell_fill(data, row, key, index)))
+                text(display(key, row.get(key)), rect,
+                     layout['body_font'] if COLUMNS[key][2] == 'text' else number_font,
+                     report_cell_color(data, row, key),
+                     wrap=key in ('team', 'name'))
+                x += col_width
+            y += row_height
+            painter.setPen(QPen(QColor('#929292'), .7))
+            painter.drawLine(QLineF(margin, y, width-margin, y))
+        bottom = y
+        x = margin
+        solid_after = {'rank', 'team', 'name', 'points', 'games', 'average_rank', 'fourth', 'avoid_fourth_rate'}
+        for index, (key, col_width) in enumerate(zip(keys, layout['widths'])):
+            x += col_width
+            if index == len(keys)-1:continue
+            # Every column gets a line; finer dashed rules group related stats.
+            painter.setPen(QPen(QColor('#555555'), .9,
+                                Qt.PenStyle.SolidLine if key in solid_after else Qt.PenStyle.DashLine))
+            painter.drawLine(QLineF(x, top, x, bottom))
+        painter.setPen(QPen(QColor('#222222'), 1.4))
+        painter.drawLine(QLineF(margin, top+layout['header_height'], width-margin, top+layout['header_height']))
+        painter.drawRect(QRectF(margin, top, width-2*margin, bottom-top))
+        if len(data['rows']) > len(rows):
+            font = QFont(artwork.FONT); font.setPixelSize(18)
+            text(f"{start+1 if rows else 0}–{start+len(rows)} / {len(data['rows'])}",
+                 QRectF(width-210, bottom+3, 200, 24), font, '#555555')
+    finally:painter.end()
+    return image
 
 
 def KINDS_LABEL(event):
@@ -347,7 +430,7 @@ def schedule_report(state,event):
 
 def _export_reports(reports,event,filename):
     styles = []
-    fills = ['FFFFFF','000000','1B604B','EDF3EF','E0F0E4','FFFFFF','F6E5AC','DFE8ED','EAD7C7']
+    fills = ['FFFFFF','000000','1B604B','EDF3EF','E0F0E4','FFFFFF','F6E5AC','DFE8ED','EAD7C7','E5E5E5']
     def style(fill=0, font=0, fmt=0, align='center'):
         spec = (fill, font, fmt, align)
         if spec not in styles:styles.append(spec)
@@ -363,19 +446,20 @@ def _export_reports(reports,event,filename):
             if isinstance(value, (int, float)) and not isinstance(value, bool):
                 return f'<c r="{address}" s="{sid}"><v>{value}</v></c>'
             return f'<c r="{address}" s="{sid}" t="inlineStr"><is><t xml:space="preserve">{_xml("—" if value is None else value)}</t></is></c>'
-        body.append(f'<row r="1" ht="36" customHeight="1">{cell("A1", data["title"], style(2,1,0,"left"))}</row>')
+        ranking=data['mode'] in ('individual','team')
+        body.append(f'<row r="1" ht="36" customHeight="1">{cell("A1", data["title"], style(5,6) if ranking else style(2,1,0,"left"))}</row>')
         header_height=max(29,max(math.ceil(units(header(k,data['mode'],event))/max(1,w-2))*16+8 for k,w in zip(keys,col_widths)))
-        body.append(f'<row r="4" ht="{header_height}" customHeight="1">' + ''.join(cell(f'{_col(i)}4', header(key,data['mode'],event),style(2,1)) for i,key in enumerate(keys,1)) + '</row>')
+        body.append(f'<row r="4" ht="{header_height}" customHeight="1">' + ''.join(cell(f'{_col(i)}4', header(key,data['mode'],event),style(9,4) if ranking else style(2,1)) for i,key in enumerate(keys,1)) + '</row>')
         for row_index, entry in enumerate(data['rows'], 5):
             cells = []
-            color = report_row_fill(data, entry, row_index-5)[1:].upper()
-            if color not in fills:fills.append(color)
-            fill = fills.index(color)
             for col_index, key in enumerate(keys,1):
+                color = report_cell_fill(data, entry, key, row_index-5)[1:].upper()
+                if color not in fills[2:]:fills.append(color)
+                fill = fills.index(color, 2)
                 value = entry.get(key); kind = COLUMNS[key][2]
                 fmt = {'decimal':164,'average':165,'percent':166,'int':3,'score_average':164}.get(kind,0)
-                font = 3 if key in ('points','leader_gap','cutoff_gap') and isinstance(value,(int,float)) and value < 0 else 0
-                cells.append(cell(f'{_col(col_index)}{row_index}', value, style(fill,font,fmt,'left' if key in ('name','team') else 'center')))
+                font = {'#b64444':3, '#111111':4, '#ffffff':5}.get(report_cell_color(data, entry, key), 0)
+                cells.append(cell(f'{_col(col_index)}{row_index}', value, style(fill,font,fmt)))
             row_height=max(25,max((math.ceil(units(entry.get(k,''))/max(1,w-2))*16+8 for k,w in zip(keys,col_widths) if COLUMNS[k][2]=='text'),default=25))
             body.append(f'<row r="{row_index}" ht="{row_height}" customHeight="1">' + ''.join(cells) + '</row>')
         end = max(4, len(data['rows']) + 4)
@@ -391,7 +475,7 @@ def _export_reports(reports,event,filename):
             '<pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="0"/></worksheet>')
     style_xml = ('<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
         '<numFmts count="3"><numFmt numFmtId="164" formatCode="0.0;[Red]-0.0;0.0"/><numFmt numFmtId="165" formatCode="0.00"/><numFmt numFmtId="166" formatCode="0.0%"/></numFmts>'
-        '<fonts count="4">' + ''.join(f'<font><sz val="{size}"/><color rgb="FF{color}"/><name val="Microsoft YaHei"/>{"<b/>" if bold else ""}</font>' for size,color,bold in [(11,'203B34',False),(12,'FFFFFF',True),(10,'61746B',False),(11,'BC4141',False)]) + '</fonts>'
+        '<fonts count="7">' + ''.join(f'<font><sz val="{size}"/><color rgb="FF{color}"/><name val="Microsoft YaHei"/>{"<b/>" if bold else ""}</font>' for size,color,bold in [(11,'203B34',False),(12,'FFFFFF',True),(10,'61746B',False),(11,'BC4141',False),(11,'111111',False),(11,'FFFFFF',False),(12,'111111',True)]) + '</fonts>'
         f'<fills count="{len(fills)}">' + ''.join('<fill><patternFill patternType="none"/></fill>' if i==0 else '<fill><patternFill patternType="gray125"/></fill>' if i==1 else f'<fill><patternFill patternType="solid"><fgColor rgb="FF{color}"/><bgColor indexed="64"/></patternFill></fill>' for i,color in enumerate(fills)) + '</fills>'
         '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
         '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'

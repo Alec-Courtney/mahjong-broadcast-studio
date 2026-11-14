@@ -1,9 +1,9 @@
 """Large, read-only colour proof of the same paged report exported as PNG."""
 from __future__ import annotations
 
-from PySide6.QtCore import QEvent, QSignalBlocker, Qt, Signal
-from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QApplication, QLabel, QScrollArea, QVBoxLayout
+from PySide6.QtCore import QEvent, QSignalBlocker, QTimer, Qt, Signal
+from PySide6.QtGui import QColor, QImage, QPainter, QPixmap
+from PySide6.QtWidgets import QApplication, QLabel, QScrollArea, QVBoxLayout, QWidget
 
 import ranking_reports as reports
 from i18n import tr
@@ -12,6 +12,31 @@ from ui_widgets import button, choice, integer, row, selected
 
 
 PAGE_SIZE = reports.REPORT_PAGE_SIZE
+
+
+class ReportCanvas(QWidget):
+    """Scroll cached, opaque pixels without repainting the whole visible page."""
+    def __init__(self):
+        super().__init__()
+        self._pixmap = QPixmap()
+        self.setProperty('typographyPreview', True)
+        self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
+        self.setAttribute(Qt.WidgetAttribute.WA_StaticContents)
+
+    def setPixmap(self, pixmap):
+        self._pixmap = pixmap
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        try:
+            for rect in event.region():
+                if self._pixmap.isNull():
+                    painter.fillRect(rect, QColor('#ffffff'))
+                else:
+                    painter.drawPixmap(rect.topLeft(), self._pixmap, rect)
+        finally:
+            painter.end()
 
 
 class RankingPreviewWindow(SettingsWindow):
@@ -25,8 +50,13 @@ class RankingPreviewWindow(SettingsWindow):
         self.model = workspace.model
         self.data = None
         self.image = None
+        self._source_pixmap = None
         self.scaled_size = None
         self.fit_mode = None
+        self._fit_timer = QTimer(self)
+        self._fit_timer.setSingleShot(True)
+        self._fit_timer.setInterval(40)
+        self._fit_timer.timeout.connect(self._fit_after_resize)
         self._settings_model = self.model
         self.model.display_changed.connect(self.refresh_settings_theme)
         self.setWindowTitle('榜单 · 彩色预览')
@@ -63,8 +93,7 @@ class RankingPreviewWindow(SettingsWindow):
         self.scroll.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
         self.scroll.setWidgetResizable(False)
         self.scroll.setStyleSheet('QScrollArea{background:#cbd5d0;border:1px solid #9eafa5}')
-        self.canvas = QLabel()
-        self.canvas.setProperty('typographyPreview', True)
+        self.canvas = ReportCanvas()
         self.scroll.setWidget(self.canvas)
         self.scroll.viewport().installEventFilter(self)
         layout.addWidget(self.scroll, 1)
@@ -95,6 +124,9 @@ class RankingPreviewWindow(SettingsWindow):
         self.summary.setText(f"共 {len(data['rows'])} {unit} · 每页 {PAGE_SIZE} 行")
         self.setWindowTitle(data['title']+' · 彩色预览')
         self.image = reports.render_report(data, (page-1)*PAGE_SIZE, PAGE_SIZE)
+        # The report is fully opaque. Keep one native bitmap across zoom levels;
+        # ordinary scrolling only copies newly exposed strips of these pixels.
+        self._source_pixmap = QPixmap.fromImage(self.image.convertToFormat(QImage.Format.Format_RGB32))
         self.scaled_size = None
         if self.fit_mode:
             self.fit(self.fit_mode)
@@ -102,10 +134,12 @@ class RankingPreviewWindow(SettingsWindow):
             self.render_scaled()
 
     def change_zoom(self, *_):
+        self._fit_timer.stop()
         self.fit_mode = None
         self.render_scaled()
 
     def set_zoom(self, value):
+        self._fit_timer.stop()
         self.fit_mode = None
         if self.zoom.value() == value:
             self.render_scaled()
@@ -113,6 +147,7 @@ class RankingPreviewWindow(SettingsWindow):
             self.zoom.setValue(value)
 
     def fit(self, mode):
+        self._fit_timer.stop()
         self.fit_mode = mode
         if self.image is None:
             return
@@ -125,6 +160,10 @@ class RankingPreviewWindow(SettingsWindow):
         del blocker
         self.render_scaled()
 
+    def _fit_after_resize(self):
+        if self.fit_mode:
+            self.fit(self.fit_mode)
+
     def render_scaled(self):
         if self.image is None:
             return
@@ -132,7 +171,7 @@ class RankingPreviewWindow(SettingsWindow):
         if size == self.scaled_size:
             return
         self.scaled_size = size
-        pixmap = QPixmap.fromImage(self.image)
+        pixmap = self._source_pixmap
         if size != self.image.size():
             pixmap = pixmap.scaled(size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         self.canvas.setPixmap(pixmap)
@@ -146,5 +185,5 @@ class RankingPreviewWindow(SettingsWindow):
                 event.accept()
                 return True
             if event.type() == QEvent.Type.Resize and self.fit_mode:
-                self.fit(self.fit_mode)
+                self._fit_timer.start()
         return super().eventFilter(watched, event)

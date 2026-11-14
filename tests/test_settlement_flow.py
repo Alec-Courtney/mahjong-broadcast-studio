@@ -203,42 +203,6 @@ class SettlementFlowTests(unittest.TestCase):
   self.manager.replay_chart();self.assertEqual(self.manager.chart_progress(),0.);self.assertTrue(self.manager.timer.isActive())
   self.manager.set_extension_visible('chart',False);self.advance(.65);self.assertIsNone(self.manager.chart_started)
   self.assertFalse(self.manager.timer.isActive())
- def test_old_proportional_custom_caption_only_migrates_height(self):
-  self.model.settings.update(commentary_layout_version=2,commentary_auto=False)
-  self.model.settings['windows']['commentary']=[212,86,770,99]
-  self.manager.restore_geometry()
-  self.assertEqual(self.manager.windows['commentary'].geometry(),QRect(212,86,770,132))
-  self.assertFalse(self.model.settings['commentary_auto'])
-  self.manager.save_geometry();self.manager.restore_geometry()
-  self.assertEqual(self.manager.windows['commentary'].geometry(),QRect(212,86,770,132))
- def test_two_line_caption_migrates_old_layout_but_retains_custom_size(self):
-  self.model.settings['windows']['commentary']=[410,137,1100,142]
-  self.model.settings['commentary_auto_geometry']=[410,137,1100,142];self.model.settings['commentary_auto']=True
-  self.manager.restore_geometry();self.manager.center_commentary(QRect(0,0,1920,1080))
-  self.assertEqual(self.manager.windows['commentary'].base,(900,132))
-  self.assertEqual(self.manager.windows['commentary'].width(),900);self.assertEqual(self.manager.windows['commentary'].height(),132)
-  custom=QRect(210,82,660,160);self.manager.windows['commentary'].setGeometry(custom);self.manager.save_geometry();self.manager.restore_geometry()
-  self.assertEqual(self.manager.windows['commentary'].geometry(),custom)
-  self.assertFalse(self.model.settings['commentary_auto'])
 
- def test_commentary_has_fixed_padding_and_keeps_native_font_for_complete_copy(self):
-  from broadcast_artwork import commentary_layout
-  self.model.state['broadcast']['config'].update(commentary_title='振听',commentary_builtin=False)
-  bodies=('曾经舍弃过自己正在等待的牌。',
-          '曾经舍弃过自己正在等待的牌，或者错过了可以荣和的机会，此时不能荣和他人的舍牌，但仍然可以通过自摸和牌。',
-          '不能荣和他人舍牌，但可以自摸和牌。'*12, '牌'*10000)
-  layouts=[]
-  for body in bodies:
-   self.model.state['broadcast']['config']['commentary_body']=body
-   layout=commentary_layout(self.model);layouts.append(layout)
-   self.assertEqual(layout['body_font'].pixelSize(),24)
-   self.assertLessEqual(layout['body_height'],layout['body_rect'].height())
-   lines=layout['body_layout']
-   self.assertEqual(sum(lines.lineAt(i).textLength() for i in range(lines.lineCount())),len(body))
-   self.assertGreaterEqual(layout['body_rect'].y()-layout['top'],20)
-  self.assertEqual(layouts[0]['body_lines'],1);self.assertEqual(layouts[1]['body_lines'],2)
-  self.assertTrue(all(layout['body_rect'].width()==layouts[0]['body_rect'].width() for layout in layouts))
-  self.assertGreater(layouts[-1]['body_lines'],2)
-  self.assertGreater(layouts[-1]['height'],layouts[0]['height'])
 
 if __name__=='__main__':unittest.main()

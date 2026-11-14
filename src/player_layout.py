@@ -35,10 +35,8 @@ class PlayerLayout:
         transform.translate(-208, -338)
         return transform
 
-    def body_bounds(self, theme='mleague'):
-        """Visible photo and card plates in the single-seat capture canvas."""
-        if theme == 'saikouisen':
-            return QRectF(14, 164, 388, 165)
+    def body_bounds(self):
+        """ML card footprint used to frame both styles in the capture canvas."""
         return self.body_transform().mapRect(QRectF(
             self.left, self.top, self.card_x + self.card_width - self.left, self.photo_height))
 

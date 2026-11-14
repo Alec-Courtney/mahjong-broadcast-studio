@@ -1,7 +1,25 @@
 """Final-score entry for other tables without inventing hand statistics."""
 import copy
 import uuid
+from datetime import datetime
 import tournament
+
+
+def recorded_datetime(record):
+    """Use the same system-local date/time for records, editing and reports."""
+    value = record.get('recorded_at')
+    if value:
+        try:
+            return datetime.fromisoformat(value).astimezone()
+        except (ValueError, TypeError):
+            pass
+    return None
+
+
+def recorded_time(record):
+    from i18n import tr
+    value = recorded_datetime(record)
+    return value.strftime('%Y-%m-%d %H:%M') if value else tr('未记录')
 
 
 def prepare_result(model, seats, scores, node_id='', match_id=None, title='补录半庄',initial_dealer=0):
@@ -48,13 +66,17 @@ def prepare_result(model, seats, scores, node_id='', match_id=None, title='补�
         results=results,initial_scores=[state['rules']['startPoints']]*4,initial_players=[],partial=False,
         config=copy.deepcopy(state['broadcast']['config']))
     if node_id:record['bracket_node_id']=node_id
+    if prior:record['_replaces_record']=prior['id']
     return record
 
 
 def record_result(store, record):
     model=store.model;record=copy.deepcopy(record)
+    replacement=record.get('_replaces_record')
     # Re-validate against the current roster and schedule, after the preview.
     by_id={r['id']:r for r in record['results']};ordered=[by_id[pid] for pid in record['seats']];prior=next((m for m in model.state['broadcast']['matches'] if m['id']==record['id']),None)
+    if replacement and (replacement!=record['id'] or prior is None):
+        raise ValueError('待更正半庄记录已删除，请重新打开成绩记录')
     checked=prepare_result(model,[r['id'] for r in ordered],[r['score'] for r in ordered],
         node_id=record.get('bracket_node_id',''),match_id=record['id'] if prior else None,title=record['title'],initial_dealer=record.get('initial_dealer',0))
     # Compare the whole result snapshot, including team identity and presentation

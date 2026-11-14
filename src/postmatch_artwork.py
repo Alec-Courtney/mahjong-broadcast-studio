@@ -79,14 +79,10 @@ def prepare_postmatch_data(model):
     data = prepare_postmatch(model)
     with overlay_scope(getattr(model, 'settings', {})):
         for row in data['rows']:
-            row['_portrait_image'] = identity_preview_image(model, row, width=239, height=194)
-            row['_team_media'] = resolve_identity_media(model, row, team=True)
-            # All card entry tracks remain independent despite raster caching.
-            for name, active in (('background', 'background_opacity'), ('names', 'name_opacity')):
-                track = dict(x=0., y=0., width=CARD_WIDTH, height=CARD_HEIGHT,
-                             background_offset=0., background_opacity=0., name_opacity=0., portrait_opacity=0.)
-                track[active] = 1.
-                row['_'+name+'_image'] = _image_layer(510, 194, lambda painter, row=row, track=track: _card(painter, model, row, track))
+            row['_background_image'] = _card_background_image(model, row)
+            row['_portrait_image'] = identity_preview_image(model, row, width=239, height=194, padding=0)
+            row['_names_image'] = _image_layer(int(CARD_WIDTH), int(CARD_HEIGHT),
+                                               lambda painter: _card_names(painter, row, 0., 0.))
     return data
 
 
@@ -211,35 +207,82 @@ def _chart(p, model, data, frame):
         p.setBrush(Qt.BrushStyle.NoBrush);p.drawPath(path);p.restore()
 
 
-def _card(p, model, row, frame):
-    x, y, width, height = frame['x'], frame['y'], frame['width'], frame['height']
-    if '_background_image' in row and '_names_image' in row:
-        p.save();_alpha(p, frame['background_opacity'])
-        p.drawImage(QPointF(x+frame['background_offset'], y), row['_background_image']);p.restore()
-        p.save();_alpha(p, frame['portrait_opacity'])
-        p.drawImage(QPointF(x+width-239, y), row['_portrait_image']);p.restore()
-        p.save();_alpha(p, frame['name_opacity'])
-        p.drawImage(QPointF(x, y), row['_names_image']);p.restore()
-        return
-    p.save();_alpha(p, frame['background_opacity'])
-    bx = x+frame['background_offset'];accent = QColor(_accent(row.get('color')))
-    gradient = QLinearGradient(bx, y, bx+width, y)
-    gradient.setColorAt(0, accent.darker(112));gradient.setColorAt(.68, accent.darker(108));gradient.setColorAt(1, QColor('#68131a20'))
-    p.fillRect(QRectF(bx, y, width, height), gradient)
-    team_media = row.get('_team_media') or resolve_identity_media(model, row, team=True)
-    if team_media.image is not None:
-        p.save();_alpha(p, .19)
-        dest = QRectF(bx+120, y+6, width-140, height-12)
-        p.drawImage(contain_rect(team_media.image, dest, padding=0), team_media.image);p.restore()
-    p.restore()
-    p.save();_alpha(p, frame['portrait_opacity'])
-    if '_portrait_image' in row:p.drawImage(QPointF(x+width-239, y), row['_portrait_image'])
-    else:paint_identity_media(p, model, row, QRectF(x+width-239, y, 239, height))
-    p.restore()
-    p.save();_alpha(p, frame['name_opacity'])
+def _logo_stamp(logo, ink):
+    """Tint logo detail while retaining transparency and lifting a flat canvas."""
+    stamp = logo.scaled(440, 268, Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation).convertToFormat(QImage.Format.Format_RGBA8888)
+    pixels = stamp.bits()
+    right = (stamp.width()-1)*4
+    bottom = (stamp.height()-1)*stamp.bytesPerLine()
+    corners = [pixels[offset:offset+4].tolist() for offset in (0, right, bottom, bottom+right)]
+    background = corners[0][:3]
+    flat_canvas = all(corner[3] >= 250 and max(abs(a-b) for a,b in zip(corner[:3], background)) <= 16
+                      for corner in corners)
+    ink_rgb = bytes((ink.red(), ink.green(), ink.blue()))
+    for offset in range(0, len(pixels), 4):
+        red, green, blue, alpha = pixels[offset:offset+4]
+        if not alpha:
+            continue
+        if flat_canvas:
+            distance = max(abs(red-background[0]), abs(green-background[1]), abs(blue-background[2]))
+            alpha = alpha * min(255, max(0, (distance-14)*3)) // 255
+        luminance = (77*red + 150*green + 29*blue) >> 8
+        pixels[offset:offset+3] = ink_rgb
+        pixels[offset+3] = alpha * (165 + 90*luminance//255) // 255
+    return stamp
+
+
+def _card_background_image(model, row):
+    width, height = int(CARD_WIDTH), int(CARD_HEIGHT)
+    bounds = QRectF(0, 0, width, height)
+    hue, saturation, value, _ = QColor(_accent(row.get('color'))).getHsvF()
+    mid_hue, light_hue = (hue+.033) % 1., (hue+.065) % 1.
+    value = min(.72, max(.34, value))
+    gradient = QLinearGradient(0, 0, width, 0)
+    gradient.setColorAt(0, QColor.fromHsvF(hue, saturation*.95, value*.70))
+    gradient.setColorAt(.54, QColor.fromHsvF(mid_hue, saturation*.94, value*.86))
+    gradient.setColorAt(.83, QColor.fromHsvF(light_hue, saturation*.90, value*1.10))
+
+    logo = resolve_identity_media(model, row, team=True).image
+
+    def paint(p):
+        p.fillRect(bounds, gradient)
+        if logo is not None:
+            ink = QColor.fromHsvF(mid_hue, saturation*.42, 1.)
+            stamp = _logo_stamp(logo, ink)
+            area = QRectF(width*.06, -height*.19, width*.86, height*1.38)
+            p.setOpacity(.19)
+            p.drawImage(contain_rect(stamp, area, padding=0), stamp)
+            p.setOpacity(1.)
+        fade = QLinearGradient(0, 0, width, 0)
+        fade.setColorAt(.81, Qt.GlobalColor.white)
+        fade.setColorAt(1, Qt.GlobalColor.transparent)
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_DestinationIn)
+        p.fillRect(bounds, fade)
+
+    return _image_layer(width, height, paint)
+
+
+def _card_names(p, row, x, y):
     _text(p, row.get('name', ''), x+22, y+29, 248, 68, 43, bold=True, minimum=20, literal=True)
     if row.get('team'):
         _text(p, row['team'], x+23, y+105, 234, 66, 25, wrap=True, minimum=15, literal=True)
+
+
+def _card(p, model, row, frame):
+    x, y, width, height = frame['x'], frame['y'], frame['width'], frame['height']
+    p.save();_alpha(p, frame['background_opacity'])
+    background = row.get('_background_image')
+    if background is None:
+        background = _card_background_image(model, row)
+    p.drawImage(QPointF(x+frame['background_offset'], y), background);p.restore()
+    p.save();_alpha(p, frame['portrait_opacity'])
+    if '_portrait_image' in row:p.drawImage(QPointF(x+width-239, y), row['_portrait_image'])
+    else:paint_identity_media(p, model, row, QRectF(x+width-239, y, 239, height), padding=0)
+    p.restore()
+    p.save();_alpha(p, frame['name_opacity'])
+    if '_names_image' in row:p.drawImage(QPointF(x, y), row['_names_image'])
+    else:_card_names(p, row, x, y)
     p.restore()
 
 

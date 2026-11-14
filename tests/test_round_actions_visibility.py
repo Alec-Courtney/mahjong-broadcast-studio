@@ -1,4 +1,5 @@
 """Live hand progression and score-strip controls work from the visible desk."""
+import copy
 import os
 from pathlib import Path
 import sys
@@ -9,11 +10,12 @@ from unittest.mock import patch
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QImage
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QDialogButtonBox
+from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QDialogButtonBox, QPushButton
 from console import Console
+from hotkeys import ShortcutDialog
 from event_metadata import new_event
 from model import Model
 from overlays import OverlayManager
@@ -42,15 +44,69 @@ class RoundActionVisibilityTests(unittest.TestCase):
         APP.processEvents()
         self.tmp.cleanup()
 
-    def test_hand_buttons_are_exposed_on_small_and_large_desks(self):
-        for font_size in (14, 17):
-            self.model.setting('console_font_size', font_size)
-            for size in ((960, 620), (1460, 1000)):
-                self.ui.resize(*size)
-                settle(APP)
-                for key in ('draw', 'draw_declaration', 'next_hand'):
-                    with self.subTest(font_size=font_size, size=size, action=key):
-                        self.assertTrue(visibility(self.ui.quick_actions[key], self.ui)['visible'])
+    def test_header_shortcuts_entry_opens_and_saves_bindings_without_changing_the_table(self):
+        self.ui.resize(960, 620); settle(APP)
+        self.assertTrue(visibility(self.ui.shortcut_button, self.ui)['visible'])
+        shortcut_x = self.ui.shortcut_button.mapTo(self.ui, QPoint()).x()
+        workspace_x = self.ui.workspace_menu_button.mapTo(self.ui, QPoint()).x()
+        self.assertLess(shortcut_x, workspace_x)
+        before = copy.deepcopy((self.model.state, self.model.undo))
+
+        def save(dialog):
+            dialog.edits['riichi'].setKeySequence('Ctrl+R')
+            self.assertTrue(dialog.save())
+            return QDialog.DialogCode.Rejected
+
+        with patch.object(ShortcutDialog, 'exec', save):
+            QTest.mouseClick(self.ui.shortcut_button, Qt.MouseButton.LeftButton)
+        self.assertEqual(self.ui.shortcuts.bindings['riichi'], 'Ctrl+R')
+        self.assertEqual(Model(self.tmp.name).settings['hotkeys']['riichi'], 'Ctrl+R')
+        self.assertEqual((self.model.state, self.model.undo), before)
+
+    def test_display_buttons_toggle_saved_preferences_without_entering_table_undo(self):
+        initial_score = self.model.state['players'][0]['score']
+        self.model.set_score(0, 31000)
+        before = copy.deepcopy((self.model.state, self.model.undo))
+        controls = (
+            (self.ui.overlays, lambda: self.model.settings['show_overlays']),
+            (self.ui.quick_table_scores, lambda: self.manager.enabled['table_scores']),
+            (self.ui.quick_conditions, self.manager.conditions_visible),
+            (self.ui.show_melds, lambda: self.model.settings['show_melds']),
+        )
+        self.assertFalse(self.ui.presentation_group.findChildren(QCheckBox))
+        self.assertTrue(self.ui.show_yaku.isHidden())
+        self.assertFalse(self.ui.presentation_group.isAncestorOf(self.ui.show_yaku))
+        for control, value in controls:
+            self.assertIsInstance(control, QPushButton)
+            label = control.text(); previous = value()
+            for expected in (not previous, previous):
+                reveal(control, APP)
+                QTest.mouseClick(control, Qt.MouseButton.LeftButton)
+                self.assertEqual(value(), expected)
+                self.assertEqual(control.isChecked(), expected)
+                self.assertEqual(control.text(), label)
+        self.assertEqual((self.model.state, self.model.undo), before)
+        self.ui.undo.click()
+        self.assertEqual(self.model.state['players'][0]['score'], initial_score)
+
+    def test_history_arrows_show_current_shortcuts_and_restore_the_undone_score(self):
+        self.assertFalse(self.ui.undo.text());self.assertFalse(self.ui.redo.text())
+        self.assertFalse(self.ui.undo.icon().isNull());self.assertFalse(self.ui.redo.icon().isNull())
+        self.assertIn('Ctrl+Z', self.ui.undo.toolTip())
+        self.assertIn('Ctrl+Shift+Z', self.ui.redo.toolTip())
+        self.ui.shortcuts.rebind({'undo': 'Alt+Z', 'redo': 'Alt+Shift+Z'})
+        self.assertIn('Alt+Z', self.ui.undo.toolTip())
+        self.assertNotIn('Ctrl+Z', self.ui.undo.toolTip())
+        self.assertIn('Alt+Shift+Z', self.ui.redo.toolTip())
+        initial_score = self.model.state['players'][0]['score']
+        self.model.set_score(0, 31000)
+        QTest.mouseClick(self.ui.undo, Qt.MouseButton.LeftButton)
+        self.assertEqual(self.model.state['players'][0]['score'], initial_score)
+        QTest.mouseClick(self.ui.redo, Qt.MouseButton.LeftButton)
+        self.assertEqual(self.model.state['players'][0]['score'], 31000)
+        self.ui.shortcuts.rebind({'redo': ''})
+        self.assertIn('未设置快捷键', self.ui.redo.toolTip())
+        self.assertNotIn('Alt+Shift+Z', self.ui.redo.toolTip())
 
     def test_draw_uses_four_seat_tenpai_status_and_next_hand_is_clickable(self):
         self.ui.resize(960, 620)

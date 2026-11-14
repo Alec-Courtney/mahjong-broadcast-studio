@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor,QPainter
 from PySide6.QtWidgets import (QApplication,QDialog,QFileDialog,QFormLayout,QHBoxLayout,QLabel,
     QLineEdit,QScrollArea,QSizePolicy,QVBoxLayout,QWidget)
 
-from corner_header import CORNER_SIZE,corner_options,corner_texts,draw_corner_header,validate_corner_config
+from corner_header import CORNER_TITLE_SIZE,corner_canvas_size,corner_options,corner_texts,draw_corner_header,validate_corner_config
 from desk_theme import apply_theme,status as status_style
 from i18n import tr
 from ui_widgets import button,decimal,integer,note,row
@@ -17,8 +17,13 @@ from settings_window import SettingsWindow, saves_section
 class CornerPreview(QWidget):
     def __init__(self,model,parent=None):
         super().__init__(parent);self.model=model;self.values=corner_options(model.state['broadcast']['config'])
-        self.setMinimumHeight(150);self.setMaximumHeight(220)
+        self.sync_canvas()
         self.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Preferred)
+
+    def sync_canvas(self):
+        # Grow the scrollable canvas instead of fitting LIVE and the title
+        # into the old title height. The title always keeps its design scale.
+        self.setMinimumSize(*corner_canvas_size(self.values));self.updateGeometry()
 
     def paintEvent(self,event):
         painter=QPainter(self)
@@ -27,9 +32,8 @@ class CornerPreview(QWidget):
             for y in range(0,self.height(),18):
                 for x in range(0,self.width(),18):
                     if (x//18+y//18)%2:painter.fillRect(x,y,18,18,QColor('#2d3947'))
-            scale=min(self.width()/CORNER_SIZE[0],self.height()/CORNER_SIZE[1])
-            painter.translate((self.width()-CORNER_SIZE[0]*scale)/2,(self.height()-CORNER_SIZE[1]*scale)/2)
-            painter.scale(scale,scale)
+            width,height=corner_canvas_size(self.values)
+            painter.translate(max(0,(self.width()-width)/2),0)
             preview=SimpleNamespace(path=self.model.path,settings=self.model.settings,state={'broadcast':{'config':self.values}})
             draw_corner_header(painter,preview)
         finally:painter.end()
@@ -42,7 +46,9 @@ class CornerHeaderDialog(SettingsWindow):
         self.set_transient_owner(parent or main)
         self.loading=False;self._applying=False;self._theme_signature=None
         self.setWindowTitle('赛事标识与 Logo');self.resize(700,700);self.setMinimumSize(570,540);self.setModal(False)
-        root=QVBoxLayout(self);self.preview=CornerPreview(self.model,self);root.addWidget(self.preview)
+        root=QVBoxLayout(self);self.preview=CornerPreview(self.model,self)
+        self.preview_scroll=QScrollArea();self.preview_scroll.setWidgetResizable(True);self.preview_scroll.setWidget(self.preview)
+        self.preview_scroll.setMinimumHeight(min(330,corner_canvas_size(self.preview.values)[1]+2));self.preview_scroll.setMaximumHeight(330);root.addWidget(self.preview_scroll)
         scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setFrameShape(QScrollArea.Shape.NoFrame)
         self.form_scroll=scroll;body=QWidget();form=QFormLayout(body);form.setContentsMargins(7,7,7,7);scroll.setWidget(body);root.addWidget(scroll,1)
         self.logo_reference='';self.logo_label=QLabel();self.logo_label.setWordWrap(True);self.logo_label.setProperty('i18nLiteral',True)
@@ -63,13 +69,22 @@ class CornerHeaderDialog(SettingsWindow):
         self.logo_x=integer(-80,80);self.logo_y=integer(-80,80)
         self.colour=QLineEdit();self.colour.setMaxLength(40)
         form.addRow('Logo 比例',self.logo_scale);form.addRow('Logo 水平 / 垂直偏移',row(self.logo_x,self.logo_y));form.addRow('文字颜色',self.colour)
+        self.live_hold=decimal(.5,120,1);self.live_hold.setSuffix(' s')
+        self.live_width=integer(40,540);self.live_height=integer(14,180)
+        self.live_x=integer(2,1080);self.live_gap=integer(-217,860)
+        for control in (self.live_width,self.live_height,self.live_x,self.live_gap):control.setSuffix(' px')
+        form.addRow('LIVE 尺寸（宽 / 高）',row(self.live_width,self.live_height))
+        form.addRow('LIVE 水平位置',self.live_x)
+        form.addRow('LIVE 与上方标识间距',self.live_gap)
+        form.addRow('LIVE 红底停留',self.live_hold)
+        form.addRow(note('间距以原有标识区域下沿为起点；正数下移，负数上移。预览可滚动查看，调整 LIVE 不会缩小上方 Logo 和标题。'))
         form.addRow(note('两段文字使用自然字宽和直体；长文字等比缩小适应边界。横线始终水平。Logo 调整限制在左侧安全区域。'))
         self.status=QLabel();self.status.setWordWrap(True);self.status.setMinimumHeight(28);root.addWidget(self.status)
         self.reload_button=button('重新读取',self.reload);self.apply_button=button('保存',self.apply)
         self.show_button=button('保存并显示',lambda:self.apply(show=True))
         root.addLayout(row(self.reload_button,1,self.apply_button,self.show_button,button('关闭',self.close)))
         for control in (self.top_text,self.bottom_text,self.match,self.colour):control.textChanged.connect(self.draft_changed)
-        for control in (self.top_size,self.bottom_size,self.top_tracking,self.bottom_tracking,self.logo_scale,self.logo_x,self.logo_y):control.valueChanged.connect(self.draft_changed)
+        for control in (self.top_size,self.bottom_size,self.top_tracking,self.bottom_tracking,self.logo_scale,self.logo_x,self.logo_y,self.live_hold,self.live_width,self.live_height,self.live_x,self.live_gap):control.valueChanged.connect(self.draft_changed)
         self.model.changed.connect(self.on_model_changed);self.model.display_changed.connect(self.on_display_changed)
         self.reload();self.on_display_changed()
         self.track_settings('corner',self.draft_values,self.apply)
@@ -85,13 +100,16 @@ class CornerHeaderDialog(SettingsWindow):
         return dict(corner_top_text=self.top_text.text(),corner_bottom_text=self.bottom_text.text(),corner_match=self.match.text(),
             corner_top_size=self.top_size.value(),corner_bottom_size=self.bottom_size.value(),
             corner_top_tracking=self.top_tracking.value(),corner_bottom_tracking=self.bottom_tracking.value(),
-            corner_logo_scale=self.logo_scale.value()/100.,corner_logo_x=self.logo_x.value(),corner_logo_y=self.logo_y.value(),corner_colour=self.colour.text().strip())
+            corner_logo_scale=self.logo_scale.value()/100.,corner_logo_x=self.logo_x.value(),corner_logo_y=self.logo_y.value(),corner_colour=self.colour.text().strip(),corner_live_hold=self.live_hold.value(),
+            corner_live_width=self.live_width.value(),corner_live_height=self.live_height.value(),corner_live_x=self.live_x.value(),corner_live_y=CORNER_TITLE_SIZE[1]+self.live_gap.value())
 
     @saves_section('corner')
     def reload(self,*_):
         self.loading=True;self.loaded_identity=self.identity();self.baseline=self.current_values()
         for control,key in ((self.top_text,'corner_top_text'),(self.bottom_text,'corner_bottom_text'),(self.match,'corner_match'),(self.colour,'corner_colour')):control.setText(self.baseline[key])
-        for control,key in ((self.top_size,'corner_top_size'),(self.bottom_size,'corner_bottom_size'),(self.top_tracking,'corner_top_tracking'),(self.bottom_tracking,'corner_bottom_tracking'),(self.logo_x,'corner_logo_x'),(self.logo_y,'corner_logo_y')):control.setValue(self.baseline[key])
+        for control,key in ((self.top_size,'corner_top_size'),(self.bottom_size,'corner_bottom_size'),(self.top_tracking,'corner_top_tracking'),(self.bottom_tracking,'corner_bottom_tracking'),(self.logo_x,'corner_logo_x'),(self.logo_y,'corner_logo_y'),(self.live_hold,'corner_live_hold'),
+                            (self.live_width,'corner_live_width'),(self.live_height,'corner_live_height'),(self.live_x,'corner_live_x')):control.setValue(self.baseline[key])
+        self.live_gap.setValue(self.baseline['corner_live_y']-CORNER_TITLE_SIZE[1])
         self.logo_scale.setValue(round(self.baseline['corner_logo_scale']*100));self.loading=False;self.status.clear();self.draft_changed()
 
     def draft_changed(self,*_):
@@ -103,7 +121,8 @@ class CornerHeaderDialog(SettingsWindow):
         try:
             draft=self.draft_values()
             values.update({key:value for key,value in draft.items() if value!=self.baseline[key]})
-            validate_corner_config(values);self.preview.values=values;self.preview.update()
+            validate_corner_config(values);self.preview.values=values;self.preview.sync_canvas()
+            self.preview_scroll.setMinimumHeight(min(330,max(230,corner_canvas_size(values)[1]+2)));self.preview.update()
         except ValueError as error:status_style(self.status,'error');self.status.setText(str(error))
 
     def choose_logo(self):

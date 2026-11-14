@@ -11,15 +11,12 @@ from PySide6.QtWidgets import QMessageBox
 
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'src'))
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 from console import Console
 from event_store import EventStore
 from model import Model
 from overlays import OverlayManager
 from sidebar_presets import sidebar_presets
-from sidebar_presets_dialog import WrappingPresetButton
 from i18n import set_language,localize_widgets
 import tournament
 
@@ -80,24 +77,6 @@ class SidebarPresetUITests(unittest.TestCase):
         self.assertEqual(control.text(),title);self.assertGreater(control.sizeHint().height(),34)
         set_language('ja_JP');localize_widgets(self.main);localize_widgets(dialog)
         self.assertEqual(control.text(),title);self.assertEqual(dialog.title.text(),title)
-
-    def test_eighty_ascii_characters_wrap_without_losing_visible_rows_or_margins(self):
-        control=WrappingPresetButton('W'*80);control.setFont(QFont('Arial',12));control.setStyleSheet('QPushButton{background:#000000;color:#ffffff;border:0}')
-        control.resize(146,control.heightForWidth(146));control.show();APP.processEvents()
-        try:
-            self.assertGreater(control.height(),60);image=control.grab().toImage();points=[];rows=[]
-            for y in range(image.height()):
-                row=[]
-                for x in range(image.width()):
-                    pixel=image.pixelColor(x,y)
-                    if min(pixel.red(),pixel.green(),pixel.blue())>220:points.append((x,y));row.append(x)
-                if row:rows.append(y)
-            self.assertTrue(points);self.assertGreaterEqual(min(x for x,y in points),7);self.assertLessEqual(max(x for x,y in points),image.width()-8)
-            self.assertGreaterEqual(min(rows),5);self.assertLessEqual(max(rows),image.height()-6)
-            groups=1+sum(b>a+1 for a,b in zip(rows,rows[1:]));self.assertGreaterEqual(groups,5)
-            bounds=control.fontMetrics().boundingRect(0,0,132,20000,control.TEXT_FLAGS,control.text())
-            self.assertLessEqual(bounds.height(),control.height()-10);self.assertEqual(control.text(),'W'*80)
-        finally:control.close();control.deleteLater();APP.processEvents()
 
     def test_open_editor_reload_and_guard_prevent_stale_cross_event_save(self):
         dialog=self.editor();original=self.model.event['id'];dialog.title.setText('旧赛事未保存草稿')

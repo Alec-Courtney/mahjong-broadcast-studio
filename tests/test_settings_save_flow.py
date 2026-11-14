@@ -104,6 +104,29 @@ class SettingsSaveFlowTests(unittest.TestCase):
         self.assertEqual(Model(self.model.path).settings['settings_font_size'], 18)
         self.assertEqual(self.dialog.dirty_sections(), [])
 
+    def test_output_style_and_other_drafts_apply_and_persist_per_event(self):
+        self.main.open_event_workspace(1)
+        workspace = self.main.event_workspace
+        workspace.ensure_event_settings()
+        workspace.select_settings_category('output')
+        editor = workspace.output_editor
+        editor.card_editor.editing_style.setCurrentIndex(1)
+        editor.show_melds.setChecked(False)
+        editor.bg.setCurrentIndex(editor.bg.findData('blue'))
+        editor.overlay_font_scale.setValue(125)
+        editor.split_fullscreen.setChecked(True)
+        first_id = self.model.event['id']
+        self.assertTrue(editor.save_changes(), editor.error.text())
+        expected = dict(theme='saikouisen', show_melds=False, capture_bg='blue',
+                        overlay_font_scale=1.25, split_fullscreen_windows=True)
+        for key,value in expected.items():
+            self.assertEqual(self.model.settings[key], value)
+            self.assertEqual(Model(self.model.path).settings[key], value)
+        self.store.create('独立样式赛事', 'individual_league')
+        self.assertEqual(self.model.settings['theme'], 'mleague')
+        self.store.open(first_id)
+        for key,value in expected.items():self.assertEqual(self.model.settings[key], value)
+
     def test_live_font_save_does_not_save_other_drafts_or_add_score_undo(self):
         undo = copy.deepcopy(self.model.undo)
         hold = self.model.settings['final_scores_hold']
@@ -130,15 +153,6 @@ class SettingsSaveFlowTests(unittest.TestCase):
         self.assertEqual(self.model.settings, before)
         self.assertIn('无法写入', self.dialog.error.text())
         self.assertEqual(self.dialog.dirty_sections(), [])
-
-    def test_rankings_are_visible_and_event_workspace_has_no_duplicate_display_page(self):
-        self.assertFalse(self.main.navigation_buttons['reports'].isHidden())
-        self.assertFalse(self.main.navigation_buttons['events'].isHidden())
-        self.assertNotIn('reports', self.dialog.entry_buttons)
-        self.main.open_event_workspace(3)
-        workspace = self.main.event_workspace
-        self.assertEqual(workspace.pages.currentIndex(), 3)
-        self.assertNotIn('播出与外观', [workspace.nav.item(i).text() for i in range(workspace.nav.count())])
 
     def test_demo_overwrite_controls_are_gone_and_legacy_restore_still_works(self):
         workspace = self.main.open_event_settings('statistics')
@@ -384,23 +398,6 @@ class SettingsSaveFlowTests(unittest.TestCase):
         self.assertEqual(columns.dirty_sections(), [])
         columns.close(); columns.deleteLater()
 
-    def test_browsing_card_preview_does_not_require_another_save(self):
-        self.dialog.show(); APP.processEvents()
-        self.dialog._go_to_page('选手卡样式')
-        editor = self.dialog.card_editor
-        for target in range(editor.text_target.count()):
-            editor.text_target.setCurrentIndex(target)
-            self.assertEqual(self.dialog.dirty_sections(), [])
-        editor.background_target.setCurrentIndex(1)
-        editor.editing_style.setCurrentIndex(1)
-        editor.seat.setCurrentIndex(2)
-        self.assertEqual(self.dialog.dirty_sections(), [])
-        QTest.mouseClick(self.dialog.save_button, Qt.MouseButton.LeftButton)
-        APP.processEvents()
-        self.assertEqual(self.dialog.dirty_sections(), [])
-        self.assertTrue(self.dialog.close())
-        self.question.assert_not_called()
-
     def test_card_edits_save_and_close_after_changing_preview_target(self):
         self.dialog.show(); self.dialog._go_to_page('选手卡样式')
         editor = self.dialog.card_editor
@@ -473,19 +470,6 @@ class SettingsSaveFlowTests(unittest.TestCase):
         self.assertEqual(self.dialog.dirty_sections(), [])
         self.assertTrue(self.dialog.close())
         self.question.assert_not_called()
-
-    def test_four_player_layout_scales_in_percent(self):
-        layout = PlayerLayoutDialog(self.main); layout.show()
-        self.assertEqual(layout.width.suffix(), ' %')
-        layout.width.setValue(150)
-        layout.gap.setValue(12)
-        layout.apply()
-        windows = [self.manager.windows[f'player{i}'] for i in range(4)]
-        expected_width = round(self.manager.base_size('player')[0] * 1.5)
-        self.assertEqual([w.width() for w in windows], [expected_width] * 4)
-        self.assertEqual([windows[i+1].x()-windows[i].x()-windows[i].width() for i in range(3)], [12] * 3)
-        self.assertEqual(layout.dirty_sections(), [])
-        layout.close(); layout.deleteLater()
 
     def test_program_exit_stops_if_a_settings_save_fails(self):
         self.main.settings_dialog = self.dialog

@@ -19,8 +19,9 @@ def begin_match(state, engine):
     broadcast = tournament.ensure_broadcast(state)
     if any(match['id'] == state['id'] and match.get('penalties') for match in broadcast['matches']):
         require_completed_match(state)
-    if broadcast['hands']:
+    if broadcast['hands'] and not broadcast.get('result_discarded'):
         tournament.archive_match(state, False)
+    broadcast.pop('result_discarded', None)
     players = copy.deepcopy(state['players'])
     rules = copy.deepcopy(state['rules'])
     rules['startPoints'] = broadcast['config'].get('start_points', rules['startPoints'])
@@ -50,6 +51,8 @@ def begin_match(state, engine):
 def require_completed_match(state):
     """Protect an existing live match before another table is loaded."""
     broadcast = state['broadcast']
+    if state['phase'] == 'finished' and broadcast.get('result_discarded'):
+        return
     record = next((match for match in broadcast['matches'] if match['id'] == state['id']), {})
     if (broadcast['hands'] or state.get('lastResult') or record.get('penalties')) and not (
             record.get('committed') and state['phase'] == 'finished'):

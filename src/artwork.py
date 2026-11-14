@@ -15,6 +15,7 @@ from card_style import get_card_style, card_font, paint_brush
 from player_status_frame import status_mode, paint_status_frame
 from panel_typography import draw_single_line, single_line_layout
 from identity_media import paint_identity_media
+from tenpai_animation import WaitFrame, WaitMotion
 from win_layout import CANVAS_SIZE as WIN_CANVAS_SIZE,SIDE_MARGIN as WIN_SIDE_MARGIN
 
 FONT='Microsoft YaHei'
@@ -24,6 +25,7 @@ HUD_HEIGHT=108+ROUND_HEADER
 GAIN_COLOR='#00e450'
 LOSS_COLOR='#f51e28'
 TILE_FACE_RECT=QRectF(2.25,3.,20.5,30.)
+WAIT_TILE_FACE_RECT=QRectF(1.5,2.,22.,32.)
 DORA_SCALE=2.1
 DORA_STEP=64
 DORA_X=10
@@ -227,38 +229,42 @@ def asset_svg(name):
   _SVGS[name]=renderer
  return _SVGS[name]
 
-def tile(p,code,x,y,scale=1.,side=False):
+def tile(p,code,x,y,scale=1.,side=False,*,face_rect=None):
  p.save();p.translate(x,y);p.scale(scale,scale)
  if side:p.translate(0,25);p.rotate(-90)
  bounds=QRectF(0,0,25,36)
  if not code or code=='back':asset_svg('Back.svg').render(p,bounds)
  else:
   asset_svg('Front.svg').render(p,bounds)
-  asset_svg(TILE_NAMES[code]).render(p,TILE_FACE_RECT)
+  asset_svg(TILE_NAMES[code]).render(p,TILE_FACE_RECT if face_rect is None else face_rect)
  p.restore()
 
 def meld_width(m,scale=1.):
  # The fourth tile of an added kan is stacked, so it takes no extra width.
  count=3 if m['kind']=='kakan' else len(m['tiles'])
  return (count*27+(11 if m['kind']!='ankan' else 0))*scale
-def meld(p,m,x,y,scale=1.,tile_progress=None):
- kind=m['kind'];tiles=list(m['tiles']);called=m.get('calledIndex');cursor=x
+def meld_tiles(m):
+ """Design-space faces shared by broadcast painting and desk hit targets."""
+ kind=m['kind'];tiles=list(m['tiles']);called=m.get('calledIndex');cursor=0;result=[]
  if kind=='chi' and called is not None:
   claimed=tiles.pop(called);tiles.sort(key=tile_sort_key);tiles.insert(called,claimed)
  if kind=='ankan':
   for i in (0,3):
-   if tiles[i][0]=='0':tiles[1],tiles[i]=tiles[i],tiles[1]
+   if i<len(tiles) and len(tiles)>1 and tiles[i][0]=='0':tiles[1],tiles[i]=tiles[i],tiles[1]
  for i,t in enumerate(tiles):
   if kind=='kakan' and i==3:continue
   side=kind!='ankan' and i==called
   back=kind=='ankan' and i in (0,3)
-  progress=tile_progress(i) if tile_progress else 1.
-  p.save();p.setOpacity(p.opacity()*progress);tile(p,'back' if back else t,cursor,y+(11*scale if side else 0),scale,side);p.restore()
-  if kind=='kakan' and i==called:
-   progress=tile_progress(3) if tile_progress else 1.
-   p.save();p.setOpacity(p.opacity()*progress);tile(p,tiles[3],cursor,y-14*scale,scale,True);p.restore()
-  cursor+=(38 if side else 27)*scale
- return cursor
+  result.append((i,t,cursor,11 if side else 0,side,back))
+  if kind=='kakan' and i==called and len(tiles)>3:result.append((3,tiles[3],cursor,-14,True,False))
+  cursor+=38 if side else 27
+ return result
+
+def meld(p,m,x,y,scale=1.,tile_progress=None):
+ for index,code,dx,dy,side,back in meld_tiles(m):
+  progress=tile_progress(index) if tile_progress else 1.
+  p.save();p.setOpacity(p.opacity()*progress);tile(p,'back' if back else code,x+dx*scale,y+dy*scale,scale,side);p.restore()
+ return x+meld_width(m,scale)
 
 @dataclass(frozen=True)
 class PaymentTiming:
@@ -372,7 +378,7 @@ def stick(p,x,y,kind,width=110,height=17):
 
 class Artwork:
  def __init__(self,model,animation):
-  self.model=model;self.animation=animation;self.images={};self.status_start={};self.meld_start={};self.dora_start={};self.remaining_start={};self.remaining_from={};self.win_started=None
+  self.model=model;self.animation=animation;self.images={};self.status_start={};self.meld_start={};self.dora_start={};self.remaining_start={};self.remaining_from={};self.wait_motion={};self.win_started=None
   self.created_at=time.monotonic();self.frame_start={i:self.created_at for i,p in enumerate(model.state['players']) if status_mode(p)}
  def transition(self,started,now,duration):
   if started is None:return 1.
@@ -381,12 +387,21 @@ class Artwork:
   now=time.monotonic()
   for i,p in enumerate(after['players']):
    prev=before['players'][i]
+   old_motion=self.wait_motion.get(i)
+   if self.model.settings.get('theme')=='saikouisen' or after.get('phase')!='playing' or p.get('id')!=prev.get('id'):
+    self.wait_motion.pop(i,None)
+   elif bool(p.get('tenpai'))!=bool(prev.get('tenpai')):
+    entering=bool(p.get('tenpai'))
+    origin=old_motion.frame(now,self.model.settings.get('speed',1.)) if old_motion else WaitFrame(0.,-24.,0.,0.) if entering else WaitFrame()
+    source=copy.deepcopy(p if entering else prev)
+    remaining=self.remaining_frame(i,prev.get('remaining'),now) if not entering else None
+    self.wait_motion[i]=WaitMotion(now,entering,source,remaining,origin)
    if (p['riichi'],p.get('tenpai'))!=(prev['riichi'],prev.get('tenpai')):self.status_start[i]=now
    if after.get('phase')=='finished' or not status_mode(p):self.frame_start.pop(i,None)
    elif status_mode(p)!=status_mode(prev) or p.get('id')!=prev.get('id') or before.get('phase')=='finished':self.frame_start[i]=now
    if not p.get('tenpai') or p.get('remaining') is None:
     self.remaining_start.pop(i,None);self.remaining_from.pop(i,None)
-   elif p.get('remaining')!=prev.get('remaining'):
+   elif p.get('remaining')!=prev.get('remaining') and (prev.get('tenpai') or self.model.settings.get('theme')=='saikouisen'):
     # Preserve the actually visible frame if the operator edits again mid-roll.
     self.remaining_from[i]=self.remaining_frame(i,prev.get('remaining') if prev.get('tenpai') else None,now)
     self.remaining_start[i]=now
@@ -500,21 +515,33 @@ class Artwork:
    paint_status_frame(p,area,mode,self.frame_start.get(index,self.created_at),now,self.model.settings.get('speed',1.));p.restore()
 
  def player_waits(self,p,player,index,now):
-  if not (player.get('riichi') or player.get('tenpai')):return
+  motion=self.wait_motion.get(index)
+  if motion and motion.player.get('id')!=player.get('id'):motion=None
+  if motion and not motion.entering:
+   if not motion.active(now,self.model.settings.get('speed',1.)):return
+   player=motion.player
+  elif not player.get('tenpai'):return
+  frame=motion.frame(now,self.model.settings.get('speed',1.)) if motion else WaitFrame()
   layout=PLAYER_LAYOUT;card_x=layout.card_x;card_w=layout.card_width;y=layout.status_y
-  p.save();p.setOpacity(p.opacity()*self.transition(self.status_start.get(index),now,.46))
-  if player.get('furiten'):rect(p,card_x,y,card_w,layout.status_height,'#486cba4b')
+  p.save();p.setClipRect(QRectF(card_x,y,card_w,layout.status_height),Qt.ClipOperation.IntersectClip)
+  base_alpha=p.opacity()
+  if player.get('furiten'):
+   p.setOpacity(base_alpha*frame.tiles_alpha);rect(p,card_x,y,card_w,layout.status_height,'#486cba4b')
   waits=normalize_waits(player.get('waits',[])) if player.get('tenpai') else []
   remaining=player.get('remaining') if player.get('tenpai') else None
   available=card_w-24-61;scale=min(1.2,available/max(1,len(waits)*32))
   start=card_x+12+(available-len(waits)*32*scale)/2
   for position,code in enumerate(waits):
-   p.save()
+   p.save();p.setOpacity(base_alpha*frame.tiles_alpha)
    if code in player.get('waits_no_yaku',[]):p.setOpacity(p.opacity()*.32)
-   tile(p,code,start+position*32*scale,y+(layout.status_height-36*scale)/2,scale);p.restore()
+   tile(p,code,start+position*32*scale+frame.tiles_x,y+(layout.status_height-36*scale)/2,scale,face_rect=WAIT_TILE_FACE_RECT);p.restore()
   if remaining is not None:
-   rect(p,card_x+card_w-66,y+6,1.3,38,'#d9ffffff')
-   self.remaining_number(p,index,remaining,card_x+card_w-61,y+(layout.status_height-53)/2,now)
+   p.setOpacity(base_alpha)
+   rect(p,card_x+card_w-66,y+6+38*(1-frame.line_fraction),1.3,38*frame.line_fraction,'#d9ffffff')
+   p.setOpacity(base_alpha*frame.count_alpha)
+   if motion and not motion.entering and motion.remaining is not None:
+    p.drawImage(QPointF(card_x+card_w-61,y+(layout.status_height-53)/2),motion.remaining)
+   else:self.remaining_number(p,index,remaining,card_x+card_w-61,y+(layout.status_height-53)/2,now)
   p.restore()
 
  def player_melds(self,p,player,index,now,finished=False):

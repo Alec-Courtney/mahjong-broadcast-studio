@@ -3,17 +3,19 @@ import copy,uuid,time,math
 from functools import lru_cache
 from pathlib import Path
 from PySide6.QtCore import Qt,QSize,QSignalBlocker,QTimer,QEvent,Signal
-from PySide6.QtGui import QIcon,QPixmap,QImage,QPainter,QValidator
+from PySide6.QtGui import QColor,QIcon,QPixmap,QImage,QPainter,QPainterPath,QPen,QValidator
 from PySide6.QtWidgets import (QApplication,QMainWindow,QWidget,QLabel,QPushButton,QCheckBox,QComboBox,QSpinBox,QLineEdit,QVBoxLayout,QHBoxLayout,QBoxLayout,QGridLayout,QLayout,QGroupBox,QDialog,QDialogButtonBox,QFileDialog,QFrame,QSizePolicy,QMenu,QGraphicsOpacityEffect,QToolBar,QScrollArea,QStyle,QStyleOptionSpinBox,QStyleOptionComboBox)
-from mahjong_values import WINDS,TILES,YAKU,tile_name,normalize_waits,display_score
-from artwork import tile,fmt,meld as draw_meld,meld_width
+from mahjong_values import WINDS,TILES,YAKU,tile_name,normalize_waits,display_score,tile_sort_key
+from artwork import tile,fmt,WAIT_TILE_FACE_RECT
 from i18n import LANGUAGES,tr,set_language,localize_widgets,LanguageController
 
-from desk_theme import stylesheet, apply_theme
+from desk_theme import stylesheet, apply_theme, palette as desk_palette
 from docking import DockWorkspace, NavigationResizeHandle, PanelCollection
 from color_input import ColorInput
 from capture_surface import reference_width
 from ui_widgets import integer,decimal,quantity_control,WindowScaleSpinBox
+from desk_tiles import TILE_SIZE_KEYS,tile_scale
+from meld_preview import MeldPreviewWidget
 
 STYLE=stylesheet({})
 
@@ -22,6 +24,22 @@ def button(name,fn=None,checkable=False):
  b=QPushButton(name);b.setCheckable(checkable)
  if fn:b.clicked.connect(fn)
  return b
+def display_button(name):
+ b=button(name,checkable=True);b.setProperty('displayToggle',True);return b
+@lru_cache(maxsize=4)
+def history_arrow_icon(direction,theme):
+ colors=desk_palette({'console_theme':theme});icon=QIcon()
+ for mode in (QIcon.Mode.Normal,QIcon.Mode.Disabled):
+  image=QImage(96,96,QImage.Format.Format_ARGB32_Premultiplied);image.fill(Qt.GlobalColor.transparent)
+  painter=QPainter(image);painter.setRenderHint(QPainter.RenderHint.Antialiasing);painter.scale(4,4)
+  if direction=='redo':painter.translate(24,0);painter.scale(-1,1)
+  color=QColor(colors['muted'] if mode==QIcon.Mode.Disabled else colors['text'])
+  if mode==QIcon.Mode.Disabled:color.setAlphaF(.55)
+  painter.setPen(QPen(color,2.,Qt.PenStyle.SolidLine,Qt.PenCapStyle.RoundCap,Qt.PenJoinStyle.RoundJoin));painter.setBrush(Qt.BrushStyle.NoBrush)
+  path=QPainterPath();path.moveTo(21,18);path.cubicTo(21,7,10,4,4,12);painter.drawPath(path)
+  path=QPainterPath();path.moveTo(4,5);path.lineTo(4,12);path.lineTo(11,12);painter.drawPath(path)
+  painter.end();icon.addPixmap(QPixmap.fromImage(image),mode)
+ return icon
 def box(title):
  g=QGroupBox(title);v=QVBoxLayout(g);v.setSpacing(9);return g,v
 def row(*items):
@@ -50,6 +68,36 @@ class OptionalCountSpinBox(QSpinBox):
   if not value.replace(self.suffix(),'').strip():return QValidator.State.Acceptable,value,pos
   return super().validate(value,pos)
 
+class PlayerWaitTiles(QWidget):
+ """Published waits stay visible for every seat, even in a narrow player dock."""
+ edit_requested=Signal()
+ def __init__(self):
+  super().__init__();self.waits=[];self.no_yaku=[];self.tenpai=False
+  self.setMinimumWidth(40);self.set_tile_scale(1.25);self.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Fixed)
+  self.setCursor(Qt.CursorShape.PointingHandCursor)
+ def set_tile_scale(self,scale):
+  self.tile_scale=scale;self.setFixedHeight(round(36*scale));self.updateGeometry();self.update()
+ def set_player(self,player):
+  self.waits=list(player.get('waits',[]));self.no_yaku=list(player.get('waits_no_yaku',[]));self.tenpai=player.get('tenpai',False)
+  details=[tile_name(code)+(' · '+tr('无役') if code in self.no_yaku else '') for code in self.waits]
+  if player.get('furiten'):details.append(tr('振听'))
+  description=' / '.join(details) if self.tenpai and details else tr('未填写待牌' if self.tenpai else '未听牌')
+  self.setToolTip(description+' · '+tr('点击编辑听牌'));self.setAccessibleName(description);self.update()
+ def paintEvent(self,event):
+  painter=QPainter(self);painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+  if self.tenpai and self.waits:
+   width=min(25.*self.tile_scale,self.width()/len(self.waits));scale=width/25.;top=(self.height()-36*scale)/2
+   for index,code in enumerate(self.waits):
+    painter.setOpacity(.35 if code in self.no_yaku else 1.);tile(painter,code,index*width,top,scale,face_rect=WAIT_TILE_FACE_RECT)
+  else:
+   painter.setPen(self.palette().color(self.foregroundRole()));painter.setOpacity(.65)
+   text=tr('未填写待牌' if self.tenpai else '未听牌');text=self.fontMetrics().elidedText(text,Qt.TextElideMode.ElideRight,self.width())
+   painter.drawText(self.rect(),Qt.AlignmentFlag.AlignVCenter,text)
+  painter.end()
+ def mousePressEvent(self,event):
+  if event.button()==Qt.MouseButton.LeftButton:self.edit_requested.emit();event.accept()
+  else:super().mousePressEvent(event)
+
 class FuSpinBox(QSpinBox):
  """Direct fu input, keeping the existing score-editor selection interface."""
  currentIndexChanged=Signal(int)
@@ -76,8 +124,9 @@ def picker_tile_icon(code,resolution=100):
  """Cache four palette resolution sets, keeping enlarged SVG faces crisp."""
  img=QImage(resolution,round(resolution*36/25),QImage.Format.Format_ARGB32_Premultiplied);img.fill(Qt.GlobalColor.transparent);p=QPainter(img);p.setRenderHint(QPainter.RenderHint.Antialiasing);tile(p,code,0,0,resolution/25);p.end();return QIcon(QPixmap.fromImage(img))
 
-def tile_face_button(code,fn):
- control=button('',fn);control.setObjectName('tileFace');control.setIcon(picker_tile_icon(code));control.setIconSize(QSize(25,36));control.setFixedSize(25,36)
+def tile_face_button(code,fn,scale=1.):
+ size=QSize(round(25*scale),round(36*scale))
+ control=button('',fn);control.setObjectName('tileFace');control.setIcon(picker_tile_icon(code));control.setIconSize(size);control.setFixedSize(size)
  control.setStyleSheet('QPushButton,QPushButton:hover,QPushButton:pressed,QPushButton:disabled{padding:0;margin:0;border:0;border-radius:0;min-height:0;background:transparent}')
  return control
 
@@ -111,8 +160,6 @@ class SeatButtonSelector(QWidget):
   for i,control in enumerate(self.buttons):
    control.setChecked(i==self.currentIndex());entry=self._choice.model().item(i);control.setEnabled(entry is None or entry.isEnabled())
 
-def meld_preview(group):
- width=round(meld_width(group)+8);img=QImage(width,64,QImage.Format.Format_ARGB32_Premultiplied);img.fill(Qt.GlobalColor.transparent);p=QPainter(img);p.setRenderHint(QPainter.RenderHint.Antialiasing);draw_meld(p,group,4,21);p.end();label=QLabel();label.setPixmap(QPixmap.fromImage(img));return label
 def clear_layout(layout):
  while layout.count():
   item=layout.takeAt(0)
@@ -227,16 +274,18 @@ class Console(QMainWindow):
   self.resize(min(1520,screen.width()-40),min(1050,screen.height()-60));self.setMinimumSize(960,620);apply_theme(self,model.settings)
   set_language(model.settings.get('language','zh_CN'));self.language_controller=LanguageController(QApplication.instance());self.language_controller.track(self)
   self.lock=QCheckBox('锁定播出窗口');self.lock.setChecked(model.settings['locked'])
-  self.overlays=QCheckBox('显示播出窗口');self.overlays.setChecked(model.settings['show_overlays'])
-  self.undo=button('撤销',lambda:self.run(lambda:model.history('undo')));self.redo=button('重做',lambda:self.run(lambda:model.history('redo')))
+  self.overlays=display_button('显示播出窗口');self.overlays.setChecked(model.settings['show_overlays'])
+  self.undo=button('',lambda:self.run(lambda:model.history('undo')));self.redo=button('',lambda:self.run(lambda:model.history('redo')))
+  for control in (self.undo,self.redo):control.setIconSize(QSize(22,22));control.setMinimumWidth(36)
   self.language=combo(LANGUAGES);self.language.setProperty('i18nLiteral',True);self.language.setCurrentIndex(self.language.findData(model.settings.get('language','zh_CN')));self.language.currentIndexChanged.connect(self.change_language)
   self.event_label=QLabel();self.event_label.setProperty('i18nLiteral',True);self.event_label.setMaximumWidth(380)
+  self.shortcut_button=button('快捷键',lambda:self.shortcuts.open_dialog())
   self.workspace_menu_button=button('工作区');self.workspace_menu=QMenu(self.workspace_menu_button)
   self.workspace_menu.addAction('重新载入当前工作区',self.reload_workspace);self.workspace_menu_button.setMenu(self.workspace_menu)
   if not model.event_store:
    self.workspace_menu.addAction('独立播出设置',lambda:self._open_settings_dialog(output=True))
   header=QWidget();header.setObjectName('consoleHeader');header_layout=QHBoxLayout(header);header_layout.setContentsMargins(12,8,12,8)
-  header_layout.addLayout(row(self.event_label,1,self.workspace_menu_button,self.overlays,self.undo,self.redo));self.setMenuWidget(header)
+  header_layout.addLayout(row(self.event_label,1,self.shortcut_button,self.workspace_menu_button,self.overlays,self.undo,self.redo));self.setMenuWidget(header)
   # These preferences remain available in Settings; the live header stays short.
   self.language.setParent(header);self.language.hide();self.lock.setParent(header);self.lock.hide()
   self.workspace=DockWorkspace(self,model)
@@ -254,6 +303,8 @@ class Console(QMainWindow):
   model.changed.connect(self.model_changed);model.display_changed.connect(self.refresh_display)
   quick=PanelCollection();self.build_quick_actions(quick);self.workspace.add_panel('quick','直播快捷操作',self.quick_bar)
   self.build_commentary_panel();self.workspace.add_panel('commentary','术语解释',self.commentary_bar)
+  from hand_history_panel import HandHistoryPanel
+  self.hand_history=HandHistoryPanel(self);self.workspace.add_panel('history','逐局收支',self.hand_history)
   self.workspace.attach_menu(self.panel_menu);self.workspace.initialize()
   from hotkeys import ShortcutController
   actions={key:widget.click for key,widget in self.quick_actions.items() if key in ('riichi','tenpai','focus_ron','focus_tsumo','draw','next_hand','replay','commentary_show','commentary_hide')}
@@ -442,11 +493,10 @@ class Console(QMainWindow):
    else:control.setMinimumWidth(55)
    if key in ('riichi','tenpai'):control.setObjectName(key)
    self.quick_actions[key]=control;self.quick_labels[key]=label
-   # Hand progression belongs to the live round panel. The shortcut strip is
+   # Hand progression belongs to the live score panel. The shortcut strip is
    # retained for keyboard actions but intentionally hidden by this workspace.
    (self.hand_actions if key in ('draw','draw_declaration','next_hand') else first).addWidget(control)
   first.addStretch()
-  self.shortcut_button=button('快捷键',lambda:self.shortcuts.open_dialog());self.shortcut_button.setParent(self.shortcut_controls);self.shortcut_button.hide()
   from programme import PAGE_BUTTONS
   self.programme_scroll=QScrollArea(self.quick_bar);self.programme_scroll.setWidgetResizable(True);self.programme_scroll.setFrameShape(QScrollArea.Shape.NoFrame)
   self.programme_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff);self.programme_scroll.setFixedHeight(64)
@@ -464,7 +514,7 @@ class Console(QMainWindow):
   self.quick_bottom=combo([('选手信息','players'),('个人积分','individual'),('队伍积分','team')]);self.quick_bottom.setToolTip('底部显示');self.quick_bottom.setMaximumWidth(118)
   self.quick_bottom.activated.connect(lambda _:self.run(lambda:self.manager.set_bottom_mode(self.quick_bottom.currentData())))
   self.presentation_layout.addWidget(self.quick_scene);self.presentation_layout.addWidget(self.quick_bottom)
-  self.quick_table_scores=QCheckBox('上方积分');self.quick_conditions=QCheckBox('条件')
+  self.quick_table_scores=display_button('上方积分');self.quick_conditions=display_button('条件')
   self.quick_table_scores.toggled.connect(lambda visible:self.run(lambda:self.manager.set_extension_visible('table_scores',visible)))
   self.quick_conditions.toggled.connect(lambda visible:self.run(self.manager.show_conditions if visible else self.manager.hide_conditions))
   self.presentation_layout.addWidget(self.quick_table_scores);self.presentation_layout.addWidget(self.quick_conditions)
@@ -472,7 +522,7 @@ class Console(QMainWindow):
   self.corner_bottom_text=QLineEdit();self.corner_bottom_text.setMaxLength(80);self.corner_bottom_text.setMinimumWidth(0);self.corner_bottom_text.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed)
   self.corner_layout.addWidget(QLabel('下段文字'));self.corner_layout.addWidget(self.corner_bottom_text)
   self.corner_apply_button=button('应用文字',self.save_corner_text);self.corner_logo_button=button('Logo 设置',self.open_corner_header);self.corner_layout.addWidget(self.corner_apply_button);self.corner_layout.addWidget(self.corner_logo_button);self.refresh_corner_panel(force=True)
-  self.presentation_layout.addWidget(self.show_melds);self.presentation_layout.addWidget(self.show_yaku)
+  self.presentation_layout.addWidget(self.show_melds)
   self.quick_postmatch_play=self.programme_buttons['ending']
   self.quick_postmatch_pause=self.programme_pause
   self.quick_postmatch_stop=self.programme_stop
@@ -546,6 +596,13 @@ class Console(QMainWindow):
   for widget,value in [(self.quick_scene,self.model.settings.get('broadcast_scene','table'))]:
    blocker=QSignalBlocker(widget);widget.setCurrentIndex(max(0,widget.findData(value)));del blocker
   if hasattr(self,'shortcuts'):self.shortcuts.refresh()
+  self.refresh_history_controls()
+ def refresh_history_controls(self):
+  theme=self.model.settings.get('console_theme','dark')
+  for key,label in (('undo','撤销'),('redo','恢复已撤销操作')):
+   control=getattr(self,key);control.setIcon(history_arrow_icon(key,theme));control.setAccessibleName(tr(label))
+   binding=self.shortcuts.key_label(key) if hasattr(self,'shortcuts') else ''
+   control.setToolTip(tr(label)+('  ('+binding+')' if binding else '\n'+tr('未设置快捷键')))
  def change_language(self):
   language=self.language.currentData() or 'zh_CN'
   try:self.model.setting('language',language)
@@ -559,7 +616,7 @@ class Console(QMainWindow):
   panel=self.broadcast_panel();panel.show();panel.refresh_language();localize_widgets(panel);panel.raise_();panel.activateWindow()
  def error(self,message):self.status.setText(tr(message));QTimer.singleShot(6000,self.status,self.status.clear)
  def model_changed(self,before,after,kind):
-  if kind in ('manual_result','commentary'):
+  if kind in ('manual_result','commentary','delete_match_record'):
    # Another table's result must not rebuild an operator's in-progress inputs.
    self.refresh_quick_actions();return
   if kind=='import':
@@ -571,13 +628,17 @@ class Console(QMainWindow):
    for b in self.yaku_buttons.values():b.setChecked(False)
    for count in self.bonuses:count.setValue(0)
    self.linked.setChecked(False);self.han.setValue(1);self.fu.setCurrentIndex(self.fu.findData(30));self.ready=True
+  if kind=='restore':
+   # Undo/redo restores the published table, including every seat's waits.
+   # A pending empty draft must not conceal the restored tiles in the editor.
+   self.wait_drafts.clear();self.wait_dirty.clear()
   if kind=='waits':
-   self.refresh_wait_editor()
+   self.refresh_wait_editor();self.refresh_player_waits()
    for i,(_,_,_,riichi,tenpai) in enumerate(self.player_widgets):
     tenpai.setChecked(after['players'][i]['tenpai']);self.draw_buttons[i].setChecked(after['players'][i]['tenpai'])
    self.undo.setEnabled(bool(self.model.undo));self.redo.setEnabled(bool(self.model.redo));self.refresh_quick_actions();self.preview();return
   self.refresh()
-  if kind not in ('next_hand','clear','new_match','start_match','import','restore'):
+  if kind not in ('next_hand','clear','new_match','start_match','import','restore','hand_correction'):
    activated=next((i for i,(a,b) in enumerate(zip(before['players'],after['players'])) if (b['riichi'] and not a['riichi']) or (b.get('tenpai') and not a.get('tenpai'))),None)
    if activated is not None:
     self.select(activated);self.set_tile_target('waits');self.workspace.ensure_visible(self.target_boxes['waits'])
@@ -588,7 +649,6 @@ class Console(QMainWindow):
    self.error(str(e));return None
  def build_table(self,left):
   g,v=box('局况');self.round_box=g;self.round=combo([(WINDS[i//4]+str(i%4+1)+'局',i) for i in range(8)]);self.dealer=QComboBox();self.honba=spin();self.pot=spin(0,0,1000000)
-  self.hand_actions=QHBoxLayout();self.hand_actions.setSpacing(7);v.addLayout(self.hand_actions)
   self.match_title=QLineEdit(self.model.state.get('title',''));self.match_title.setMaxLength(80);self.match_title.setPlaceholderText('A1联赛 第1节');self.match_title.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);v.addLayout(row('比赛',self.match_title))
   self.match_title.editingFinished.connect(lambda:self.field('title',self.match_title.text().strip()) if self.match_title.text().strip()!=self.model.state.get('title','') else None)
   self.round_field_rows=[]
@@ -601,7 +661,7 @@ class Console(QMainWindow):
   for control in (self.round,self.dealer):control.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
   left.addWidget(g)
   self.round.currentIndexChanged.connect(lambda:self.field('roundIndex',self.round.currentData()));self.dealer.currentIndexChanged.connect(lambda:self.field('dealer',self.dealer.currentData()));self.honba.valueChanged.connect(lambda v:self.field('honba',v));self.pot.valueChanged.connect(lambda v:self.field('pot',v*1000))
-  g,v=box('选手');self.player_grid=QGridLayout();self.player_grid.setSpacing(3);self.player_widgets=[];self.recognized_hands=[]
+  g,v=box('选手');self.player_grid=QGridLayout();self.player_grid.setSpacing(3);self.player_widgets=[];self.recognized_hands=[];self.player_wait_widgets=[]
   from recognized_hand import RecognizedHandWidget
   for i in range(4):
    panel=QFrame();panel.setObjectName('playerControl');body=QVBoxLayout(panel);body.setContentsMargins(3,0,3,0);body.setSpacing(0);pv=QHBoxLayout();pv.setContentsMargins(0,0,0,0);pv.setSpacing(4);select=button('',lambda _,j=i:self.select(j));select.setProperty('i18nLiteral',True);select.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);score=spin(0,-1000000000,1000000000,100);score.setMinimumWidth(85);score.setMaximumWidth(125);score.editingFinished.connect(lambda j=i:self.edit_score(j));riichi=button('立直',lambda _,j=i:self.toggle_player_status(j,'riichi'),True);riichi.setObjectName('riichi');tenpai=button('听牌',lambda _,j=i:self.toggle_player_status(j,'tenpai'),True);tenpai.setObjectName('tenpai');riichi.setFixedWidth(48);tenpai.setFixedWidth(48);pv.addWidget(select,1);pv.addWidget(score);pv.addWidget(riichi);pv.addWidget(tenpai);body.addLayout(pv);hand=RecognizedHandWidget(i);body.addWidget(hand);self.recognized_hands.append(hand);self.player_grid.addWidget(panel,i,0);self.player_widgets.append((panel,select,score,riichi,tenpai))
@@ -609,9 +669,17 @@ class Console(QMainWindow):
    hand.edit_requested.connect(self.edit_recognized_hand)
    if hasattr(hand,'edit_finished'):hand.edit_finished.connect(self.hand_edit_finished)
    if hasattr(hand,'selection_changed'):hand.selection_changed.connect(self.hand_selection_changed)
+   waits=PlayerWaitTiles();waits.edit_requested.connect(lambda j=i:self.edit_player_waits(j))
+   remaining=OptionalCountSpinBox();remaining.setFixedWidth(108);remaining.setAccessibleName('山存量');remaining.setToolTip('修改后立即生效；清空表示未知')
+   remaining.valueChanged.connect(lambda value,j=i:self.change_player_remaining(j,value))
+   wait_line=row(waits,'山存',remaining);wait_line.setSpacing(3);body.addLayout(wait_line)
+   self.player_wait_widgets.append((waits,remaining))
   v.addLayout(self.player_grid)
   left.insertWidget(0,g)
-  g,v=box('宝牌');self.target_boxes['dora']=g;self.dora_row=QHBoxLayout();self.dora_row.setSpacing(7);v.addLayout(self.dora_row);left.addWidget(g)
+  g,v=box('宝牌');self.target_boxes['dora']=g
+  self.dora_board=QWidget();self.dora_board.setMinimumSize(1,1);self.dora_board.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Ignored);self.dora_board.installEventFilter(self)
+  self.dora_row=QHBoxLayout(self.dora_board);self.dora_row.setContentsMargins(0,0,0,0);self.dora_row.setSpacing(7);self.dora_row.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
+  v.addWidget(self.dora_board,1);left.addWidget(g)
   g,v=box('听牌');self.target_boxes['waits']=g;self.wait_owner=QLabel();self.wait_owner.setProperty('i18nLiteral',True);self.wait_enabled=QCheckBox('显示听牌');v.addLayout(row(self.wait_owner,self.wait_enabled))
   self.remaining=OptionalCountSpinBox();self.remaining.setFixedWidth(108);self.remaining.setToolTip('首次随听牌提交；已播出后修改山存数量立即生效');self.clear_remaining_button=button('清除',lambda:self.remaining.setValue(-1));remaining_row=row('山存',self.remaining,self.clear_remaining_button);remaining_row.setSpacing(3);v.addLayout(remaining_row)
   self.wait_no_yaku=button('无役',checkable=True);self.furiten=button('振听',checkable=True)
@@ -622,6 +690,23 @@ class Console(QMainWindow):
   self.wait_preview_label=QLabel();self.wait_preview_label.setObjectName('draftPreview');self.wait_preview_label.setProperty('i18nLiteral',True);self.wait_preview_label.setWordWrap(True);v.addWidget(self.wait_preview_label)
   self.clear_wait_button=button('清空待牌',self.clear_wait_draft);self.submit_wait_button=button('提交听牌',self.submit_waits);self.submit_wait_button.setObjectName('primary');self.submit_wait_button.setToolTip('按当前草稿更新该选手；立直请直接点击该选手的立直按钮');v.addLayout(row(self.clear_wait_button,self.submit_wait_button));left.addWidget(g)
   self.remaining.valueChanged.connect(self.change_remaining);self.wait_enabled.toggled.connect(lambda value:self.run(lambda:self.model.set_tenpai(self.selected,value)) if self.ready else None)
+ def edit_player_waits(self,index):
+  self.select(index);self.focus_tile_target('waits');self.workspace.ensure_visible(self.target_boxes['waits'])
+ def refresh_player_waits(self):
+  for index,(waits,remaining) in enumerate(self.player_wait_widgets):
+   player=self.model.state['players'][index];waits.set_player(player)
+   blocker=QSignalBlocker(remaining);remaining.setValue(-1 if player.get('remaining') is None else player['remaining']);del blocker
+   remaining.setEnabled(self.model.state['phase']=='playing' and not self.recognized_hands[index].editing)
+ def change_player_remaining(self,index,value):
+  if not self.ready:return
+  remaining=None if value<0 else value
+  if remaining==self.model.state['players'][index].get('remaining'):return
+  draft=self.wait_drafts.get(index);previous=draft['remaining'] if draft is not None else None
+  if draft is not None:draft['remaining']=remaining
+  try:self.model.set_remaining(index,remaining)
+  except Exception as error:
+   if draft is not None:draft['remaining']=previous
+   self.refresh_player_waits();self.refresh_wait_editor();self.error(str(error))
  def edit_score(self,index):
   if not self.ready:return
   value=self.player_widgets[index][2].value()
@@ -645,11 +730,24 @@ class Console(QMainWindow):
   self.clear_remaining_button.setEnabled(draft['remaining'] is not None);clear_layout(self.wait_row)
   for i,code in enumerate(draft['waits']):
    action='左键切换有役／无役' if self.wait_no_yaku.isChecked() else '左键移除 / 右键切换有役'
-   control=tile_face_button(code,lambda _,j=i:self.click_wait(j));control.setToolTip(tile_name(code)+' · '+('无役' if code in draft['no_yaku'] else '有役')+' · '+action);control.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu);control.customContextMenuRequested.connect(lambda _,t=code:self.toggle_wait_yaku(t));self.wait_row.addWidget(control,i//7,i%7)
+   control=tile_face_button(code,lambda _,j=i:self.click_wait(j),tile_scale(self.model.settings,'wait'));control.setToolTip(tile_name(code)+' · '+('无役' if code in draft['no_yaku'] else '有役')+' · '+action);control.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu);control.customContextMenuRequested.connect(lambda _,t=code:self.toggle_wait_yaku(t));self.wait_row.addWidget(control,i//7,i%7)
    if code in draft['no_yaku']:
     effect=QGraphicsOpacityEffect(control);effect.setOpacity(.35);control.setGraphicsEffect(effect)
-  self.refresh_wait_preview()
+  self.reflow_wait_tiles();self.refresh_wait_preview()
   self.submit_wait_button.setEnabled(self.model.state['phase']=='playing' and not self.recognized_hands[self.selected].editing)
+ def reflow_wait_tiles(self):
+  if not hasattr(self,'wait_row'):return
+  width=self.target_boxes['waits'].contentsRect().width()-18
+  if 'waits' in self.workspace.scrolls:width=min(width,self.workspace.scrolls['waits'].viewport().width()-18)
+  tile_width=round(25*tile_scale(self.model.settings,'wait'));columns=max(1,min(7,(max(1,width)+7)//(tile_width+7)))
+  controls=[self.wait_row.itemAt(i).widget() for i in range(self.wait_row.count())]
+  size=QSize(tile_width,round(36*tile_scale(self.model.settings,'wait')))
+  for control in controls:control.ensurePolished();control.setFixedSize(size)
+  signature=(columns,tuple(controls))
+  if signature==getattr(self,'_wait_tile_layout_signature',None):return
+  self._wait_tile_layout_signature=signature
+  for control in controls:self.wait_row.removeWidget(control)
+  for index,control in enumerate(controls):self.wait_row.addWidget(control,index//columns,index%columns)
  def player_input_blocked_message(self):
   return '半庄已结束，请开始新半庄后录入副露或听牌' if self.model.state['phase']=='finished' else '本局已结算，请进入下一局后录入副露或听牌'
  def refresh_wait_preview(self):
@@ -686,7 +784,12 @@ class Console(QMainWindow):
    self.run(lambda:self.inline_automation.confirm_waits(self.selected));return
   draft=copy.deepcopy(self.wait_draft());index=self.selected
   def submit():
-   self.wait_dirty.discard(index);self.model.submit_waits(index,draft['waits'],draft['remaining'],draft['no_yaku'],draft['furiten'])
+   dirty=index in self.wait_dirty;self.wait_dirty.discard(index)
+   try:self.model.submit_waits(index,draft['waits'],draft['remaining'],draft['no_yaku'],draft['furiten'])
+   except Exception:
+    self.wait_drafts[index]=draft
+    if dirty:self.wait_dirty.add(index)
+    self.refresh_wait_editor();raise
   self.run(submit)
  def build_picker(self,root):
   g,v=box('牌面');self.picker_box=g;g.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding);g.installEventFilter(self);v.setSpacing(2);self.picker_target=QLabel();self.picker_target.setObjectName('muted');self.picker_target.setMinimumWidth(0);self.picker_target.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);v.addWidget(self.picker_target)
@@ -742,6 +845,19 @@ class Console(QMainWindow):
   if hasattr(self,'navigation_handle'):self.navigation_handle.fit_width()
   if hasattr(self,'picker_grid'):self.reflow_picker()
   if hasattr(self,'yaku_grid'):self.reflow_live_panels()
+ def reflow_dora(self):
+  if not hasattr(self,'dora_board') or getattr(self,'_dora_reflow_busy',False):return
+  self._dora_reflow_busy=True
+  try:
+   controls=[self.dora_row.itemAt(i).widget() for i in range(self.dora_row.count()) if self.dora_row.itemAt(i).widget()]
+   if not controls:return
+   count=len(controls);width=max(1,self.dora_board.width()-(count-1)*self.dora_row.spacing())
+   scale=min(width/(count*25),max(1,self.dora_board.height())/36)
+   size=QSize(max(1,int(25*scale)),max(1,int(36*scale)))
+   pixels=math.ceil(max(size.width(),size.height()*25/36)*self.dora_board.devicePixelRatioF());resolution=max(100,((pixels+24)//25)*25)
+   for code,control in zip(self.model.dora_tiles,controls):
+    control.setFixedSize(size);control.setIconSize(size);control.setIcon(picker_tile_icon(code,resolution))
+  finally:self._dora_reflow_busy=False
  def reflow_round_controls(self):
   """Keep round inputs readable as the desk font or the dock width changes."""
   if not hasattr(self,'round_field_rows') or getattr(self,'_round_reflow_busy',False):return
@@ -780,16 +896,13 @@ class Console(QMainWindow):
       else:
        row_index=index//columns;column=(index%columns)*2
        fields.addWidget(label,row_index,column);fields.addWidget(control,row_index,column+1)
-   if hasattr(self,'quick_actions') and 'draw' in self.quick_actions:
-    actions=[self.quick_actions[key] for key in ('draw','draw_declaration','next_hand')]
-    required=sum(max(control.minimumWidth(),control.minimumSizeHint().width()) for control in actions)+(len(actions)-1)*self.hand_actions.spacing()
-    self.hand_actions.setDirection(QBoxLayout.Direction.LeftToRight if required<=available else QBoxLayout.Direction.TopToBottom)
    self.round_box.updateGeometry()
   finally:self._round_reflow_busy=False
  def reflow_live_panels(self):
   if not hasattr(self,'workspace') or 'yaku' not in self.workspace.scrolls:return
   self.reflow_round_controls()
   self.reflow_score_numbers()
+  self.reflow_wait_tiles()
   available=self.workspace.scrolls['yaku'].viewport().width()-26
   controls=[self.yaku_buttons[name] for name,_,_ in YAKU[:30]]
   columns=1
@@ -804,14 +917,20 @@ class Console(QMainWindow):
    riichi.setVisible(not compact);tenpai.setVisible(not compact)
   required=self.workspace.scrolls['players'].widget().minimumSizeHint().height()+28
   editing=any(hand.editing for hand in self.recognized_hands)
-  self.workspace.docks['players'].setMinimumHeight(min(required+12,(430 if editing else 390) if self.height()>=900 else 160))
+  # Large desk tiles must leave room for native docking at the window edges.
+  minimum_cap=min(430 if editing else 390,max(160,self.height()//3)) if self.height()>=900 else 160
+  self.workspace.docks['players'].setMinimumHeight(min(required+12,minimum_cap))
  def eventFilter(self,obj,event):
   if self._closing:return False
+  if obj is getattr(self,'dora_board',None) and event.type() in (QEvent.Type.Resize,QEvent.Type.DevicePixelRatioChange):self.reflow_dora()
   if obj in (getattr(self,'picker_box',None),getattr(self,'picker_board',None)) and event.type() in (QEvent.Type.Resize,QEvent.Type.DevicePixelRatioChange) and hasattr(self,'picker_grid'):self.reflow_picker()
   if hasattr(self,'picker_target_keys') and hasattr(self,'picker_grid') and event.type() in (QEvent.Type.Show,QEvent.Type.Hide,QEvent.Type.FontChange) and any(obj is self.target_buttons[key] for key in self.picker_target_keys):self.reflow_picker()
   if hasattr(self,'workspace') and 'tiles' in self.workspace.scrolls and obj is self.workspace.scrolls['tiles'].viewport() and event.type()==QEvent.Type.Resize:self.reflow_picker()
-  if hasattr(self,'workspace') and hasattr(self,'yaku_grid') and event.type()==QEvent.Type.Resize and any(obj is self.workspace.scrolls[key].viewport() for key in ('players','round','score','yaku')):self.reflow_live_panels()
-  if event.type() in (QEvent.Type.MouseButtonPress,QEvent.Type.FocusIn) and isinstance(obj,QWidget):
+  if hasattr(self,'workspace') and hasattr(self,'yaku_grid') and event.type()==QEvent.Type.Resize and any(obj is self.workspace.scrolls[key].viewport() for key in ('players','round','score','waits','yaku')):self.reflow_live_panels()
+  # Activation and layout rebuilds can restore focus to an unrelated editor.
+  # Only an operator click or keyboard navigation may change the tile target.
+  explicit_focus=event.type()==QEvent.Type.FocusIn and event.reason() in (Qt.FocusReason.MouseFocusReason,Qt.FocusReason.TabFocusReason,Qt.FocusReason.BacktabFocusReason,Qt.FocusReason.ShortcutFocusReason)
+  if self.ready and (event.type()==QEvent.Type.MouseButtonPress or explicit_focus) and isinstance(obj,QWidget):
    if obj is getattr(self,'win_tile',None):self.set_tile_target('win_tile')
    elif obj is getattr(self,'ura_indicators',None):self.set_tile_target('ura')
    for key,g in self.target_boxes.items():
@@ -849,14 +968,14 @@ class Console(QMainWindow):
    if widget.player!=player and widget.editing:widget.cancel_edit()
   if self.selected!=player:self.select(player)
   self.set_tile_target('hand');self.workspace.show_panel('tiles')
-  self.refresh_wait_editor();self.preview()
+  self.refresh_wait_editor();self.refresh_player_waits();self.preview()
   QTimer.singleShot(0,self,lambda:self.reveal_hand_editor(player))
  def reveal_hand_editor(self,player):
   if self._closing:return
   self.reflow_live_panels();self.workspace.ensure_visible(self.recognized_hands[player])
  def hand_edit_finished(self,player,accepted):
   self.reflow_live_panels()
-  self.refresh_wait_editor();self.preview()
+  self.refresh_wait_editor();self.refresh_player_waits();self.preview()
   if player==self.selected and self.tile_target=='hand':
    caption='手牌已采用 · 点击手牌可继续修正' if accepted else '修正手牌 · 点击手牌开始'
    self.picker_target.setText(caption);self.picker_target.setToolTip(caption)
@@ -916,7 +1035,8 @@ class Console(QMainWindow):
   else:self.wait_dirty.add(index)
   self.clear_remaining_button.setEnabled(value>=0);self.refresh_wait_preview()
  def build_score(self,middle):
-  g,v=box('计分');self.score_box=g;self.winner=SeatButtonSelector();self.loser=SeatButtonSelector();self.winner_buttons=self.winner.buttons;self.loser_buttons=self.loser.buttons;v.addLayout(row('和牌',self.winner));v.addLayout(row('放铳',self.loser));self.ron=button('荣和',lambda:self.win_kind('ron'),True);self.tsumo=button('自摸',lambda:self.win_kind('tsumo'),True);self.ron.setStyleSheet(CHOICE_BUTTON_STYLE);self.tsumo.setStyleSheet(CHOICE_BUTTON_STYLE);self.ron.setProperty('operatorChoice',True);self.tsumo.setProperty('operatorChoice',True);self.ron.setChecked(True);self.kind='ron';v.addLayout(row(self.ron,self.tsumo))
+  g,v=box('计分');self.score_box=g;self.hand_actions=QHBoxLayout();self.hand_actions.setSpacing(7);v.addLayout(self.hand_actions)
+  self.winner=SeatButtonSelector();self.loser=SeatButtonSelector();self.winner_buttons=self.winner.buttons;self.loser_buttons=self.loser.buttons;v.addLayout(row('和牌',self.winner));v.addLayout(row('放铳',self.loser));self.ron=button('荣和',lambda:self.win_kind('ron'),True);self.tsumo=button('自摸',lambda:self.win_kind('tsumo'),True);self.ron.setStyleSheet(CHOICE_BUTTON_STYLE);self.tsumo.setStyleSheet(CHOICE_BUTTON_STYLE);self.ron.setProperty('operatorChoice',True);self.tsumo.setProperty('operatorChoice',True);self.ron.setChecked(True);self.kind='ron';v.addLayout(row(self.ron,self.tsumo))
   self.win_tile=QLineEdit();self.win_tile.setMaximumWidth(84);self.win_tile.setMaxLength(3);self.win_tile.setPlaceholderText('点牌面');self.win_tile.setToolTip('点击此框后从下方选择和牌张，也可直接输入如 3m；根据该选手识别手牌辅助填写役种')
   self.ura_indicators=QLineEdit();self.ura_indicators.setPlaceholderText('点牌面');self.ura_indicators.setClearButtonEnabled(True);self.ura_indicators.setToolTip('点击此框后从下方依次选择里宝牌指示牌，也可输入如 4m1z；明宝牌和副露自动读取系统')
   self.win_fill_button=button('更新役种',lambda:self.inline_automation.update_win() if hasattr(self,'inline_automation') else None);self.win_fill_button.setEnabled(False)
@@ -932,7 +1052,7 @@ class Console(QMainWindow):
   self.win_preview_label=QLabel();self.win_preview_label.setObjectName('draftPreview');self.win_preview_label.setProperty('i18nLiteral',True);self.win_preview_label.setWordWrap(True);v.addWidget(self.win_preview_label)
   self.preview_grid=QGridLayout();v.addLayout(self.preview_grid);self.preview_error=QLabel('');self.preview_error.setWordWrap(True);self.preview_error.setObjectName('error');v.addWidget(self.preview_error);self.settle_button=button('提交结算',self.settle);self.settle_button.setObjectName('primary');self.settle_button.setToolTip('按上方预览提交和牌与收支；不会再弹出确认窗口');v.addWidget(self.settle_button)
   # Duplicate status buttons and playback preferences keep their existing API,
-  # while the live desk uses the four seats and the visible round actions.
+  # while the live desk uses the four seats and the visible score actions.
   self.score_preferences=QWidget(self);preferences=QVBoxLayout(self.score_preferences);self.score_preferences.hide()
   self.draw_buttons=[];draw=row('听牌')
   for i in range(4):b=button(WINDS[i],lambda _,j=i:self.toggle_player_status(j,'tenpai'),True);self.draw_buttons.append(b);draw.addWidget(b)
@@ -981,6 +1101,10 @@ class Console(QMainWindow):
   if hasattr(self,'inline_automation'):self.inline_automation.win_edited('fu')
  def reflow_score_numbers(self):
   if not hasattr(self,'score_numbers'):return
+  if hasattr(self,'quick_actions') and 'draw' in self.quick_actions:
+   actions=[self.quick_actions[key] for key in ('draw','draw_declaration','next_hand')]
+   required=sum(max(control.minimumWidth(),control.minimumSizeHint().width()) for control in actions)+(len(actions)-1)*self.hand_actions.spacing()
+   self.hand_actions.setDirection(QBoxLayout.Direction.LeftToRight if required<=self.score_box.contentsRect().width()-18 else QBoxLayout.Direction.TopToBottom)
   narrow=self.workspace.scrolls['score'].viewport().width()<300 if 'score' in self.workspace.scrolls else False
   if narrow==getattr(self,'_score_numbers_narrow',None):return
   self._score_numbers_narrow=narrow
@@ -1045,9 +1169,18 @@ class Console(QMainWindow):
   for label,value in [('吃','chi'),('碰','pon'),('明杠','daiminkan'),('暗杠','ankan'),('加杠','kakan')]:self.meld_kind.addItem(label,value)
   self.meld_kind.setCurrentIndex(1);self.meld_from=SeatButtonSelector(columns=3,literal=False)
   for label,value in [('上家',3),('对家',2),('下家',1)]:self.meld_from.addItem(label,value)
-  v.addWidget(self.meld_kind);v.addLayout(row('来源',self.meld_from));self.draft_row=QHBoxLayout();self.draft_row.setSpacing(7);v.addLayout(self.draft_row);self.called_tile_hint=QLabel();self.called_tile_hint.setObjectName('muted');self.called_tile_hint.setWordWrap(True);self.called_tile_hint.hide();v.addWidget(self.called_tile_hint);self.add_meld_button=button('添加副露',self.add_meld);v.addLayout(row(button('清空',self.clear_draft),self.add_meld_button));self.meld_rows=QVBoxLayout();v.addLayout(self.meld_rows);middle.addWidget(g)
-  self.show_melds=QCheckBox('显示副露区');self.show_melds.setChecked(self.model.settings.get('show_melds',True));v.insertWidget(0,self.show_melds);self.show_melds.toggled.connect(lambda value:self.run(lambda:self.model.setting('show_melds',value)) if self.ready else None)
-  self.meld_kind.currentIndexChanged.connect(self.clear_draft)
+  v.addWidget(self.meld_kind);v.addLayout(row('来源',self.meld_from))
+  self.draft_row=QHBoxLayout();self.draft_row.setContentsMargins(0,0,0,0)
+  self.meld_draft_preview=MeldPreviewWidget(parent=g);self.meld_draft_preview.tile_clicked.connect(self.choose_called);self.meld_draft_preview.tile_removed.connect(self.remove_draft)
+  self.draft_row.addWidget(self.meld_draft_preview);v.addLayout(self.draft_row)
+  self.add_meld_button=button('添加副露',self.add_meld);v.addLayout(row(button('清空',self.clear_draft),self.add_meld_button));self.meld_rows=QVBoxLayout();v.addLayout(self.meld_rows);middle.addWidget(g)
+  self.show_melds=display_button('显示副露区');self.show_melds.setChecked(self.model.settings.get('show_melds',True));v.insertWidget(0,self.show_melds);self.show_melds.toggled.connect(lambda value:self.run(lambda:self.model.setting('show_melds',value)) if self.ready else None)
+  self.meld_kind.currentIndexChanged.connect(self.change_meld_kind)
+  self.meld_from.currentIndexChanged.connect(self.refresh_draft)
+ def change_meld_kind(self,*_):
+  if self.meld_kind.currentData()=='chi':
+   blocker=QSignalBlocker(self.meld_from);self.meld_from.setCurrentIndex(self.meld_from.findData(3));del blocker
+  self.clear_draft()
  def clear_draft(self,*_):self.draft=[];self.called_index=0;self.refresh_draft()
  def add_draft(self,t):
   kind=self.meld_kind.currentData();n=4 if kind in ['ankan','daiminkan','kakan'] else 3
@@ -1061,12 +1194,35 @@ class Console(QMainWindow):
   else:self.draft=[t] if kind=='chi' else complete
   self.refresh_draft()
  def choose_called(self,index):self.called_index=index;self.refresh_draft()
- def refresh_draft(self):
-  clear_layout(self.draft_row);kind=self.meld_kind.currentData();self.called_index=min(self.called_index,max(0,len(self.draft)-1))
-  for i,t in enumerate(self.draft):
-   b=tile_face_button(t,lambda _,j=i:self.choose_called(j));b.setToolTip('点击设为鸣入牌；右键移除');b.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu);b.customContextMenuRequested.connect(lambda _,j=i:self.remove_draft(j));self.draft_row.addWidget(b)
-  self.called_tile_hint.setText('暗杠：无需选择鸣入牌' if kind=='ankan' else '鸣入牌：第'+str(self.called_index+1)+'张（点牌切换）');self.called_tile_hint.setVisible(bool(self.draft))
-  self.draft_row.addStretch(1);self.meld_from.setEnabled(kind!='ankan');required=4 if kind in ['ankan','daiminkan','kakan'] else 3;playing=self.model.state['phase']=='playing';self.add_meld_button.setEnabled(playing and len(self.draft)==required);self.add_meld_button.setToolTip('添加当前副露' if playing else self.player_input_blocked_message())
+ def meld_draft_group(self):
+  kind=self.meld_kind.currentData();source=None if kind=='ankan' else (self.selected+self.meld_from.currentData())%4
+  required=4 if kind in ('ankan','daiminkan','kakan') else 3;group=None
+  if len(self.draft)==required:
+   try:
+    before=self.model.state['players'][self.selected]['melds']
+    after=self.model.engine.apply(self.model.state,{'type':'meld','player':self.selected,'meld':{'kind':kind,'tiles':self.draft.copy(),'from':source,'calledIndex':self.called_index}})['players'][self.selected]['melds']
+    group=next((new for old,new in zip(before,after) if old!=new),after[-1])
+   except ValueError:pass
+  if group is None:
+   indexed=list(enumerate(self.draft));called=None
+   if indexed and kind!='ankan':
+    claimed=indexed.pop(self.called_index)
+    if kind=='chi':indexed.sort(key=lambda entry:tile_sort_key(entry[1]))
+    slot=0 if self.meld_from.currentData()==3 else 1 if self.meld_from.currentData()==2 else (3 if kind=='daiminkan' else 2)
+    called=min(slot,len(indexed));indexed.insert(called,claimed)
+   group={'kind':kind,'tiles':[code for _,code in indexed],'from':source,'calledIndex':called}
+  remaining=list(range(len(self.draft)));indices=[None]*len(group['tiles']);called=group.get('calledIndex')
+  if called is not None and group['tiles'][called]==self.draft[self.called_index]:
+   indices[called]=self.called_index;remaining.remove(self.called_index)
+  for index,code in enumerate(group['tiles']):
+   if indices[index] is None:
+    original=next(candidate for candidate in remaining if self.draft[candidate]==code);indices[index]=original;remaining.remove(original)
+  return group,indices
+ def refresh_draft(self,*_):
+  kind=self.meld_kind.currentData();self.called_index=min(self.called_index,max(0,len(self.draft)-1))
+  group,indices=self.meld_draft_group() if self.draft else (None,None)
+  self.meld_draft_preview.set_group(group,tile_scale(self.model.settings,'meld'),indices)
+  self.meld_from.setEnabled(kind!='ankan');required=4 if kind in ['ankan','daiminkan','kakan'] else 3;playing=self.model.state['phase']=='playing';self.add_meld_button.setEnabled(playing and len(self.draft)==required);self.add_meld_button.setToolTip('添加当前副露' if playing else self.player_input_blocked_message())
  def remove_draft(self,i):self.draft.pop(i);self.refresh_draft()
  def add_meld(self):
   if self.model.state['phase']!='playing':self.error(self.player_input_blocked_message());return
@@ -1075,7 +1231,7 @@ class Console(QMainWindow):
    self.model.meld(self.selected,kind,self.draft.copy(),source,self.called_index);self.clear_draft()
   self.run(add)
  def build_yaku(self,right):
-  g,v=box('役种');self.show_yaku=QCheckBox('和牌画面');self.show_yaku.setChecked(self.model.settings['show_yaku']);self.yaku_grid=QGridLayout();self.yaku_grid.setSpacing(3)
+  g,v=box('役种');self.show_yaku=QCheckBox('和牌画面',g);self.show_yaku.setChecked(self.model.settings['show_yaku']);self.show_yaku.hide();self.yaku_grid=QGridLayout();self.yaku_grid.setSpacing(3)
   v.addLayout(row('和牌张',self.win_tile,'里指示牌',self.ura_indicators,self.win_fill_button));v.addWidget(self.win_assist_hint)
   for i,(name,closed,opened) in enumerate(YAKU[:30]):
    b=button(name,lambda _,n=name:self.role_clicked(n),True);b.setMinimumWidth(0);b.setStyleSheet(CHOICE_BUTTON_STYLE);b.setProperty('operatorChoice',True);self.yaku_buttons[name]=b;self.yaku_grid.addWidget(b,i//5,i%5)
@@ -1158,6 +1314,7 @@ class Console(QMainWindow):
   size=int(self.model.settings.get('console_font_size',14));self.font_smaller_button.setEnabled(size>9);self.font_larger_button.setEnabled(size<24)
   self.font_smaller_button.setToolTip('减小导播台字号 · '+str(size)+' px');self.font_larger_button.setToolTip('增大导播台字号 · '+str(size)+' px')
   self.apply_typography()
+  self.refresh_desk_tile_sizes()
   self.navigation_handle.fit_width()
   self.reflow_round_controls()
   mode=self.model.settings.get('riichi_payment_mode','immediate')
@@ -1169,6 +1326,19 @@ class Console(QMainWindow):
   self.reflow_round_controls()
   if hasattr(self,'picker_grid'):self.reflow_picker()
   if getattr(self,'broadcast_dialog',None):apply_theme(self.broadcast_dialog,self.model.settings)
+ def refresh_desk_tile_sizes(self):
+  signature=tuple(self.model.settings.get(key,100) for key in TILE_SIZE_KEYS)
+  if signature==getattr(self,'_desk_tile_sizes_signature',None):return
+  self._desk_tile_sizes_signature=signature
+  for waits,_ in self.player_wait_widgets:waits.set_tile_scale(tile_scale(self.model.settings,'wait'))
+  self.refresh_wait_editor();self.refresh_draft();self.refresh_meld_rows();self.reflow_live_panels()
+ def refresh_meld_rows(self):
+  clear_layout(self.meld_rows);p=self.model.state['players'][self.selected]
+  for i,m in enumerate(p['melds']):
+   source='自家' if m['kind']=='ankan' else {3:'上家',2:'对家',1:'下家'}.get((m.get('from',self.selected)-self.selected)%4,'');kind={'chi':'吃','pon':'碰','daiminkan':'明杠','ankan':'暗杠','kakan':'加杠'}[m['kind']]
+   line=QHBoxLayout();line.setSpacing(4);label=QLabel(kind+' · '+source);label.setWordWrap(True);line.addWidget(label)
+   line.addWidget(MeldPreviewWidget(m,tile_scale(self.model.settings,'meld'),self.target_boxes['meld']));line.addStretch()
+   remove=button('删除',lambda _,j=i:self.run(lambda:self.model.remove_meld(self.selected,j)));line.addWidget(remove);self.meld_rows.addLayout(line)
  def refresh(self):
   if not self.ready:return
   self.ready=False;s=self.model.state;playing=True;self.round.setCurrentIndex(s['roundIndex']);self.honba.setValue(s['honba']);self.pot.setValue(s['pot']//1000)
@@ -1180,11 +1350,10 @@ class Console(QMainWindow):
   clear_layout(self.dora_row)
   for i,t in enumerate(self.model.dora_tiles):
    b=tile_face_button(t,lambda _,j=i:self.run(lambda:self.model.dora(index=j)));b.setToolTip('移除'+tile_name(t));b.setEnabled(playing);self.dora_row.addWidget(b)
-  self.dora_row.addStretch(1);self.refresh_wait_editor();p=s['players'][self.selected]
-  clear_layout(self.meld_rows)
-  for i,m in enumerate(p['melds']):
-   source='自家' if m['kind']=='ankan' else {3:'上家',2:'对家',1:'下家'}.get((m.get('from',self.selected)-self.selected)%4,'');kind={'chi':'吃','pon':'碰','daiminkan':'明杠','ankan':'暗杠','kakan':'加杠'}[m['kind']];line=QHBoxLayout();line.setSpacing(4);label=QLabel(kind+' · '+source);label.setWordWrap(True);line.addWidget(label);line.addWidget(meld_preview(m));line.addStretch();remove=button('删除',lambda _,j=i:self.run(lambda:self.model.remove_meld(self.selected,j)));remove.setEnabled(playing);line.addWidget(remove);self.meld_rows.addLayout(line)
+  self.dora_row.addStretch(1);self.reflow_dora();self.refresh_wait_editor();self.refresh_player_waits();p=s['players'][self.selected]
+  self.refresh_meld_rows()
   self.undo.setEnabled(bool(self.model.undo));self.redo.setEnabled(bool(self.model.redo));self.replay_button.setEnabled(bool(self.model.last_transition));self.ready=True;self.refresh_display();self.refresh_draft();self.set_tile_target(self.tile_target);self.yaku_changed()
+  self.hand_history.refresh()
  def closeEvent(self,event):
   if self._closing:event.accept();return
   from settings_context import settings_windows
@@ -1213,7 +1382,7 @@ class Console(QMainWindow):
   if hasattr(self,'automation'):self.automation.close()
   self.workspace.dispose()
   if getattr(self,'event_workspace',None):
-   if getattr(self.event_workspace,'output',None):self.event_workspace.output._skip_close_save=True;self.event_workspace.output.close()
+   if getattr(self.event_workspace,'output',None):self.event_workspace.output.close()
    self.event_workspace.close()
   if getattr(self,'broadcast_dialog',None) and self.broadcast_dialog.isWindow():self.broadcast_dialog.close()
   if getattr(self,'corner_dialog',None):self.corner_dialog.close()

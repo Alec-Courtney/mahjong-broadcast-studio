@@ -135,9 +135,9 @@ class RecognitionSettingsPage:
                     menu.addAction(label, lambda checked=False, index=player, source=sample_kind:
                                    self._recognition_sample(index, source))
             samples.setMenu(menu)
-            samples.setVisible(bool(menu.actions()))
             reset_roi = button('恢复全画面', lambda checked=False, index=player: self._drag_recognition_roi(index, (0., 0., 1., 1.)))
             details.addLayout(row(samples, reset_roi, 1))
+            samples.setVisible(bool(menu.actions()))
             self.recognition_roi_stack.addWidget(detail)
             self.recognition_sources.append(dict(group=group, enabled=enabled, kind=kind, path=path,
                 browse=browse, samples=samples, preview_button=preview_button, roi=roi, device=device,

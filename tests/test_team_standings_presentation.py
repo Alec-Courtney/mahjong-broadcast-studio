@@ -13,15 +13,17 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'src'))
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QImage, QPainter
+from PySide6.QtGui import QImage, QPainter
 from PySide6.QtWidgets import QApplication, QTableWidgetItem
 from model import Model
 from event_store import EventStore
 import broadcast_artwork as art
 import ranking_reports as reports
 import tournament
+from broadcast_test_support import initialize_fonts
 
 APP = QApplication.instance() or QApplication([])
+initialize_fonts(APP)
 NS = {'s': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
 COLORS = ['#b83b56', '#2866bd', '#3c8a5a', '#d0aa26', '#8652ab', '#238d91',
           '#cb7136', '#627b93', '#8b943f', '#b06292']
@@ -110,38 +112,6 @@ class TeamStandingsPresentationTests(unittest.TestCase):
         for row in expected:self.assertIn(art._point(row['points'], True), [value for value, rect in captions])
         self.assertEqual(reports.individual_rows(self.model.state, self.model.event), first)
 
-    def test_team_sidebar_has_uniform_dark_rows_and_current_red_without_team_stripes(self):
-        rows = tournament.standings(self.model.state, 'team')
-        self.model.state['broadcast']['config'].update(sidebar_page=0, sidebar_page_size=10, sidebar_scope='all')
-        image, _ = self.sidebar('team', rows)
-        current = art._current_team_ids(self.model)
-        for index, row in enumerate(rows[:10]):
-            y = 86+index*52
-            reference = QImage(1, 1, QImage.Format.Format_ARGB32_Premultiplied)
-            reference.fill(Qt.GlobalColor.transparent); paint = QPainter(reference)
-            paint.fillRect(0, 0, 1, 1, QColor('#b8081713'))
-            paint.fillRect(0, 0, 1, 1, QColor('#b7a6242a' if row['id'] in current else '#bc101c19'));paint.end()
-            for x in (2, 8, 390):
-                self.assertEqual(image.pixelColor(x, y+3), reference.pixelColor(0, 0))
-        duplicate = [row for row in rows if row['name']=='同名队']
-        self.assertEqual(len(duplicate), 2)
-        self.assertNotEqual(duplicate[0]['id'], duplicate[1]['id'])
-        self.assertNotEqual(reports.team_row_fill(duplicate[0]), reports.team_row_fill(duplicate[1]))
-        reversed_image, _ = self.sidebar('team', list(reversed(rows)))
-        for index, row in enumerate(list(reversed(rows))[:10]):
-            color = reversed_image.pixelColor(2, 86+index*52+3)
-            self.assertEqual(color, reversed_image.pixelColor(390, 86+index*52+3))
-
-    def test_personal_sidebar_has_no_team_background_or_color_stripes(self):
-        config = self.model.state['broadcast']['config']
-        config.update(sidebar_scope='all', sidebar_page=0, sidebar_page_size=10)
-        image, _ = self.sidebar('individual')
-        # None of these top10 are on the current table; their different team
-        # colours must produce the exact same plain dark row and left margin.
-        colors = [image.pixelColor(9, 86+index*52+1) for index in range(10)]
-        self.assertEqual(len({color.rgba() for color in colors}), 1)
-        for index in range(10):self.assertEqual(colors[index], image.pixelColor(390, 86+index*52+1))
-
     def test_unassigned_and_invalid_colors_are_neutral_without_merging_people(self):
         rows = reports.team_rows(self.model.state, self.model.event)
         unassigned = [row for row in rows if row['id'].startswith('unassigned:')]
@@ -182,21 +152,46 @@ class TeamStandingsPresentationTests(unittest.TestCase):
         before['broadcast']['config']['sidebar_page'] = 1
         self.assertEqual(self.model.state, before)
 
-    def test_png_and_operator_table_use_the_same_whole_row_team_tint(self):
+    def test_png_and_operator_tables_color_only_the_team_name_cell(self):
         self.finish()
         for mode in ('individual', 'team'):
             data = reports.report(self.model.state, self.model.event, mode)
             image = reports.render_report(data)
+            layout=reports.report_layout(data)
             for index, row in enumerate(data['rows']):
-                expected = reports.report_row_fill(data, row, index)
-                # Short fixture names keep all headers at42px and rows at44px.
-                for x in (52, 100, 240, 350):
-                    self.assertEqual(image.pixelColor(x, 124+index*44+2).name(), expected)
+                x=layout['margin']
+                y=layout['top']+layout['header_height']+sum(layout['heights'][:index])
                 for key in data['columns']:
+                    expected=reports.report_cell_fill(data,row,key,index)
+                    self.assertEqual(expected,reports.row_team_color(row) if key=='team' and row.get('team') else '#ffffff')
                     cell = QTableWidgetItem(); reports.style_table_item(cell, data, row, key, index)
                     self.assertEqual(cell.background().color().name(), expected)
-                    negative = key=='points' and row['points']<0
-                    self.assertEqual(cell.foreground().color().name(), '#b64444' if negative else '#203b34')
+                    self.assertEqual(cell.foreground().color().name(), reports.report_cell_color(data,row,key))
+                    self.assertEqual(cell.textAlignment(),Qt.AlignmentFlag.AlignCenter)
+                    self.assertEqual(image.pixelColor(x+4,y+4).name(),expected)
+                    x+=layout['widths'][data['columns'].index(key)]
+            self.assertEqual(image.pixelColor(layout['margin']+4,layout['top']+4).name(),'#e5e5e5')
+
+    def test_personal_export_keeps_all_vertical_rules_and_uses_compact_large_type(self):
+        data=reports.report(self.model.state,self.model.event)
+        data['columns']=reports.default_columns('team_league')
+        layout=reports.report_layout(data)
+        image=reports.render_report(data)
+        self.assertEqual(layout['body_font'].pixelSize(),24)
+        self.assertLess(max(layout['heights']),44)
+        self.assertEqual(image.height(),layout['top']+layout['header_height']+sum(layout['heights'])+10)
+        top=layout['top']+layout['header_height']+1
+        bottom=image.height()-10
+        x=layout['margin']
+        coverages=[]
+        for width in layout['widths'][:-1]:
+            x+=width
+            dark=sum(image.pixelColor(x,y).lightness()<210 for y in range(top,bottom))
+            coverages.append(dark/(bottom-top))
+        self.assertTrue(all(coverage>.2 for coverage in coverages))
+        self.assertTrue(any(coverage<.85 for coverage in coverages))
+        self.assertTrue(any(coverage>.95 for coverage in coverages))
+        self.assertEqual(image.pixelColor(2,image.height()-2).name(),'#ffffff')
 
     def test_xlsx_colors_all_cells_and_preserves_numeric_ledgers(self):
         self.finish(); target = Path(self.tmp.name)/'standings.xlsx'
@@ -215,7 +210,8 @@ class TeamStandingsPresentationTests(unittest.TestCase):
                     for cell in cells:
                         fill = fills[int(xfs[int(cell.attrib['s'])].attrib['fillId'])]
                         actual.append(fill.find('s:patternFill/s:fgColor', NS).attrib['rgb'])
-                    self.assertEqual(set(actual), {'FF'+reports.report_row_fill(data, row, index)[1:].upper()})
+                    self.assertEqual(actual, ['FF'+reports.report_cell_fill(data,row,key,index)[1:].upper()
+                                              for key in data['columns']])
                     point = cells[data['columns'].index('points')]
                     self.assertAlmostEqual(float(point.find('s:v', NS).text), row['points'])
                     self.assertNotIn('t', point.attrib)

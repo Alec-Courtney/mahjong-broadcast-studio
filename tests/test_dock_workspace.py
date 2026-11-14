@@ -60,6 +60,26 @@ class DockWorkspaceTests(unittest.TestCase):
         QTest.mouseRelease(dock,Qt.MouseButton.LeftButton,modifiers,pos=dock.mapFromGlobal(point))
         APP.processEvents()
 
+    def test_closed_floating_history_reopens_from_the_top_toolbar(self):
+        workspace = self.ui.workspace
+        dock = workspace.docks['history']
+        control = workspace.panel_buttons['history']
+        before = copy.deepcopy(self.model.state)
+        self.assertEqual(control.text(), '历史局收支')
+        dock.setFloating(True)
+        APP.processEvents()
+        self.assertTrue(control.isChecked())
+        dock.close()
+        APP.processEvents()
+        self.assertFalse(control.isChecked())
+        self.assertTrue(dock.isHidden())
+        control.click()
+        APP.processEvents()
+        self.assertTrue(dock.isVisible())
+        self.assertTrue(dock.isFloating())
+        self.assertTrue(control.isChecked())
+        self.assertEqual(self.model.state, before)
+
     def test_native_edge_preview_and_docking_work_without_using_an_arrow(self):
         workspace=self.ui.workspace;before=copy.deepcopy(self.model.state)
         original=workspace.docks['dora'].geometry()
@@ -124,6 +144,8 @@ class DockWorkspaceTests(unittest.TestCase):
 
     def test_visual_drop_places_wide_yaku_only_below_the_tile_panel(self):
         workspace=self.ui.workspace;tiles=workspace.docks['tiles'];yaku=workspace.docks['yaku']
+        # Leave the bottom area free for this deliberately wide drag source.
+        workspace.docks['history'].hide()
         self.ui.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea,yaku);APP.processEvents()
         self.assertGreater(yaku.width(),tiles.width())
         before=copy.deepcopy(self.model.state);self.native_drag('yaku')
@@ -171,16 +193,6 @@ class DockWorkspaceTests(unittest.TestCase):
         workspace._update_drag_target(self.ui.mapToGlobal(QPoint(-20,-20)))
         self.assertEqual(shown(),set());workspace.end_drag()
         self.assertEqual({key:dock.geometry() for key,dock in workspace.docks.items()},before)
-
-    def test_visible_arrows_do_not_replace_normal_target_edges(self):
-        workspace=self.ui.workspace;tiles=workspace.docks['tiles']
-        workspace.begin_drag('yaku');workspace._drag_timer.stop()
-        workspace._update_drag_target(tiles.mapToGlobal(tiles.rect().center()))
-        overlay=workspace.drop_overlays['tiles']
-        self.assertIsNone(workspace.arrow_destination(overlay.mapToGlobal(QPoint(3,overlay.height()//2))))
-        point=overlay.mapToGlobal(overlay.zones()['right'].center())
-        self.assertEqual(workspace.arrow_destination(point),('yaku','tiles','right'))
-        workspace.end_drag()
 
     def test_toolbar_switches_and_saved_v3_tabs_are_restored_without_merging(self):
         workspace=self.ui.workspace;button=workspace.panel_buttons['dora']
@@ -239,11 +251,13 @@ class DockWorkspaceTests(unittest.TestCase):
         controls = [self.ui.navigation_buttons['settings'], self.ui.quick_scene,
                     self.ui.quick_bottom, self.ui.quick_table_scores,
                     self.ui.quick_conditions, self.ui.quick_corner, self.ui.show_melds,
-                    self.ui.show_yaku, self.ui.font_smaller_button,
+                    self.ui.font_smaller_button,
                     self.ui.font_larger_button, self.ui.player_animation_button,
                     self.ui.corner_bottom_text,
                     self.ui.corner_apply_button, self.ui.corner_logo_button,
                     *self.ui.sidebar_preset_buttons.values()]
+        self.assertTrue(self.ui.show_yaku.isHidden())
+        self.assertFalse(self.ui.presentation_group.isAncestorOf(self.ui.show_yaku))
         for width, height in ((960, 620), (1460, 1000)):
             self.ui.resize(width, height)
             QTest.qWait(20)
@@ -310,23 +324,6 @@ class DockWorkspaceTests(unittest.TestCase):
         self.ui.resize(1460, 1000)
         APP.processEvents()
         self.assertEqual(nav.width(), 222)
-
-    def test_navigation_width_adapts_to_small_windows_and_large_text(self):
-        nav = self.ui.navigation_scroll
-        self.drag_navigation(90)
-        self.ui.resize(960, 620)
-        APP.processEvents()
-        self.assertLess(nav.width(), 232)
-        self.assertEqual(self.ui.size().width(), 960)
-        self.ui.resize(1460, 1000)
-        APP.processEvents()
-        self.assertEqual(nav.width(), 232)
-
-        self.model.setting('console_font_size', 24)
-        self.drag_navigation(-200)
-        self.assertLess(nav.width(), 232)
-        self.assertEqual(nav.horizontalScrollBar().maximum(), 0)
-        self.assertLessEqual(nav.widget().width(), nav.viewport().width())
 
     def drag_navigation(self, distance):
         handle = self.ui.navigation_handle

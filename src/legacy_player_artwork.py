@@ -48,7 +48,7 @@ def paint_saikouisen_card(*args, **kwargs):
     return paint(*args, **kwargs)
 
 def draw_player(self, p, i, now):
-    from artwork import rect, text, color, fmt, tile, paint_status_badge
+    from artwork import rect, text, color, fmt, tile, paint_status_badge, WAIT_TILE_FACE_RECT
     from mahjong_values import display_score, normalize_waits, TEAM_COLORS
     s = self.model.state
     d = s['players'][i]
@@ -98,7 +98,7 @@ def draw_player(self, p, i, now):
             p.save()
             if code in d.get('waits_no_yaku', []):
                 p.setOpacity(p.opacity() * 0.32)
-            tile(p, code, start + j * 32 * scale, status_y + (53 - 36 * scale) / 2, scale)
+            tile(p, code, start + j * 32 * scale, status_y + (53 - 36 * scale) / 2, scale, face_rect=WAIT_TILE_FACE_RECT)
             p.restore()
         after_tiles = start+len(waits)*32*scale+4
         if waits and after_tiles+45 < card_x+card_w-count_width:

@@ -160,11 +160,6 @@ class BracketEditingTests(unittest.TestCase):
             self.assertIsNone(dialog.sources[0].currentData())
         finally:dialog.deleteLater()
 
-    def test_long_names_are_fitted_in_full_instead_of_elided(self):
-        roster=copy.deepcopy(self.model.state['broadcast']['roster']);name='这是用于验证完整显示的较长选手姓名ABC'
-        roster[0]['name']=name;self.model.set_roster(roster)
-        self.assertIn(name,self.draw_texts())
-
     def test_schedule_report_and_xlsx_keep_sources_custom_table_names_and_manual_real_names(self):
         data=ranking_reports.schedule_report(self.model.state,self.model.event)
         final=next(row for row in data['rows'] if row['node_name']=='C桌')

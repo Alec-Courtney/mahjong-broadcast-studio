@@ -11,14 +11,14 @@ from PySide6.QtGui import QPainter, QColor, QIcon, QImage, QPixmap, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView, QCheckBox, QComboBox, QDialog, QFileDialog, QFormLayout,
     QHBoxLayout, QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem,QGroupBox,QGridLayout,
-    QScrollArea, QSizePolicy, QStackedWidget, QStyledItemDelegate, QVBoxLayout, QWidget,QInputDialog,QMenu,QMessageBox,
+    QScrollArea, QSizePolicy, QStackedWidget, QStyledItemDelegate, QTableWidgetSelectionRange, QVBoxLayout, QWidget,QInputDialog,QMenu,QMessageBox,
 )
 from ui_widgets import button, row, choice, integer, decimal, note, selected, table, item
 from desk_theme import apply_theme, status as set_status_style
 from color_input import ColorDelegate, ColorInput
 from event_store import EventStore, KINDS, validate_event, now
 from event_history import EventHistoryDialog
-from event_penalties import net_results, penalty_totals
+from event_penalties import net_results, penalty_targets
 from event_roster import PLAYER_STATUSES, selected_profile
 from event_teams import DEFAULT_COLOR, assigned_team_id, assign_team, is_rgb_color, known_teams, player_color
 from i18n import get_language, signals, tr
@@ -102,12 +102,9 @@ class ReportOutputWindow(QWidget):
             painter.drawImage(QRectF((self.width()-size.width())/2,(self.height()-size.height())/2,size.width(),size.height()),self.image)
         painter.end()
     def closeEvent(self,event):
-        if not getattr(self,'_skip_close_save',False):
-            try:self.main.model.save_preferences(dict(self.main.model.settings,report_output_geometry=[self.x(),self.y(),self.width(),self.height()]))
-            except (OSError,ValueError) as error:
-                if callable(getattr(self.main,'error',None)):self.main.error(str(error))
-                event.ignore();return
-        event.accept()
+        # Closing a live output is local. The next workspace save records its position.
+        self.main.model.settings['report_output_geometry'] = [self.x(), self.y(), self.width(), self.height()]
+        super().closeEvent(event)
 
 
 class NodeDialog(QDialog):
@@ -246,31 +243,156 @@ class ResultEntryDialog(QDialog):
 
 class ResultsDialog(QDialog):
     def __init__(self,workspace):
-        super().__init__(workspace);self.workspace=workspace;self.setWindowTitle('已确认成绩与更正');self.resize(900,560);layout=QVBoxLayout(self)
-        self.table=table(['记录标题','来源','四人最终持点 / 入账 pt','生效扣分']);layout.addWidget(self.table)
-        layout.addLayout(row(button('更正选中补录成绩',self.edit),button('选中半庄的判罚',self.penalties),
-                             1,button('关闭',self.close)));self.reload()
-    def reload(self):
-        self.matches=reports.confirmed_matches(self.workspace.model.state);self.table.setRowCount(len(self.matches))
+        super().__init__(workspace)
+        self.workspace=workspace
+        self.event_id=workspace.model.event['id']
+        self.matches=[]
+        self.setWindowTitle('已确认成绩与更正')
+        self.resize(1120,620)
+        self.setMinimumSize(920,440)
+        layout=QVBoxLayout(self)
+        layout.addWidget(note('每条半庄分两行展示，每行两名选手；pt 为判罚后的入账积分。悬停选手可查看最终持点。'))
+        self.table=table(['记录标题','来源','记录时间','选手 / 扣分详情','入账 pt','选手 / 扣分详情','入账 pt'])
+        self.table.setAlternatingRowColors(False)
+        header=self.table.horizontalHeader()
+        header.setStretchLastSection(False)
+        for column in (0,3,5):
+            header.setSectionResizeMode(column,QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2,QHeaderView.ResizeMode.Fixed)
+        header.sectionResized.connect(self.resize_record_rows)
+        layout.addWidget(self.table,1)
+        self.status=QLabel()
+        self.status.setWordWrap(True)
+        self.status.setProperty('i18n_literal',True)
+        layout.addWidget(self.status)
+        self.edit_button=button('更正选中补录成绩',self.edit)
+        self.edit_time_button=button('修改记录时间',self.edit_record_time)
+        self.penalties_button=button('选中半庄的判罚',self.penalties)
+        self.delete_button=button('删除选中半庄记录',self.delete)
+        layout.addLayout(row(self.edit_button,self.edit_time_button,self.penalties_button,self.delete_button,1,button('关闭',self.close)))
+        self.table.itemSelectionChanged.connect(self.select_record)
+        self.table.currentCellChanged.connect(self.select_record)
+        self.workspace.model.changed.connect(self.reload)
+        self.reload()
+
+    def selected_record(self):
+        index=self.table.currentRow()//2
+        return self.matches[index] if 0<=index<len(self.matches) else None
+
+    def resize_record_rows(self,column,*_):
+        if column in (0,3,5):self.table.resizeRowsToContents()
+
+    def select_record(self,*_):
+        record=self.selected_record()
+        if record:
+            start=(self.table.currentRow()//2)*2
+            with QSignalBlocker(self.table):
+                self.table.clearSelection()
+                self.table.setRangeSelected(QTableWidgetSelectionRange(start,0,start+1,self.table.columnCount()-1),True)
+        self.edit_button.setEnabled(bool(record and record.get('source')=='manual'))
+        self.edit_time_button.setEnabled(record is not None)
+        self.penalties_button.setEnabled(record is not None)
+        self.delete_button.setEnabled(record is not None)
+
+    def reload(self,*_):
+        from event_results import recorded_time
+
+        selected_record=self.selected_record()
+        identity=selected_record['id'] if selected_record else None
+        self.matches=(reports.confirmed_matches(self.workspace.model.state)
+                      if self.workspace.model.event['id']==self.event_id else [])
+        with QSignalBlocker(self.table):
+            self.table.clearSpans()
+            self.table.clearContents()
+            self.table.setRowCount(2*len(self.matches))
+            self.table.setColumnWidth(2,max(114,self.table.fontMetrics().horizontalAdvance('0000-00-00')+24))
+            self.populate_records(recorded_time)
+            self.table.resizeRowsToContents()
+            index=next((index for index,record in enumerate(self.matches) if record['id']==identity),0)
+            if self.matches:self.table.setCurrentCell(index*2,0)
+        self.select_record()
+        if not self.matches:self.status.setText(tr('此赛事暂无已确认的半庄。'))
+
+    def populate_records(self,recorded_time):
         for index,record in enumerate(self.matches):
-            players, teams = penalty_totals(record)
-            total = sum(players.values()) + sum(teams.values())
-            values=[record.get('title','半庄'),'补录' if record.get('source')=='manual' else '导播台',
-                ' / '.join(f"{r['name']} {r.get('score','—')} ({r['points']:+.1f})" for r in net_results(record)),
-                f'−{total:g} pt' if total else '—']
-            for column,value in enumerate(values):self.table.setItem(index,column,item(value,editable=False))
+            start=index*2
+            active=[entry for entry in record.get('penalties',[]) if not entry.get('voided_at')]
+            metadata={0:record.get('title') or tr('半庄'),1:tr('补录' if record.get('source')=='manual' else '导播台'),
+                      2:recorded_time(record).replace(' ','\n')}
+            teams=penalty_targets(record,'team')
+            for entry in active:
+                if entry['scope']=='team':
+                    metadata[0]+='\n'+tr('队伍判罚')+'：'+teams[entry['target']]+' '+self.penalty_text(entry)
+            for column,value in metadata.items():
+                cell=item(value,record['id'],editable=False)
+                cell.setToolTip(str(value).replace('\n',' '))
+                cell.setTextAlignment(Qt.AlignmentFlag.AlignCenter if column else Qt.AlignmentFlag.AlignVCenter|Qt.AlignmentFlag.AlignLeft)
+                self.table.setItem(start,column,cell)
+                self.table.setSpan(start,column,2,1)
+            for seat,result in enumerate(net_results(record)):
+                line=start+seat//2
+                column=3+(seat%2)*2
+                penalties=[entry for entry in active if entry['scope']=='player' and entry['target']==result['id']]
+                label='\n'.join([result['name'],*(self.penalty_text(entry) for entry in penalties)])
+                cell=item(label,record['id'],editable=False)
+                score=result.get('score')
+                tooltip=[label]
+                if isinstance(score,(int,float)):tooltip.append(tr('最终持点')+f'：{score:,}')
+                tooltip.extend(entry['note'] for entry in penalties if entry.get('note'))
+                cell.setToolTip('\n'.join(tooltip))
+                self.table.setItem(line,column,cell)
+                points=item(f"{result['points']:+,.1f}".replace('-','−'),record['id'],editable=False)
+                points.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.table.setItem(line,column+1,points)
+
+    @staticmethod
+    def penalty_text(entry):
+        return f"−{entry['points']:g} pt · {entry['reason']}"
+
     def penalties(self):
-        index = self.table.currentRow()
-        if 0 <= index < len(self.matches):
-            self.workspace.show_match_penalties(self.matches[index]['id'], self)
+        record=self.selected_record()
+        if record:
+            self.workspace.show_match_penalties(record['id'],self)
             self.reload()
+
     def edit(self):
-        index=self.table.currentRow()
-        if index<0:return
-        record=self.matches[index]
+        record=self.selected_record()
+        if not record:return
         if record.get('source')!='manual':self.workspace.status.setText('直播半庄请在导播台更正；此处可更正补录成绩。');return
         dialog=ResultEntryDialog(self.workspace,record=record)
-        if dialog.exec()==QDialog.DialogCode.Accepted:self.reload();self.workspace.refresh_reports();self.workspace.refresh_bracket()
+        try:
+            if dialog.exec()==QDialog.DialogCode.Accepted:self.reload();self.workspace.refresh_reports();self.workspace.refresh_bracket()
+        finally:dialog.deleteLater()
+
+    def edit_record_time(self):
+        from match_record_time import MatchRecordTimeDialog
+
+        record=self.selected_record()
+        if not record:return
+        if self.workspace.model.event['id']!=self.event_id:
+            self.status.setText(tr('赛事已切换，请重新打开半庄记录'));return
+        dialog=MatchRecordTimeDialog(self,self.workspace.model,record)
+        try:
+            if dialog.exec()==QDialog.DialogCode.Accepted:
+                self.status.setText(tr('记录时间已保存，结果图将按新的记录时间计算当天序号。'))
+        finally:dialog.deleteLater()
+
+    def delete(self):
+        record=self.selected_record()
+        if not record:return
+        message=tr('删除后，此半庄的积分、场次、技术统计和判罚将从当前赛事中移除，无法通过导播台撤销恢复。')
+        message+='\n\n'+(record.get('title') or tr('半庄'))+'\n'+' / '.join(result['name'] for result in record['results'])
+        if QMessageBox.question(self,tr('删除半庄记录'),message,
+                QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No)!=QMessageBox.StandardButton.Yes:return
+        try:
+            if self.workspace.model.event['id']!=self.event_id:raise ValueError('赛事已切换，请重新打开成绩记录')
+            self.workspace.model.records.delete_match(record['id'],expected_record=record)
+        except (ValueError,OSError) as error:
+            set_status_style(self.status,'error');self.status.setText(str(error));return
+        self.reload()
+        set_status_style(self.status,'success')
+        self.status.setText(tr('半庄记录已删除，榜单已更新。'))
 
 
 
@@ -1002,6 +1124,7 @@ class EventWorkspaceDialog(SettingsWindow):
         finally:
             self._saving_identity=False
         if refresh:self._refresh_identity_section(section)
+        self.refresh_reports()
 
     def follow_team_colors(self):
         if not self.is_team_event():return
@@ -1109,6 +1232,7 @@ class EventWorkspaceDialog(SettingsWindow):
         committed=record is not None
         count=sum(bool(match.get('committed')) for match in matches)
         if committed:message='本半庄积分已计入当前赛事；可选择下一半庄四席。'
+        elif finished and state['broadcast'].get('result_discarded'):message='本半庄记录已删除；可开始下一半庄，也可重新记录本半庄积分。'
         elif finished:message='本半庄已结束，请核对最终持点并记录积分，再开始下一半庄。'
         else:message='本半庄进行中；完成终局结算后，可在这里记录赛事积分。'
         self.match_record_status.setText(message+f'　当前赛事已确认 {count} 半庄')
@@ -1349,6 +1473,8 @@ class EventWorkspaceDialog(SettingsWindow):
         self.report_preset=choice([('赛事成绩','results'),('ML 完整数据','ml'),('技术统计','technical')]);page.addLayout(row('个人榜预设',self.report_preset,button('应用预设',self.apply_report_preset),1))
         self.report_table=table([]);self.report_table.setProperty('i18n_literal',True);self.report_table.setMinimumHeight(300);self.report_table.horizontalHeader().setSectionsMovable(True);self.report_table.horizontalHeader().sectionMoved.connect(self.column_moved);self.report_table.horizontalHeader().sectionDoubleClicked.connect(self.rename_header);page.addWidget(self.report_table,1)
         self.report_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.report_table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.report_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.report_page = 1
         self.report_previous = button('上一页', lambda: self.set_report_page(self.report_page-1))
         self.report_next = button('下一页', lambda: self.set_report_page(self.report_page+1))
@@ -1358,12 +1484,15 @@ class EventWorkspaceDialog(SettingsWindow):
         page.addLayout(row(self.report_previous, self.report_page_label, self.report_next, 1))
         page.addLayout(row(button('补录其他桌成绩',self.manual_result),button('成绩记录与更正',self.show_confirmed_results),
             button('查看历史成绩', lambda: self.show_event_history()),1))
+        self.team_results_button=button('选择半庄生成队伍结果图',self.show_team_results)
+        page.addLayout(row(self.team_results_button,1))
         self.report_notes=QLabel();self.report_notes.setWordWrap(True);self.report_notes.setProperty('i18n_literal',True);self.report_notes.setObjectName('muted');page.addWidget(self.report_notes)
         page.addWidget(note('放大彩色预览支持缩放和翻页。拖动表头调整顺序，双击表头修改名称。列设置和表头名称随赛事保存。团队 Excel 包含两张榜，图片导出为当前榜单的整张 PNG。'));page.addStretch()
     def refresh_reports(self,*_,force=False):
         event = self.model.event
         if not event:return
         is_team=self.is_team_event()
+        self.team_results_button.setVisible(is_team)
         mode=(self.report_mode.currentData() or 'individual') if is_team else 'individual'
         if self.report_mode.count() != (2 if is_team else 1):
             with QSignalBlocker(self.report_mode):
@@ -1404,7 +1533,6 @@ class EventWorkspaceDialog(SettingsWindow):
                 for index,entry in enumerate(data['rows']):
                     for column,key in enumerate(columns):
                         cell=item(reports.display(key,entry.get(key)),editable=False)
-                        if key not in ('name','team'):cell.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         reports.style_table_item(cell,data,entry,key,index)
                         self.report_table.setItem(index,column,cell)
                 self.report_table.resizeColumnsToContents()
@@ -1469,6 +1597,11 @@ class EventWorkspaceDialog(SettingsWindow):
             self.run(lambda:(self.store.update(report_headers=labels),self.refresh_reports()),'表头名称已保存，界面和导出同步使用新名称')
     def export_dir(self):
         directory=self.model.path/'exports';directory.mkdir(exist_ok=True);return directory
+    def show_team_results(self):
+        if not self.is_team_event():return
+        dialog=EventHistoryDialog(self,self.model.state,self.model.event,select_matches=True)
+        try:dialog.exec()
+        finally:dialog.deleteLater()
     def export_xlsx(self):
         path,_=QFileDialog.getSaveFileName(self,'导出彩色 Excel',str(self.export_dir()/(safe_name(self.model.event['name'])+'-积分榜.xlsx')),'Excel (*.xlsx)')
         if path:self.run(lambda:reports.export_xlsx(self.model.state,self.model.event,path),'彩色 Excel 已导出')
@@ -1639,7 +1772,7 @@ class EventWorkspaceDialog(SettingsWindow):
             if roster_changed and not self._saving_all and not getattr(self,'_saving_identity',False):
                 self.refresh_identity_from_model()
             self.refresh_current_match()
-            if (self.isVisible() and self.pages.currentIndex()==3) or (getattr(self,'report_preview',None) and self.report_preview.isVisible()):self.refresh_reports()
+            self.refresh_reports()
             if self.isVisible():
                 if self.pages.currentIndex()==4:self.refresh_bracket()
         if getattr(self,'output',None) and self.output.isVisible():
@@ -1647,13 +1780,18 @@ class EventWorkspaceDialog(SettingsWindow):
             elif self.output_mode=='bracket':self.refresh_bracket()
     def refresh_identity_from_model(self):
         dirty=self.dirty_sections()
-        if 'teams' not in dirty:
+        live_teams=self._live_team_values()
+        teams_changed=live_teams!=self._teams_baseline
+        if teams_changed and 'teams' not in dirty:
             self._load_team_table();self.mark_saved('teams')
-        elif self.is_team_event():
-            self.saved_teams=known_teams(self.model.state,self.model.event)
-        if 'roster' not in dirty:
+        elif teams_changed and self.is_team_event():
+            self.saved_teams=live_teams['teams']
+        live_roster={p['id']:p for p in self.model.state['broadcast']['roster']}
+        roster_changed=(live_roster!=self.roster_original
+                        or self.model.event.get('player_plans',{})!=self._roster_plans_baseline)
+        if roster_changed and 'roster' not in dirty:
             self._load_roster_table();self.mark_saved('roster')
-        else:
+        elif teams_changed:
             self.refresh_roster_team_labels()
     def on_display_changed(self):
         signature=tuple(self.model.settings.get(key) for key in ('console_theme','console_font_family','settings_font_size'))
@@ -1663,9 +1801,13 @@ class EventWorkspaceDialog(SettingsWindow):
         else:
             self.refresh_heading()
             self.refresh_current_match()
+            # Plans and other metadata saves emit display_changed without a
+            # state change. Refresh their editors as well as the report cache.
+            if not self._saving_all and not getattr(self,'_saving_identity',False):
+                self.refresh_identity_from_model()
             self.refresh_team_sidebar_preview()
             if not self._saving_all and 'general' not in self.dirty_sections():self.load_general();self.mark_saved('general')
-            if (self.isVisible() and self.pages.currentIndex()==3) or (getattr(self,'report_preview',None) and self.report_preview.isVisible()):self.refresh_reports()
+            self.refresh_reports()
     def closeEvent(self,event):
         super().closeEvent(event)
         if event.isAccepted() and getattr(self,'report_preview',None):self.report_preview.close()

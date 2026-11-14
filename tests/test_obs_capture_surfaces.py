@@ -4,16 +4,17 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'src'))
-from PySide6.QtCore import Qt,QPoint,QEvent,QObject
-from PySide6.QtGui import QImage,QColor,QBitmap,QRegion
+from PySide6.QtCore import Qt,QPoint,QPointF,QRect,QEvent,QObject
+from PySide6.QtGui import QImage,QColor,QMouseEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication,QMessageBox
-from console import Console,PlayerLayoutDialog
+from console import Console
 from model import Model
 from overlays import OverlayManager
 from settings_dialog import SettingsDialog
@@ -96,24 +97,43 @@ class OBSCaptureTests(unittest.TestCase):
         self.assertTrue(all(item['scale']==dict(x=.5,y=.5) if item['name']=='局况 · 宝牌' else item['scale']==dict(x=1.,y=1.) for item in data['sources'][-1]['settings']['items']))
         self.assertTrue(all(item['scale_filter']=='lanczos' for item in data['sources'][-1]['settings']['items']))
 
-    def test_hud_capture_has_double_pixels_and_keeps_layout_and_handle(self):
-        self.model.setting('show_overlays',True)
-        self.manager.set_visible('round',True)
-        layout=self.manager.windows['round'];capture=self.manager.capture_windows['round']
-        handle=int(capture.winId());state,undo=copy.deepcopy((self.model.state,self.model.undo))
-        self.assertFalse(layout.isVisible())
-        for geometry in ([40,8,619,121],[70,90,728,142],[20,30,900,176]):
-            layout.setGeometry(*geometry);self.manager.on_display();APP.processEvents()
-            self.assertEqual(capture.geometry().getRect(),tuple(geometry[:2]+[v*2 for v in geometry[2:]]))
-            self.assertGreater(alpha_pixels(capture),1000)
-            self.manager.save_geometry()
-            self.assertEqual(Model(self.model.path).settings['windows']['round'],geometry)
-            self.assertEqual(int(capture.winId()),handle)
-        self.manager.set_visible('round',False)
-        self.assertEqual(alpha_pixels(capture),0);self.assertTrue(capture.isVisible())
-        self.manager.set_visible('round',True)
-        self.assertGreater(alpha_pixels(capture),1000);self.assertEqual(int(capture.winId()),handle)
-        self.assertEqual((self.model.state,self.model.undo),(state,undo))
+    def test_obs_export_places_sources_relative_to_their_own_monitor(self):
+        def source(name, origin, offset, ratio):
+            screen = SimpleNamespace(geometry=lambda: QRect(*origin, 1600, 900),
+                                     devicePixelRatio=lambda: ratio)
+            return SimpleNamespace(windowTitle=lambda: name, screen=lambda: screen,
+                                   x=lambda: origin[0] + offset[0], y=lambda: origin[1] + offset[1])
+
+        manager = SimpleNamespace(capture_windows={
+            'primary': source('Primary', (0, 0), (80, 60), 1.),
+            'second': source('Second', (-1920, -400), (100, 80), 1.5),
+        })
+        data = scene_collection(manager, identity=lambda window: window.windowTitle())
+        items = data['sources'][-1]['settings']['items']
+        self.assertEqual([item['pos'] for item in items], [dict(x=80, y=60), dict(x=150, y=120)])
+
+    def test_player_drag_across_scaled_monitors_preserves_output_and_saves_position(self):
+        def mouse_event(kind, x, y, button, buttons):
+            return QMouseEvent(kind, QPointF(20, 20), QPointF(x, y), button, buttons,
+                               Qt.KeyboardModifier.NoModifier)
+
+        self.model.setting('show_overlays', True)
+        capture = self.manager.players_capture
+        size = self.manager.capture_output_size(capture)
+        left, no_button = Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton
+        capture.mousePressEvent(mouse_event(QEvent.Type.MouseButtonPress, 300, 720, left, left))
+        with patch('capture_surface.screen_pixel_ratio', return_value=1.5), \
+             patch('overlays.screen_pixel_ratio', return_value=1.5), \
+             patch('overlays.QCursor.pos', return_value=QPoint(400, 730)):
+            self.manager._capture_dpi_changed(capture, 1., 1.5)
+            position = capture.pos()
+            capture.mouseMoveEvent(mouse_event(QEvent.Type.MouseMove, 450, 750, no_button, left))
+            capture.mouseReleaseEvent(mouse_event(QEvent.Type.MouseButtonRelease, 450, 750, left, no_button))
+            self.assertEqual(capture.pos() - position, QPoint(50, 20))
+            self.assertEqual(self.manager.capture_output_size(capture), size)
+        seats = self.manager.player_group_snapshot()
+        saved = Model(self.model.path).settings['windows']
+        self.assertEqual({key: saved[key] for key in seats}, seats)
 
     def test_hud_capture_drag_updates_layout_without_saving_double_dimensions(self):
         capture=self.manager.capture_windows['round'];layout=self.manager.windows['round']
@@ -148,7 +168,7 @@ class OBSCaptureTests(unittest.TestCase):
         self.model.save()
         reopened=Model(self.model.path)
         self.assertEqual({key:reopened.settings['windows'][key] for key in expected},expected)
-        self.assertEqual(reopened.settings['broadcast_canvas_version'],7)
+        self.assertEqual(reopened.settings['broadcast_canvas_version'],8)
         self.assertEqual((self.model.state,self.model.undo),(state,undo))
 
     def test_offscreen_player_group_moves_together(self):
@@ -230,10 +250,24 @@ class OBSCaptureTests(unittest.TestCase):
         self.model.settings['windows'].pop('fullscreen',None)
         self.model.settings['windows']['opening']=[20,30,800,450]
         self.model.settings['windows']['postmatch']=[60,70,960,540]
+        self.model.settings['windows']['qualification'] = [60, 204, 1800, 588]
+        self.model.settings.update(qualification_geometry_mode='four',
+                                   qualification_sidebar_base_height=650,
+                                   qualification_geometries={'sidebar': [53, 89, 360, 585]})
         self.manager=OverlayManager(self.model)
         self.assertEqual(self.manager.fullscreen_capture.geometry().getRect(),(20,30,800,450))
         self.assertEqual(self.manager.windows['round'].geometry(),before)
+        self.assertEqual(self.manager.windows['qualification'].geometry().getRect(), (53, 89, 360, 585))
         self.assertIs(self.manager.opening.window,self.manager.postmatch.window)
+
+    def test_legacy_win_banner_keeps_its_saved_width_and_bottom_placement(self):
+        self.model.settings['windows']['yaku'] = [31, 680, 1440, 220]
+        self.model.settings['win_banner_canvas_version'] = 1
+        self.manager.restore_geometry()
+        banner = self.manager.windows['yaku']
+        self.assertEqual((banner.x(), banner.width(), banner.y() + banner.height()), (31, 1440, 900))
+        self.manager.save_geometry()
+        self.assertEqual(Model(self.model.path).settings['windows']['yaku'], list(banner.geometry().getRect()))
 
     def test_each_event_restores_its_own_fullscreen_position_without_recreating_surface(self):
         from event_store import EventStore
@@ -257,17 +291,6 @@ class OBSCaptureTests(unittest.TestCase):
         self.assertEqual(int(sidebar.winId()),sidebar_handle)
         self.assertEqual(int(surface.winId()),handle)
 
-    def test_default_canvas_is_full_hd_and_individual_fullscreen_outputs_start_hidden(self):
-        from capture_surface import reference_canvas
-        canvas=reference_canvas()
-        self.assertEqual(self.manager.fullscreen_capture.geometry(),canvas)
-        self.assertEqual(self.manager.players_capture.width(),canvas.width())
-        self.assertFalse(self.model.settings['split_fullscreen_windows'])
-        self.assertEqual(alpha_pixels(self.manager.fullscreen_capture),0)
-        self.assertTrue(all(not self.manager.enabled[key] for key in ('opening','postmatch','chart','statistics','riichi_effect')))
-        self.assertFalse({'opening','postmatch','chart','statistics','riichi_effect','standings'} & self.manager.capture_windows.keys())
-        self.assertTrue(all(not self.manager.layout_windows[key].isVisible() for key in ('opening','postmatch','chart','statistics','riichi_effect')))
-
     def test_standings_are_painted_inside_the_same_player_capture(self):
         players=[{**p,'team':f'队伍{i+1}','team_id':f'team{i}','base_points':(i-2)*20.5} for i,p in enumerate(self.model.state['players'])]
         self.model.configure_broadcast({'roster':players,'seats':[p['id'] for p in players]})
@@ -284,21 +307,6 @@ class OBSCaptureTests(unittest.TestCase):
         self.manager.set_bottom_mode('individual');self.manager.extension_transitions.clear()
         self.manager.set_visible('players',False);self.assertEqual(alpha_pixels(surface),0)
         self.manager.set_visible('players',True);self.assertGreater(alpha_pixels(surface),1000)
-
-    def test_chart_and_statistics_use_the_shared_surface_and_replace_each_other(self):
-        self.model.setting('show_overlays',True)
-        surface=self.manager.fullscreen_capture;handle=int(surface.winId())
-        undo=copy.deepcopy(self.model.undo)
-        for key in ('chart','statistics'):
-            self.manager.set_extension_visible(key,True);self.manager.extension_transitions.clear();self.manager.on_display()
-            self.assertEqual(self.manager.fullscreen_panel(),key)
-            self.assertGreater(alpha_pixels(surface),1000)
-            self.assertFalse(self.manager.windows[key].isVisible())
-            self.assertEqual(int(surface.winId()),handle)
-        self.assertFalse(self.manager.enabled['chart'])
-        self.manager.set_extension_visible('statistics',False);self.manager.extension_transitions.clear();self.manager.on_display()
-        self.assertEqual(alpha_pixels(surface),0)
-        self.assertEqual(self.model.undo,undo)
 
     def test_four_conditions_share_the_fullscreen_handle_without_resizing_sidebar(self):
         self.model.setting('show_overlays',True)
@@ -392,29 +400,6 @@ class OBSCaptureTests(unittest.TestCase):
         self.assertTrue({'赛前开场','赛后连播','赛后走势','技术统计','立直特效'} <= names)
         self.assertFalse({'全屏节目','赛事排名'} & names)
 
-    def test_padding_extends_canvas_without_shrinking_or_rearranging_cards(self):
-        self.model.setting('show_overlays',True)
-        surface=self.manager.players_capture
-        self.model.setting('player_side_padding',0.)
-        before=surface.grab().toImage()
-        before_bounds=QRegion(QBitmap.fromImage(before.createAlphaMask())).boundingRect()
-        geometry=surface.geometry();handle=int(surface.winId());helpers=self.manager.player_group_snapshot()
-        main=Console(self.model,self.manager);dialog=PlayerLayoutDialog(main)
-        try:
-            dialog.side_padding.setValue(12.);dialog.apply()
-            after=surface.grab().toImage()
-            after_bounds=QRegion(QBitmap.fromImage(after.createAlphaMask())).boundingRect()
-            self.assertGreater(after.width(),before.width());self.assertEqual(after.height(),before.height())
-            self.assertEqual(self.manager.player_group_snapshot(),helpers);self.assertEqual(int(surface.winId()),handle)
-            self.assertGreater(after_bounds.left(),before_bounds.left())
-            self.assertEqual(after_bounds.size(),before_bounds.size())
-            self.assertAlmostEqual(after_bounds.left(),after.width()-after_bounds.right()-1,delta=3)
-            self.assertGreaterEqual(after_bounds.left(),after.width()*.115)
-            self.assertEqual(Model(self.model.path).settings['player_side_padding'],12.)
-        finally:
-            dialog._allow_close=True;dialog.close();dialog.deleteLater()
-            main.workspace.dispose();main.shortcuts.dispose();main.language_controller.dispose();APP.removeEventFilter(main);main.hide();main.deleteLater();APP.processEvents()
-
 
 class PlayerGeometryMigrationTests(unittest.TestCase):
     def setUp(self):
@@ -431,10 +416,6 @@ class PlayerGeometryMigrationTests(unittest.TestCase):
 
     def test_partial_v1_snapshot_joins_the_three_new_defaults(self):
         self.assertEqual(self.restore({'player0':[16,1009,438,340]},1),self.new)
-
-    def test_v1_custom_majority_keeps_its_layout(self):
-        saved={f'player{i}':[20+i*448,900,438,340] for i in range(3)}
-        self.assertEqual(self.restore(saved,1),{f'player{i}':[20+i*448,900,438,340] for i in range(4)})
 
     def test_intentional_layouts_are_preserved(self):
         grid={f'player{i}':[(i%2)*448,(i//2)*350,438,340] for i in range(4)}

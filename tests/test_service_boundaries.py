@@ -84,6 +84,7 @@ class ServiceBoundaryTests(unittest.TestCase):
         depth = (len(self.model.undo), len(self.model.redo))
         record = self.result()
         record_result(self.store, record)
+        record = self.model.records.penalty_match(record['id'])
         self.assertEqual((len(self.model.undo), len(self.model.redo)), depth)
         self.model.history('undo')
         self.assertEqual(self.model.state['players'][0]['score'], 25000)
@@ -100,6 +101,7 @@ class ServiceBoundaryTests(unittest.TestCase):
         self.model.field('honba', 2)
         corrected = self.result([20000, 40000, 30000, 30000], first['id'])
         record_result(self.store, corrected)
+        corrected = self.model.records.penalty_match(corrected['id'])
         self.model.history('undo')
         self.assertEqual(self.model.state['honba'], 0)
         self.assertEqual(self.model.state['broadcast']['matches'], [corrected])
@@ -139,6 +141,7 @@ class ServiceBoundaryTests(unittest.TestCase):
         record = self.result()
         record_result(self.store, record)
         before = copy.deepcopy(self.model.state)
+        record = self.model.records.penalty_match(record['id'])
         self.model.set_score(0, self.model.state['players'][0]['score'] + 1000)
         self.model.history('undo')
         self.assertEqual(self.model.state, before)
@@ -153,6 +156,7 @@ class ServiceBoundaryTests(unittest.TestCase):
         seats = [player['id'] for player in roster[:3]] + ['guest']
         record = self.result(seats=seats)
         record_result(self.store, record)
+        record = self.model.records.penalty_match(record['id'])
         self.model.history('undo')
         self.model.engine.validate(self.model.state)
         self.assertIn('guest', {player['id'] for player in self.model.state['broadcast']['roster']})
@@ -272,6 +276,10 @@ class ServiceBoundaryTests(unittest.TestCase):
         self.assertEqual((self.model.state, self.model.undo), (state, undo))
         target = self.directory / 'card-profiles.json'
         self.model.export_data(target)
+        portable = json.loads(target.read_text(encoding='utf-8'))
+        for key in ('player_card_style', 'saikouisen_card_style'):
+            portable['settings'][key].pop('typography_version')
+        target.write_text(json.dumps(portable), encoding='utf-8')
         restarted = Model(self.model.path)
         restarted.import_data(target)
         self.assertEqual(restarted.settings['theme'], 'saikouisen')

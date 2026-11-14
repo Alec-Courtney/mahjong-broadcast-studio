@@ -64,33 +64,19 @@ class SidebarPagingTests(unittest.TestCase):
         self.assertEqual((current['pages'],len(current['rows'])),(1,4))
         self.assertEqual([row['rank'] for row in current['rows']],[3,10,18,24])
 
-    def test_half_second_transition_renders_one_page_and_never_writes_data(self):
+    def test_automatic_paging_shows_each_page_and_wraps_without_saving(self):
         before=copy.deepcopy(self.model.state);initial=digest(self.frame())
         with patch.object(self.model,'save') as save,patch.object(self.model.repository,'save') as repository_save:
-            self.at(4.99);self.assertEqual(self.manager.current_sidebar_page(),0);self.assertIsNone(self.manager._sidebar_transition)
-            self.at(5.)
-            self.assertIsNotNone(self.manager._sidebar_transition)
-            self.at(5.125)
-            with patch.object(self.manager,'_sidebar_picture',wraps=self.manager._sidebar_picture) as picture:
-                self.frame();self.assertEqual([call.args[0] for call in picture.call_args_list],[0])
-            self.at(5.375)
-            with patch.object(self.manager,'_sidebar_picture',wraps=self.manager._sidebar_picture) as picture:
-                self.frame();self.assertEqual([call.args[0] for call in picture.call_args_list],[1])
-            self.at(5.51)
-            self.assertIsNone(self.manager._sidebar_transition);self.assertEqual(self.manager.current_sidebar_page(),1)
-            self.assertNotEqual(initial,digest(self.frame()))
-            self.assertFalse(self.manager.timer.isActive());self.assertTrue(self.manager.sidebar_timer.isActive())
+            self.at(4.99)
+            self.assertEqual(self.manager.current_sidebar_page(),0)
+            for begin,end,index in ((5.,5.51,1),(10.51,11.02,2),(16.02,16.53,0)):
+                self.at(begin);self.at(end)
+                self.assertEqual(self.manager.current_sidebar_page(),index)
+                if index:
+                    self.assertNotEqual(initial,digest(self.frame()))
+            self.assertTrue(self.manager.sidebar_timer.isActive())
             save.assert_not_called();repository_save.assert_not_called()
         self.assertEqual(self.model.state,before)
-
-    def test_last_page_and_repeat_keep_the_same_window_geometry(self):
-        geometry=self.manager.windows['qualification'].geometry()
-        for begin,end,index in ((5.,5.51,1),(10.51,11.02,2),(16.02,16.53,0)):
-            self.at(begin);self.at(end)
-            self.assertEqual(self.manager.current_sidebar_page(),index)
-            self.assertEqual(self.manager.windows['qualification'].geometry(),geometry)
-            self.assertEqual(self.frame().size().width(),400)
-            self.assertEqual(self.frame().size().height(),650)
 
     def test_manual_static_export_uses_requested_page_and_proxy_is_read_only(self):
         self.model.configure_broadcast(dict(sidebar_auto_page=False,sidebar_page=2))

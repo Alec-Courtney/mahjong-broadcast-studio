@@ -14,6 +14,8 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 
+from PySide6.QtCore import Qt
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 from app_paths import LOCAL_RECOGNITION_SAMPLES
 from console import Console
@@ -206,7 +208,14 @@ class InlineAutomationTests(unittest.TestCase):
         self.receive(0, NO_YAKU_HAND)
         before = copy.deepcopy(self.model.state)
         corrected = parse_tiles('123456m234p678s2z')
-        self.ui.recognized_hands[0].hand_edited.emit(0, corrected)
+        hand = self.ui.recognized_hands[0]
+        QTest.mouseClick(hand, Qt.MouseButton.LeftButton, pos=hand.tile_rects()[-1].center().toPoint())
+        self.assertEqual(self.ui.tile_target, 'hand')
+        self.assertFalse(self.ui.submit_wait_button.isEnabled())
+        self.assertFalse(self.ui.settle_button.isEnabled())
+        self.ui.tile_buttons['2z'].click()
+        self.assertEqual(hand.tiles, parse_tiles(NO_YAKU_HAND))
+        hand.edit_buttons['apply'].click()
         pump()
         self.assertEqual(self.ui.recognized_hands[0].tiles, corrected)
         self.assertEqual(self.ui.wait_draft()['waits'], ['2z'])

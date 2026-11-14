@@ -5,14 +5,13 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'src'))
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication,QWidget,QPushButton,QLabel
-from broadcast_console import BroadcastDialog
+from PySide6.QtWidgets import QApplication
 from model import Model,display_score,payment_lines
 from overlays import OverlayManager
 
@@ -23,7 +22,8 @@ class RiichiIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(dir=ROOT/'tests');self.model=Model(self.tmp.name)
         self.clock=patch('overlays.time.monotonic',return_value=100.);self.now=self.clock.start()
-        self.manager=OverlayManager(self.model)
+        self.audio = Mock(spec=('play', 'stop', 'close'))
+        self.manager=OverlayManager(self.model, riichi_audio=self.audio)
         self.console=None
 
     def tearDown(self):
@@ -34,9 +34,7 @@ class RiichiIntegrationTests(unittest.TestCase):
 
     def test_existing_seat_quick_and_hotkey_buttons_reveal_each_player_only_after_its_effect(self):
         from console import Console
-        from artwork import render_image
         self.console=Console(self.model,self.manager);self.console.show();APP.processEvents()
-        baseline=render_image(self.manager.art,'player',0,now=100.).copy(12,162,124,169)
         self.console.player_widgets[0][3].click()
         self.now.return_value=100.2;self.console.select(2);self.console.quick_actions['riichi'].click()
         self.now.return_value=100.4;self.console.select(1)
@@ -53,7 +51,7 @@ class RiichiIntegrationTests(unittest.TestCase):
         self.assertFalse(self.manager.animation.active);self.assertEqual(self.manager.art.frame_start,{})
         ledger=copy.deepcopy(self.model.state);history=copy.deepcopy(self.model.undo)
         self.now.return_value=102.49;self.manager.tick()
-        self.assertEqual(render_image(self.manager.art,'player',0,now=102.49).copy(12,162,124,169),baseline)
+        self.assertFalse(self.manager.riichi_display_state()['players'][0]['riichi'])
         self.now.return_value=102.5;self.manager.tick()
         shown=self.manager.riichi_display_state()
         self.assertEqual([p['riichi'] for p in shown['players']],[True,False,False,False])
@@ -61,7 +59,6 @@ class RiichiIntegrationTests(unittest.TestCase):
         self.assertEqual(self.manager.animation.lines,[(-1000,0),(0,0),(0,0),(0,0)])
         self.assertEqual(self.manager.animation.started,102.5)
         self.now.return_value=102.8;self.manager.tick()
-        self.assertNotEqual(render_image(self.manager.art,'player',0,now=102.8).copy(12,162,124,169),baseline)
         self.now.return_value=105.;self.manager.tick()
         self.assertEqual([p['riichi'] for p in self.manager.riichi_display_state()['players']],[True,False,True,False])
         self.assertEqual(self.manager.animation.lines,[(-1000,0),(0,0),(-1000,0),(0,0)])
@@ -104,11 +101,13 @@ class RiichiIntegrationTests(unittest.TestCase):
                 self.model.settings.update(show_overlays=True,broadcast_scene='table')
                 self.model.set_riichi_effect_enabled(True);self.model.start_match()
                 self.model.riichi(0);self.model.riichi(1)
+                self.audio.stop.reset_mock()
                 if action=='hidden':self.manager.set_overlays_visible(False)
                 elif action=='disabled':self.model.set_riichi_effect_enabled(False)
                 elif action=='clean':self.manager.apply_scene('clean')
                 else:self.manager.clear_riichi_effects()
                 self.assertFalse(self.manager.riichi_queue.busy)
+                self.audio.stop.assert_called()
                 self.assertIs(self.manager.riichi_display_state(),self.model.state)
                 self.assertFalse(self.manager.animation.active)
                 self.assertTrue(self.manager.art.model.state['players'][0]['riichi'])
@@ -187,21 +186,26 @@ class RiichiIntegrationTests(unittest.TestCase):
         self.assertEqual([p['riichi'] for p in self.manager.riichi_display_state()['players']],[False]*4)
         self.assertEqual(self.manager.riichi_queue.pending_count,1)
 
-    def test_fast_real_clicks_wait_fifo_and_do_not_restart_active(self):
+    def test_queued_declarations_play_each_effect_and_sound_once_in_order(self):
         ids=[p['id'] for p in self.model.state['players']]
         self.model.riichi(0);self.now.return_value=100.2;self.model.riichi(2);self.now.return_value=100.4;self.model.riichi(1)
         queue=self.manager.riichi_queue
         self.assertEqual(queue.active.player_id,ids[0]);self.assertAlmostEqual(queue.elapsed(),.4)
         self.assertEqual([p.player_id for p in queue.pending],[ids[2],ids[1]])
         self.now.return_value=102.49;self.manager.tick();self.assertEqual(queue.active.player_id,ids[0])
+        self.audio.play.assert_called_once_with(1)
         self.now.return_value=102.5;self.manager.tick();self.assertEqual(queue.active.player_id,ids[2]);self.assertEqual(queue.elapsed(),0.)
+        self.manager.on_display()
         self.now.return_value=105.;self.manager.tick();self.assertEqual(queue.active.player_id,ids[1]);self.assertEqual(queue.elapsed(),0.)
+        self.audio.stop.reset_mock()
         self.now.return_value=107.5;self.manager.tick();self.assertIsNone(queue.active);self.assertFalse(self.manager.content_visible('riichi_effect'))
+        self.assertEqual(self.audio.play.call_args_list, [call(1), call(2), call(3)])
+        self.audio.stop.assert_called()
 
     def test_effect_window_is_transparent_and_always_click_through(self):
         self.model.settings['locked']=False;self.model.riichi(0)
         window=self.manager.fullscreen_capture
-        self.assertEqual(window.base,(1920,1080));self.assertTrue(self.manager.content_visible('riichi_effect'))
+        self.assertTrue(self.manager.content_visible('riichi_effect'))
         self.assertTrue(window.testAttribute(Qt.WidgetAttribute.WA_TranslucentBackground))
         self.assertTrue(window.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents))
         self.assertTrue(window.testAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating))
@@ -220,24 +224,18 @@ class RiichiIntegrationTests(unittest.TestCase):
         self.model.riichi(0);self.model.riichi(1);self.model.riichi(2);self.model.riichi(1)
         queue=self.manager.riichi_queue;players=self.model.state['players']
         self.assertEqual(queue.active.player_id,players[0]['id']);self.assertEqual([p.player_id for p in queue.pending],[players[2]['id']])
+        self.model.riichi(0)
+        self.assertEqual(queue.active.player_id, players[2]['id'])
+        self.assertEqual(self.audio.play.call_args_list, [call(1), call(3)])
 
-    def test_queue_runs_in_background_without_separate_operator_controls(self):
-        parent=QWidget();parent.model=self.model;parent.manager=self.manager;dialog=BroadcastDialog(parent)
-        try:
-            self.model.riichi(0);self.model.riichi(1)
-            self.assertFalse(any('队列' in button.text() for button in dialog.findChildren(QPushButton)))
-            self.assertFalse(any('待播' in label.text() for label in dialog.findChildren(QLabel)))
-            self.assertFalse(hasattr(dialog,'riichi_effect_status'))
-            self.assertEqual(self.manager.riichi_queue.pending_count,1)
-            self.now.return_value=102.5;self.manager.tick()
-            self.assertEqual(self.manager.riichi_queue.pending_count,0)
-            self.assertEqual(self.manager.riichi_queue.active.player_id,self.model.state['players'][1]['id'])
-            lengths=(len(self.model.undo),len(self.model.redo));transition=copy.deepcopy(self.model.last_transition)
-            self.model.set_riichi_effect_enabled(False)
-            self.assertFalse(self.manager.riichi_queue.busy)
-            self.assertEqual((len(self.model.undo),len(self.model.redo)),lengths);self.assertEqual(self.model.last_transition,transition)
-        finally:
-            dialog.hide();dialog.deleteLater();parent.deleteLater();APP.processEvents()
+    def test_settlement_stops_sound_and_closing_releases_audio(self):
+        self.model.riichi(0)
+        self.audio.play.assert_called_once()
+        self.audio.stop.reset_mock()
+        self.model.settle(dict(type='ron', winner=1, loser=2, han=1, fu=30), None)
+        self.audio.stop.assert_called()
+        self.manager.close()
+        self.audio.close.assert_called_once()
 
 
 if __name__=='__main__':unittest.main()

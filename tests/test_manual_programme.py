@@ -62,6 +62,20 @@ class ManualProgrammeTests(unittest.TestCase):
         self.manager.set_bottom_mode('players');self.assertIsNone(self.drawn_rank())
         self.assertEqual((self.model.state,self.model.undo),before)
 
+    def test_player_preview_can_be_skipped_and_yields_to_live_riichi(self):
+        before = copy.deepcopy((self.model.state, self.model.undo))
+        self.assertTrue(self.manager.replay_players('cycle'))
+        self.manager.finish()
+        self.assertEqual(self.manager.player_opacity(), 1.)
+        self.assertEqual((self.model.state, self.model.undo), before)
+        self.assertTrue(self.manager.replay_players())
+        self.model.riichi(0)
+        self.assertTrue(self.manager.riichi_queue.busy)
+        state = copy.deepcopy(self.model.state)
+        with self.assertRaises(ValueError):
+            self.manager.replay_players()
+        self.assertEqual(self.model.state, state)
+
     def test_result_choices_remain_available_after_showing_final_cards(self):
         from broadcast_console import refresh_bottom_selector
         from PySide6.QtWidgets import QComboBox

@@ -19,17 +19,23 @@ import sys
 import uuid
 import wave
 
+from app_paths import LOCAL_REFERENCE_RESOURCES, ROOT
 
-ROOT = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parents[1]))
 ASSET_DIR = ROOT / 'resources' / 'postmatch_audio'
 SAMPLE_RATE = 48000
 CHANNELS = 2
+_LOCAL_RECORDING_FRAMES = {
+    'title_axes_reveal': round(.78 * SAMPLE_RATE),
+    'graph_reveal': round(2.667 * SAMPLE_RATE),
+    'layout_sweep': round(1.6 * SAMPLE_RATE),
+}
 ENTRY_DURATION = 5.967
 TRANSITION_DURATION = 3.0
 FADE_OUT = .5
 # Reserve headroom for the independently mixed effects at their loudest setting.
 # The packaged stereo effects peak below .355; .59 + .355 stays below .95.
 MUSIC_HEADROOM_GAIN = .59
+EFFECT_PEAK_LIMIT = .355
 
 
 @dataclass(frozen=True)
@@ -82,6 +88,21 @@ def _pcm(path, max_seconds=None):
         if sys.byteorder != 'little':
             result.byteswap()
         return result
+
+
+def _local_recordings():
+    """Load optional local cues that fit their time slots and mix limits."""
+    folder = LOCAL_REFERENCE_RESOURCES / 'postmatch_audio'
+    recordings = {}
+    for name, frames in _LOCAL_RECORDING_FRAMES.items():
+        try:
+            samples = _pcm(folder / (name + '.wav'), (frames + 1) / SAMPLE_RATE)
+        except (OSError, EOFError, ValueError, wave.Error):
+            continue
+        peak = max(map(abs, samples), default=0)
+        if len(samples) == frames * CHANNELS and 0 < peak <= EFFECT_PEAK_LIMIT * 32768:
+            recordings[name] = samples
+    return recordings
 
 
 def _decode_music(path, seconds):
@@ -178,7 +199,7 @@ def _add_music(target, source, gain):
 
 def mix_soundtrack(output_path, chart_hold=15., stats_hold=15., music_path='',
                    music_volume=.35, sfx_volume=.7, music_enabled=True,
-                   sfx_enabled=True, fade_out=FADE_OUT, asset_dir=None):
+                   sfx_enabled=True, fade_out=FADE_OUT, asset_dir=None, *, recordings=None):
     """Render a stereo WAV; return its absolute Path.
 
     The complete-state holds are excluded from the entry/transition durations.
@@ -195,8 +216,11 @@ def mix_soundtrack(output_path, chart_hold=15., stats_hold=15., music_path='',
         source = _decode_music(music_path, seconds)
         _add_music(samples, source, music_volume*MUSIC_HEADROOM_GAIN)
     if sfx_enabled and sfx_volume:
+        recordings = recordings or {}
         for cue in sound_cues(chart_hold):
-            source = _pcm(assets/(cue.name+'.wav'))
+            source = recordings.get(cue.name)
+            if source is None:
+                source = _pcm(assets/(cue.name+'.wav'))
             first = round(cue.time*SAMPLE_RATE)*CHANNELS
             gain = sfx_volume * 10**(cue.gain_db/20) / 32768.
             for i in range(min(len(source), len(samples)-first)):
@@ -394,10 +418,15 @@ class PostMatchAudio:
                     raise ValueError('找不到所选背景音乐：' + str(candidate))
                 details = candidate.stat()
                 fingerprint = (str(candidate), details.st_size, details.st_mtime_ns)
+            recordings = {}
             resources = []
             if sfx_enabled and sfx_volume:
-                resources.extend(ASSET_DIR/(cue.name+'.wav') for cue in sound_cues(chart_hold))
+                recordings = _local_recordings()
+                resources = [ASSET_DIR/(cue.name+'.wav') for cue in sound_cues(chart_hold)
+                             if cue.name not in recordings]
             metadata = [(str(p), p.stat().st_size, p.stat().st_mtime_ns) for p in resources]
+            metadata.extend((name, hashlib.sha256(samples.tobytes()).hexdigest())
+                            for name, samples in recordings.items())
             arguments = dict(chart_hold=chart_hold, stats_hold=stats_hold, music_path=music,
                              music_volume=music_volume, sfx_volume=sfx_volume,
                              music_enabled=music_enabled, sfx_enabled=sfx_enabled)
@@ -412,7 +441,8 @@ class PostMatchAudio:
                     pass
             if sfx_enabled and sfx_volume:
                 self.path = target if valid else mix_soundtrack(target, chart_hold=chart_hold, stats_hold=stats_hold,
-                                                               music_enabled=False, sfx_enabled=True, sfx_volume=sfx_volume)
+                                                               music_enabled=False, sfx_enabled=True, sfx_volume=sfx_volume,
+                                                               recordings=recordings)
             if prepare_music:
                 music_args = [6, fingerprint, music_volume]
                 if preview is not None:

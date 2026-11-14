@@ -12,13 +12,12 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'src'))
 
-from PySide6.QtCore import QEvent, Qt
+from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QApplication, QWidget
 from event_store import EventStore
 from event_workspace import EventWorkspaceDialog
 from model import Model
-from panel_typography import draw_single_line
 import ranking_reports as reports
 
 APP = QApplication.instance() or QApplication([])
@@ -84,7 +83,7 @@ class RankingPreviewTests(unittest.TestCase):
         self.assertFalse(self.preview.previous.isEnabled())
         self.assertFalse(self.preview.next.isEnabled())
         self.assertEqual(self.preview.image, reports.render_report(self.workspace.report_data))
-        fills = {reports.report_row_fill(self.workspace.report_data, row, index)
+        fills = {reports.report_cell_fill(self.workspace.report_data, row, 'team', index)
                  for index, row in enumerate(self.workspace.report_data['rows'])}
         self.assertGreater(len(fills), 1)
         self.preview.fit('width')
@@ -92,18 +91,51 @@ class RankingPreviewTests(unittest.TestCase):
         self.preview.set_zoom(100)
         self.assertEqual(self.preview.canvas.size(), self.preview.image.size())
 
-    def test_names_are_centered_in_both_colour_previews(self):
-        for mode in ('individual', 'team'):
-            with self.subTest(mode=mode):
-                data = reports.report(self.model.state, self.model.event, mode)
-                entry = data['rows'][0]
-                labels = [entry[key] for key in ('name', 'team') if key in data['columns']]
-                with patch('panel_typography.draw_single_line', wraps=draw_single_line) as draw:
-                    reports.render_report(data, limit=1)
-                for label in labels:
-                    calls = [call for call in draw.call_args_list if call.args[1] == label]
-                    self.assertTrue(calls)
-                    self.assertTrue(all(call.args[4] & Qt.AlignmentFlag.AlignHCenter for call in calls))
+    def test_name_cells_are_centered_in_both_workspace_rankings(self):
+        for mode in ('individual','team'):
+            self.preview.mode_requested.emit(mode)
+            keys=self.workspace.report_data['columns']
+            for key in ('name','team'):
+                if key in keys:
+                    self.assertEqual(self.workspace.report_table.item(0,keys.index(key)).textAlignment(),
+                                     Qt.AlignmentFlag.AlignCenter)
+
+    def test_scrolling_reuses_bitmaps_and_only_paints_the_exposed_strip(self):
+        class PaintObserver(QObject):
+            area=0
+            def eventFilter(self,target,event):
+                if event.type()==QEvent.Type.Paint:
+                    self.area+=sum(rect.width()*rect.height() for rect in event.region())
+                return False
+
+        self.preview.resize(1000,650)
+        self.preview.set_zoom(200)
+        APP.processEvents()
+        bar=self.preview.scroll.verticalScrollBar()
+        bar.setValue(0)
+        APP.processEvents()
+        self.assertGreater(bar.maximum(),200)
+        observer=PaintObserver(self.preview.canvas)
+        self.preview.canvas.installEventFilter(observer)
+        source=self.preview._source_pixmap.cacheKey()
+        with patch.object(reports,'render_report',wraps=reports.render_report) as render, \
+             patch.object(self.preview,'render_scaled',wraps=self.preview.render_scaled) as scale, \
+             patch.object(self.workspace,'populate_report_table',wraps=self.workspace.populate_report_table) as populate:
+            for index in range(1,13):
+                bar.setValue(index*12)
+                self.model.display_changed.emit()
+                APP.processEvents()
+            render.assert_not_called()
+            scale.assert_not_called()
+            populate.assert_not_called()
+        viewport=self.preview.scroll.viewport()
+        self.assertGreater(observer.area,0)
+        self.assertLess(observer.area,viewport.width()*viewport.height()*3)
+        self.assertEqual(self.preview._source_pixmap.cacheKey(),source)
+        region=self.preview.canvas.visibleRegion().boundingRect()
+        painted=self.preview.canvas.grab(region).toImage().convertToFormat(QImage.Format.Format_RGB32)
+        expected=self.preview.canvas._pixmap.toImage().copy(region).convertToFormat(QImage.Format.Format_RGB32)
+        self.assertEqual(painted,expected)
 
     def test_confirmed_refresh_and_event_switch_reuse_the_existing_preview(self):
         self.model.state['broadcast']['roster'][0]['base_points'] = 999
@@ -118,12 +150,34 @@ class RankingPreviewTests(unittest.TestCase):
         self.assertIn('1 / 1', self.preview.page_label.text())
         self.assertEqual(self.preview.image, reports.render_report(self.workspace.report_data))
 
+    def test_broadcast_window_can_close_after_another_workspace_saves(self):
+        self.workspace.show_report()
+        output = self.workspace.output
+        errors = []
+        self.main.error = errors.append
+        try:
+            self.assertTrue(output.isVisible())
+            other = Model(self.model.path)
+            other.set_score(0, 31000)
+            session = self.model.path / 'session.json'
+            saved = session.read_bytes()
+            self.assertTrue(output.close())
+            self.assertFalse(output.isVisible())
+            self.assertEqual(errors, [])
+            self.assertEqual(session.read_bytes(), saved)
+            self.workspace.show_report()
+            self.assertIs(self.workspace.output, output)
+            self.assertTrue(output.isVisible())
+        finally:
+            output.deleteLater()
+
     def test_team_quota_does_not_highlight_individual_places(self):
         event = copy.deepcopy(self.model.event)
         event['qualification_count'] = 2
         data = reports.report(self.model.state, event, 'individual')
         for index, row in enumerate(data['rows']):
-            self.assertEqual(reports.report_row_fill(data, row, index), reports.team_row_fill(row))
+            self.assertEqual(reports.report_row_fill(data, row, index), '#ffffff')
+            self.assertEqual(reports.report_cell_fill(data, row, 'team', index), reports.row_team_color(row))
 
     def test_visible_preview_refreshes_when_another_workspace_page_is_open(self):
         self.workspace.show()
@@ -141,24 +195,7 @@ class RankingPreviewTests(unittest.TestCase):
         self.assertEqual(self.preview.data['event']['name'], '修改后的赛事名称')
         self.assertEqual(self.preview.image, reports.render_report(self.workspace.report_data, 0, 36))
 
-    def test_preview_reuses_the_report_until_its_saved_inputs_change(self):
-        with patch.object(self.workspace,'populate_report_table',wraps=self.workspace.populate_report_table) as populate, \
-             patch.object(reports,'render_report',wraps=reports.render_report) as render:
-            self.workspace.preview_report()
-            self.model.display_changed.emit()
-            self.model.set_score(0,26000)
-            populate.assert_not_called()
-            render.assert_not_called()
-            self.store.update(name='已保存的新赛事名称')
-            populate.assert_called_once()
-            render.assert_called_once()
-            self.assertEqual(self.preview.data['event']['name'],'已保存的新赛事名称')
 
-    def test_short_column_sets_fill_the_canvas_instead_of_leaving_a_blank_strip(self):
-        data = reports.report(self.model.state, self.model.event, 'team')
-        image = reports.render_report(data)
-        self.assertEqual(image.pixelColor(image.width()-40, 126).name(),
-                         reports.report_row_fill(data, data['rows'][0], 0))
 
 
 if __name__ == '__main__':

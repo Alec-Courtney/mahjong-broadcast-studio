@@ -38,7 +38,7 @@ QGroupBox{background:%(panel)s;border:1px solid %(border)s;border-radius:6px;mar
 QGroupBox::title{subcontrol-origin:margin;left:12px;padding:0 5px;color:%(muted)s}
 QGroupBox[tileTarget="true"]{border:2px solid %(accent)s}
 QGroupBox[panelBody="true"]{margin-top:0;padding:6px;border-radius:4px}
-QPushButton,QComboBox,QSpinBox,QDoubleSpinBox,QLineEdit,QKeySequenceEdit{border:1px solid %(border)s;border-radius:4px;background:%(field)s;color:%(text)s;min-height:28px;padding:2px 7px}
+QPushButton,QComboBox,QSpinBox,QDoubleSpinBox,QDateTimeEdit,QLineEdit,QKeySequenceEdit{border:1px solid %(border)s;border-radius:4px;background:%(field)s;color:%(text)s;min-height:28px;padding:2px 7px}
 QPushButton:hover{background:%(hover)s;border-color:%(accent)s}
 QPushButton:checked{background:%(selected)s;border-color:%(accent)s}
 QPushButton:disabled{color:%(muted)s;background:%(panel)s}
@@ -46,6 +46,8 @@ QPushButton[operatorChoice="true"]:checked{background:%(primary)s;color:white;bo
 QPushButton[operatorChoice="true"]:checked:hover{background:%(primary)s;border-color:%(text)s}
 QPushButton[operatorChoice="true"]:disabled{background:%(panel)s;color:%(muted)s;border:1px solid %(border)s}
 QPushButton[currentSeat="true"]{background:%(selected)s;border:2px solid %(accent)s;font-weight:600}
+QPushButton[displayToggle="true"]:!checked:hover{border:1px solid %(border)s}
+QPushButton[displayToggle="true"]:checked,QPushButton[displayToggle="true"]:checked:hover{background:%(field)s;border:2px solid %(accent)s}
 QPushButton[calledTile="true"]{border:2px solid %(accent)s}
 QPushButton#tileChoice:hover{border:2px solid %(accent)s}
 QPushButton#tileChoice:pressed{border:3px solid %(primary)s}
@@ -96,6 +98,10 @@ QDockWidget{font-weight:500}QDockWidget::title{background:%(field)s;padding:7px;
 QToolBar#operatorNavigation{background:%(panel)s;border:0;spacing:7px;padding:7px 0 7px 7px}
 QToolBar#operatorNavigation QToolButton{background:%(panel)s;border:0;border-radius:4px;padding:12px 8px;color:%(text)s;text-align:left}
 QToolBar#operatorNavigation QToolButton:hover{background:%(selected)s}
+QToolBar#operatorPanelSwitches{background:%(panel)s;border:0;spacing:3px;padding:3px}
+QToolBar#operatorPanelSwitches QToolButton{background:%(field)s;color:%(text)s;border:1px solid %(border)s;border-radius:3px;padding:4px 8px}
+QToolBar#operatorPanelSwitches QToolButton:hover{background:%(hover)s;border-color:%(accent)s}
+QToolBar#operatorPanelSwitches QToolButton:checked{background:%(selected)s;border-color:%(accent)s}
 QWidget#navigationResizeHandle{background:transparent;border-right:2px solid %(border)s}
 QWidget#navigationResizeHandle:hover{background:%(accent)s}
 QMainWindow::separator{width:5px;height:5px;background:%(bg)s}QMainWindow::separator:hover{background:%(accent)s}

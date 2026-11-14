@@ -29,7 +29,7 @@ class Engine:
   broadcast=a.get('broadcast',_UNCHANGED) if isinstance(a,dict) else _UNCHANGED
   # The payment engine owns only the live table. Sending complete historical
   # archives to JavaScript made every preview/validation copy the whole event.
-  if broadcast is not _UNCHANGED and name in ('applyEvent','previewSettlement','validateState','computeStandings'):
+  if broadcast is not _UNCHANGED and name in ('applyEvent','previewSettlement','reviseSettlement','validateState','computeStandings'):
    a={key:value for key,value in a.items() if key!='broadcast'}
   args=[QJSValue(name),QJSValue(json.dumps(a,ensure_ascii=False))]
   if b is not None:args.append(QJSValue(json.dumps(b,ensure_ascii=False)))
@@ -201,7 +201,7 @@ class Model(QObject):
     raise ValueError('当前半庄进行中，请完成并确认后再修改计分规则')
   # Terminal pot awards freeze tied ranks. Only an explicit later score edit
   # invalidates that snapshot; a replay, rename or display edit must preserve it.
-  if before.get('phase')==after.get('phase')=='finished' and kind not in ('ron','tsumo','draw') and any(p['score']!=q['score'] for p,q in zip(before['players'],after['players'])):
+  if before.get('phase')==after.get('phase')=='finished' and kind not in ('ron','tsumo','draw','hand_correction') and any(p['score']!=q['score'] for p,q in zip(before['players'],after['players'])):
    after['finalRanking']=None
   tournament.on_update(before,after,kind);self.engine.validate(after)
   from media_store import manage_photos
@@ -308,8 +308,24 @@ class Model(QObject):
   self.update(change,'clear',info=None)
  def settle(self,event,info):
   def change(s):
+   from hand_history import settlement_context
+   context=settlement_context(s)
    s.update(self.engine.apply(s,event))
+   tournament.record_hand(s,context=context,event=event,win_info=info)
   self.update(change,event['type'],info=info,display=True)
+ def preview_hand_correction(self,hand_id,patch,expected_state=None):
+  if expected_state is not None and self.state is not expected_state:
+   raise ValueError('对局记录已变化，请关闭详情后重新核对')
+  from hand_history import revise
+  candidate=copy_state(self.state)
+  info=revise(candidate,self.engine,hand_id,patch)
+  tournament.on_update(self.state,candidate,'hand_correction')
+  self.engine.validate(candidate);tournament.validate_broadcast(candidate)
+  return candidate,info
+ def correct_hand(self,hand_id,patch,expected_state=None):
+  candidate,info=self.preview_hand_correction(hand_id,patch,expected_state)
+  self.update(lambda s:(s.clear(),s.update(candidate)),'hand_correction',info=info,
+              reset_transition=True,display=True)
  def preview(self,event):
   """Preview a new payment, or the replacement of this hand's last payment."""
   result=self.engine.preview(self.state,event)
@@ -329,7 +345,10 @@ class Model(QObject):
   self.playing()
   def change(s):
    tenpai=declared_tenpai if declared_tenpai is not None else [i for i,p in enumerate(s['players']) if p['tenpai']]
-   s.update(self.engine.apply(s,{'type':'draw','tenpai':tenpai}))
+   from hand_history import settlement_context
+   context=settlement_context(s);event={'type':'draw','tenpai':tenpai}
+   s.update(self.engine.apply(s,event))
+   tournament.record_hand(s,context=context,event=event)
   self.update(change,'draw',info=None)
  def meld(self,player,kind,tiles,source,called=0):
   self.playing();self.update(lambda s:s.update(self.engine.apply(s,{'type':'meld','player':player,'meld':{'kind':kind,'tiles':tiles,'from':source,'calledIndex':called}})))
@@ -368,7 +387,15 @@ class Model(QObject):
   from media_store import manage_photos
   presentation={key:copy.deepcopy(after['broadcast']['config'][key]) for key in values}
   manage_photos(presentation,self.path,strict=True);after['broadcast']['config'].update(presentation)
-  candidate=copy.deepcopy(self.settings if settings is None else settings);validate_settings(candidate)
+  candidate=copy.deepcopy(self.settings if settings is None else settings)
+  if set(values)&CORNER_SETTING_KEYS:
+   from corner_header import corner_canvas_size
+   old_size=corner_canvas_size(before['broadcast']['config']);new_size=corner_canvas_size(after['broadcast']['config'])
+   geometry=candidate.get('windows',{}).get('corner_header')
+   if geometry and old_size!=new_size:
+    factor=geometry[2]/old_size[0]
+    candidate['windows']['corner_header']=[*geometry[:2],max(1,round(new_size[0]*factor)),max(1,round(new_size[1]*factor))]
+  validate_settings(candidate)
   # Copy the editable table/config part only. Immutable archived results remain
   # shared across all 60 undo entries rather than copied 60 more times.
   undo,redo=copy.deepcopy((self.undo,self.redo))

@@ -141,10 +141,10 @@ def paint_identity_media(painter, model, profile, bounds, team=False, radius=0.,
     return media
 
 
-def identity_preview_image(model, profile, width=80, height=100, team=False):
+def identity_preview_image(model, profile, width=80, height=100, team=False, padding=None):
     image = QImage(width, height, QImage.Format.Format_ARGB32_Premultiplied)
     image.fill(Qt.GlobalColor.transparent)
     painter = QPainter(image)
-    try:paint_identity_media(painter, model, profile, QRectF(0,0,width,height), team=team)
+    try:paint_identity_media(painter, model, profile, QRectF(0,0,width,height), team=team, padding=padding)
     finally:painter.end()
     return image

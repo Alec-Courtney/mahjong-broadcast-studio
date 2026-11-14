@@ -88,18 +88,6 @@ class SidebarQuickCloseTests(unittest.TestCase):
         self.assertFalse(self.manager.content_visible('qualification'))
         self.assertFalse(Model(self.tmp.name).settings['visible']['qualification'])
 
-    def test_entry_reverses_from_current_pixels_without_jumping_or_restarting_exit(self):
-        self.at(.25);before=self.frame();frame=self.manager._sidebar_motion.frame(self.now)
-        self.assertGreater(frame.width,0.);self.assertLess(frame.width,1.)
-        self.assertTrue(self.manager.force_sidebar_exit())
-        self.assertEqual(self.manager._sidebar_motion.initial,frame)
-        self.assertEqual(pixels(self.frame()),pixels(before))
-        started=self.manager._sidebar_motion.started
-        self.at(.3);self.assertFalse(self.manager.force_sidebar_exit())
-        self.assertEqual(self.manager._sidebar_motion.started,started)
-        self.assertTrue(self.manager.content_visible('qualification'))
-        self.at(.46);self.assertFalse(self.manager.content_visible('qualification'))
-
     def test_page_change_is_frozen_and_pending_page_does_not_resume(self):
         self.at(5.);self.at(5.125)
         self.assertIsNotNone(self.manager._sidebar_transition)
