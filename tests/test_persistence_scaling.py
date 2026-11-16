@@ -66,7 +66,7 @@ class PersistenceScalingTests(unittest.TestCase):
         model.save()
         source = self.root/'session.json'
         with patch('session_repository.MAX_SESSION_BYTES', 10):
-            with self.assertRaisesRegex(ValueError, '50MB'):model.repository.read(source)
+            with self.assertRaisesRegex(ValueError, '转换'):model.repository.read(source)
             loaded = model.repository.read(source, local=True)
         self.assertEqual(loaded[0], model.state)
 

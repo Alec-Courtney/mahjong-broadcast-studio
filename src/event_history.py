@@ -129,7 +129,8 @@ class EventHistoryDialog(QDialog):
         self.final_table.setColumnHidden(2, self.event_metadata['kind'] != 'team_league')
         details.addWidget(self.final_table, 1)
         self.penalties_button = button('查看半庄判罚', self.show_penalties)
-        details.addLayout(row(self.penalties_button, 1))
+        self.hand_history_button = button('查看导播台逐局收支', self.show_hand_history)
+        details.addLayout(row(self.penalties_button, self.hand_history_button, 1))
         self.hand_note = note('')
         details.addWidget(self.hand_note)
         self.hand_table = table([])
@@ -141,6 +142,7 @@ class EventHistoryDialog(QDialog):
         layout.addWidget(split, 1)
 
         self.match_table.currentCellChanged.connect(self.show_match)
+        self.match_table.cellDoubleClicked.connect(lambda *_:self.show_hand_history())
         if self.matches:
             self.match_table.selectRow(0)
         else:
@@ -207,6 +209,7 @@ class EventHistoryDialog(QDialog):
         self.edit_time_button.setEnabled(match is not None and self.is_current_event())
         self.edit_time_button.setToolTip('' if self.is_current_event() else tr('请先打开此赛事，再修改记录时间。'))
         self.penalties_button.setEnabled(bool(match and match.get('penalties')))
+        self.hand_history_button.setEnabled(bool(match and match.get('hands')))
         self.hand_table.setVisible(bool(match and match['hands']))
         if match is None:
             self.hand_note.setText(tr('此赛事暂无已确认的半庄。'))
@@ -241,11 +244,20 @@ class EventHistoryDialog(QDialog):
         self.hand_table.setRowCount(len(hands))
         for index, hand in enumerate(hands):
             detail = self.hand_outcome(hand)
-            scores = {player['id']: f'{after:,} ({after - before:+,})'
-                for player, before, after in zip(hand['players'], hand['before_scores'], hand['after_scores'])}
+            from hand_history import hand_deltas
+            scores = {player['id']: f'{after:,} ({delta:+,})'
+                for player, after, delta in zip(hand['players'], hand['after_scores'], hand_deltas(hand))}
             values = [tr(hand.get('label') or '—'), detail, *(scores.get(player['id'], '—') for player in first_seats)]
             for column, value in enumerate(values):
                 self.hand_table.setItem(index, column, item(value, editable=False))
+
+    def show_hand_history(self):
+        from hand_history_panel import ArchivedHandHistoryDialog
+        index=self.match_table.currentRow()
+        if not 0<=index<len(self.matches):return
+        dialog=ArchivedHandHistoryDialog(self,self.matches[index],self.settings)
+        try:dialog.exec()
+        finally:dialog.deleteLater()
 
     def show_penalties(self):
         from penalty_dialog import MatchPenaltyDialog

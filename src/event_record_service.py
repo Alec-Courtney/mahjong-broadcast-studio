@@ -108,14 +108,24 @@ class EventRecordService:
                        undo, redo, transition, 'match_record_time', display=True)
 
     def write_manual(self, record):
-        model = self.model
-        if record.get('source') != 'manual' or record['id'] == model.state['id']:
+        if record.get('source') != 'manual' or record['id'] == self.model.state['id']:
             raise ValueError('此入口只保存其他桌补录成绩')
+        return self.write_result(record)
+
+    def write_result(self, record):
+        model = self.model
         prior = next((item for item in model.state['broadcast']['matches'] if item['id'] == record['id']), None)
         record = dict(record)
         replacement = record.pop('_replaces_record', None)
         if replacement and (replacement != record['id'] or prior is None):
             raise ValueError('待更正半庄记录已删除，请重新打开成绩记录')
+        expected = record.pop('_expected_record', None)
+        if expected is not None and prior != expected:
+            raise ValueError('该半庄记录已改变，请重新预览成绩')
+        if prior and prior.get('source') != 'manual':
+            record['final_score_corrected_at'] = now()
+        elif not prior and record.get('source') != 'manual':
+            raise ValueError('直播成绩必须先在导播台确认')
         record.pop('penalties', None)
         if prior and 'penalties' in prior:
             record['penalties'] = prior['penalties']
@@ -136,11 +146,12 @@ class EventRecordService:
         undo, redo = copy.deepcopy((model.undo, model.redo))
         for state, _ in undo + redo:
             replace_record(state, record, profiles)
-        model._save_snapshot(after, model.settings, model.last_info, model.event)
-        model.state = after
-        model.undo, model.redo = undo, redo
-        model.changed.emit(before, after, 'manual_result')
-        model.display_changed.emit()
+        transition = copy.deepcopy(model.last_transition)
+        if transition and prior and prior.get('source') != 'manual':
+            replace_record(transition[0], record, profiles)
+            replace_record(transition[1], record, profiles)
+        model._publish(before, after, copy.deepcopy(model.settings), model.last_info,
+                       undo, redo, transition, 'manual_result', display=True)
         return record['id']
 
     def delete_match(self, match_id, expected_record=None):

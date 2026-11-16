@@ -15,6 +15,7 @@ from PySide6.QtCore import QRectF,Qt
 from PySide6.QtGui import QImage,QPainter,QColor,QFontDatabase
 from PySide6.QtWidgets import QApplication,QWidget
 from model import Model
+from backup_test_support import read_document, write_document
 from media_store import resolve_media_path
 from event_store import EventStore
 from identity_media import resolve_identity_media,paint_identity_media,contain_rect,identity_preview_image
@@ -107,8 +108,8 @@ class IdentityMediaTests(unittest.TestCase):
         reference=self.model.state['players'][0]['team_logo']
         self.assertTrue(reference.startswith('assets/imported/logos/'))
         self.model.start_match();self.assertEqual(self.model.state['players'][0]['team_logo'],reference)
-        before=copy.deepcopy(self.model.state);destination=self.root/'portable.json';self.model.export_data(destination)
-        payload=json.loads(destination.read_text(encoding='utf-8'))
+        before=copy.deepcopy(self.model.state);destination=self.root/'portable.mjbackup';self.model.export_data(destination)
+        payload=read_document(destination)
         self.assertEqual(len(payload['assets']),1);self.assertIn(reference,payload['assets'])
         self.logo.unlink();resolve_media_path(self.model.path,reference).unlink()
         relocated=Model(self.root/'relocated');relocated.import_data(destination)
@@ -127,9 +128,9 @@ class IdentityMediaTests(unittest.TestCase):
         self.assertEqual(next(r for r in current['results'] if r['id']=='p1')['team_logo'],original)
 
     def test_corrupt_embedded_logo_is_rejected_without_replacing_the_event(self):
-        self.configure('logo');destination=self.root/'logo.json';self.model.export_data(destination)
-        payload=json.loads(destination.read_text(encoding='utf-8'));next(iter(payload['assets'].values()))['sha256']='bad'
-        destination.write_text(json.dumps(payload),encoding='utf-8');before=copy.deepcopy(self.model.state)
+        self.configure('logo');destination=self.root/'logo.mjbackup';self.model.export_data(destination)
+        payload=read_document(destination);next(iter(payload['assets'].values()))['sha256']='bad'
+        write_document(destination,payload);before=copy.deepcopy(self.model.state)
         with self.assertRaisesRegex(ValueError,'校验'):self.model.import_data(destination)
         self.assertEqual(self.model.state,before)
 

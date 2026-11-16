@@ -225,6 +225,7 @@ class BroadcastDialog(SettingsWindow):
  def eventFilter(self,watched,event):
   if watched is getattr(self,'categories',{}).get('presentation') and event.type()==QEvent.Type.Hide:
    self.stop_music_audition()
+   self.stop_riichi_audition()
   return super().eventFilter(watched,event)
 
  def build_animation_controls(self, page):
@@ -233,11 +234,12 @@ class BroadcastDialog(SettingsWindow):
   self.riichi_preview=RiichiAnimationPreview(self.model)
   self.riichi_preview.setAccessibleName(tr('立直特效预览'))
   self.riichi_preview_seat=QComboBox();self.riichi_preview_seat.setProperty('i18n_literal',True)
-  self.riichi_preview_seat.currentIndexChanged.connect(self.riichi_preview.stop)
+  self.riichi_preview_seat.currentIndexChanged.connect(self.stop_riichi_preview)
   self.riichi_preview_button=button('播放立直预览',self.play_riichi_preview)
+  self._riichi_audition=None;self._riichi_audition_sequence=0
   self.riichi_preview_button.setAutoDefault(False)
   self.animation_form.addRow('预览选手',self.riichi_preview_seat)
-  self.animation_form.addRow('',row(self.riichi_preview_button,button('停止预览',self.riichi_preview.stop),1))
+  self.animation_form.addRow('',row(self.riichi_preview_button,button('停止预览',self.stop_riichi_preview),1))
   layout.addLayout(self.animation_form,1);layout.addWidget(self.riichi_preview,2);page.addWidget(self.animation_group)
   signals.language_changed.connect(self.riichi_preview.invalidate)
 
@@ -264,7 +266,21 @@ class BroadcastDialog(SettingsWindow):
 
  def play_riichi_preview(self):
   seat=self.riichi_preview_seat.currentData()
-  if seat is not None:self.riichi_preview.play(seat)
+  if seat is None:return
+  self.riichi_preview.play(seat)
+  from riichi_audio import RiichiAudio
+  if self._riichi_audition is None:
+   self._riichi_audition=RiichiAudio()
+   self.destroyed.connect(lambda _=None,audio=self._riichi_audition:audio.close())
+  self._riichi_audition_sequence+=1
+  if not self._riichi_audition.play(self._riichi_audition_sequence):
+   self.status.setText(self._riichi_audition.error);set_status_style(self.status,'error')
+
+ def stop_riichi_audition(self):
+  if self._riichi_audition:self._riichi_audition.stop()
+
+ def stop_riichi_preview(self):
+  self.riichi_preview.stop();self.stop_riichi_audition()
 
  def animation_values(self):
   return dict(speed=self.model.settings.get('speed',1.),
@@ -1051,7 +1067,7 @@ class BroadcastDialog(SettingsWindow):
   save=self.save_technical_baselines if self.workspace_roster else self.save_roster
   self.stats_save=button('保存历史基数',save);page.addLayout(row(self.stats_save,1))
   self.export_kind=choice([(name,key) for key,name in EXTENSIONS.items()]);selected(self.export_kind,'chart');page.addLayout(row('SVG',self.export_kind,button('导出 SVG',self.export_svg),1))
-  page.addLayout(row(button('导出统计 CSV',self.export_csv),button('保存完整数据 JSON',self.export_json),button('导入数据 JSON',self.import_json),1));page.addWidget(note('SVG保存当前显示配置的矢量图；JSON包含选手资料、照片、逐局记录、赛事积分与显示设置；CSV用于表格分析。'))
+  page.addLayout(row(button('导出统计 CSV',self.export_csv),button('保存完整赛事备份包',self.export_json),button('导入赛事备份包',self.import_json),1));page.addWidget(note('SVG保存当前显示配置的矢量图；备份包包含选手资料、素材、逐局记录、赛事积分与显示设置；CSV用于表格分析。'))
   self.demo_restore=button('恢复测试前数据',self.restore_demo);self.demo_restore.hide();page.addLayout(row(self.demo_restore,1));page.addStretch()
  def refresh_demo_status(self):
   active=self.demo_session.active
@@ -1129,13 +1145,13 @@ class BroadcastDialog(SettingsWindow):
     for entry in rows:writer.writerow({key:entry.get(key) for key in fields})
   self.run(export,'统计 CSV 已保存（比率为 0–1）')
  def export_json(self):
-  path,_=QFileDialog.getSaveFileName(self,tr('保存数据'),str(self.export_directory()/'tournament.json'),'JSON (*.json)')
+  path,_=QFileDialog.getSaveFileName(self,tr('保存数据'),str(self.export_directory()/'tournament.mjbackup'),'赛事备份包 (*.mjbackup)')
   if path:self.run(lambda:self.model.export_data(path),'赛事数据已保存')
  def import_json(self):
   if self.event_workspace:
    self.event_workspace.import_event()
    return
-  path,_=QFileDialog.getOpenFileName(self,tr('导入数据'),str(self.export_directory()),'JSON (*.json)')
+  path,_=QFileDialog.getOpenFileName(self,tr('导入数据'),str(self.export_directory()),'赛事备份包 (*.mjbackup)')
   if path:
    from settings_context import SettingsContextChange
    context=SettingsContextChange(self)
@@ -1163,7 +1179,7 @@ class BroadcastDialog(SettingsWindow):
   if outcome:self.status_source='请在淘汰赛程选择下一场' if outcome=='schedule' else '新半庄已开始';self.status.setText(tr(self.status_source))
  def reload(self):
   if self._saving_all:return
-  self.riichi_preview.stop();self.stop_music_audition()
+  self.stop_riichi_preview();self.stop_music_audition()
   self.loading=True;config=self.config();self.title.setText(config.get('title',''));selected(self.standings_mode,self.manager.bottom_mode());selected(self.event_mode,config.get('event_mode','individual'));self.settlement_enabled.setChecked(config.get('settlement_enabled',True));self.settlement_hold.setValue(config.get('settlement_hold',3.));self.settlement_total_hold.setValue(config.get('settlement_total_hold',3.));self.update_settlement_controls()
   self.load_postmatch_controls(config)
   self.refresh_opening_controls()
@@ -1203,7 +1219,7 @@ class BroadcastDialog(SettingsWindow):
    self.manual_conditions.setItem(index,2,QTableWidgetItem(config.get('qualification_titles',{}).get(identity,'')))
  def on_model_changed(self,*_):
   if len(_)>2 and _[2] in ('import','event_settings'):
-   self.riichi_preview.stop();self.stop_music_audition()
+   self.stop_riichi_preview();self.stop_music_audition()
    if not self.event_workspace:self.reload()
    return
   if (self.workspace_roster or self.event_workspace) and len(_)>2:

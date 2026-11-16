@@ -16,6 +16,7 @@ from PySide6.QtWidgets import QApplication
 from event_results import prepare_result, record_result
 from event_store import EventStore
 from model import Model
+from backup_test_support import read_document, write_document
 from session_repository import atomic_json
 import event_schedule
 
@@ -54,7 +55,7 @@ class ServiceBoundaryTests(unittest.TestCase):
             atomic_json(destination, {'updated': True})
         self.assertEqual(len(attempts), 3)
         self.assertEqual(sleep.call_count, 2)
-        self.assertEqual(json.loads(destination.read_text(encoding='utf-8')), {'updated': True})
+        self.assertEqual(read_document(destination), {'updated': True})
         self.assertFalse(destination.with_name('locked.json.tmp').exists())
 
     def test_atomic_writer_stops_retrying_and_preserves_original_on_persistent_lock(self):
@@ -216,31 +217,31 @@ class ServiceBoundaryTests(unittest.TestCase):
         self.assertEqual(emitted, [])
 
     def test_persisted_v6_settings_and_legacy_theme_migrate(self):
-        target = self.directory / 'portable.json'
+        target = self.directory / 'portable.mjbackup'
         self.model.export_data(target)
-        saved = json.loads(target.read_text(encoding='utf-8'))
+        saved = read_document(target)
         self.assertEqual(saved['version'], 6)
         saved['settings'].update(theme='saikouisen', console_theme='light')
         saved['settings'].pop('player_style_version', None)
-        target.write_text(json.dumps(saved), encoding='utf-8')
+        write_document(target,saved)
         self.model.import_data(target)
         self.assertEqual(self.model.settings['theme'], 'mleague')
         self.assertEqual(self.model.settings['console_theme'], 'light')
         saved['settings']['console_theme'] = 'unknown'
-        target.write_text(json.dumps(saved), encoding='utf-8')
+        write_document(target,saved)
         with self.assertRaisesRegex(ValueError, '后台主题'):
             self.model.read_data(target)
 
     def test_v5_portable_without_event_metadata_imports_into_new_event(self):
-        target = self.directory / 'legacy-v5.json'
+        target = self.directory / 'legacy-v5.mjbackup'
         self.model.export_data(target)
-        saved = json.loads(target.read_text(encoding='utf-8'))
+        saved = read_document(target)
         saved['version'] = 5
         saved.pop('event')
         saved['settings'].pop('console_theme', None)
         saved['settings'].pop('player_style_version', None)
         saved['settings']['theme'] = 'saikouisen'
-        target.write_text(json.dumps(saved), encoding='utf-8')
+        write_document(target,saved)
         original_id = self.model.event['id']
         new_id = self.store.import_new(target)
         self.assertNotEqual(original_id, new_id)
@@ -253,7 +254,7 @@ class ServiceBoundaryTests(unittest.TestCase):
         self.assertEqual(self.model.settings['player_style_version'], 1)
         restarted = Model(self.model.path)
         self.assertEqual(restarted.settings['theme'], 'saikouisen')
-        target = self.directory / 'legacy-style.json'
+        target = self.directory / 'legacy-style.mjbackup'
         self.model.export_data(target)
         self.model.setting('theme', 'mleague')
         self.model.import_data(target)
@@ -274,12 +275,12 @@ class ServiceBoundaryTests(unittest.TestCase):
         for theme in ('saikouisen', 'mleague', 'saikouisen'):
             self.model.setting('theme', theme)
         self.assertEqual((self.model.state, self.model.undo), (state, undo))
-        target = self.directory / 'card-profiles.json'
+        target = self.directory / 'card-profiles.mjbackup'
         self.model.export_data(target)
-        portable = json.loads(target.read_text(encoding='utf-8'))
+        portable = read_document(target)
         for key in ('player_card_style', 'saikouisen_card_style'):
             portable['settings'][key].pop('typography_version')
-        target.write_text(json.dumps(portable), encoding='utf-8')
+        write_document(target,portable)
         restarted = Model(self.model.path)
         restarted.import_data(target)
         self.assertEqual(restarted.settings['theme'], 'saikouisen')
@@ -289,25 +290,25 @@ class ServiceBoundaryTests(unittest.TestCase):
         self.assertEqual(self.model.settings['player_card_style']['text']['name']['size'], 34)
 
     def test_invalid_card_profile_import_preserves_current_session(self):
-        target = self.directory / 'invalid-card.json'
+        target = self.directory / 'invalid-card.mjbackup'
         self.model.export_data(target)
-        saved = json.loads(target.read_text(encoding='utf-8'))
+        saved = read_document(target)
         before = copy.deepcopy((self.model.state, self.model.settings, self.model.undo))
         for invalid in (None, {'text': {'name': {'size': 200}}},
                         {'backgrounds': {'score': {'start': 'red'}}}):
             saved['settings']['player_card_style'] = invalid
-            target.write_text(json.dumps(saved), encoding='utf-8')
+            write_document(target,saved)
             with self.assertRaises(ValueError):
                 self.model.import_data(target)
             self.assertEqual((self.model.state, self.model.settings, self.model.undo), before)
 
     def test_old_session_without_card_profiles_receives_distinct_defaults(self):
-        target = self.directory / 'old-card-settings.json'
+        target = self.directory / 'old-card-settings.mjbackup'
         self.model.export_data(target)
-        saved = json.loads(target.read_text(encoding='utf-8'))
+        saved = read_document(target)
         for key in ('player_card_style', 'saikouisen_card_style'):
             saved['settings'].pop(key)
-        target.write_text(json.dumps(saved), encoding='utf-8')
+        write_document(target,saved)
         self.model.import_data(target, replace_settings=True)
         self.assertEqual(self.model.settings['player_card_style']['backgrounds']['score']['mode'], 'gradient')
         self.assertEqual(self.model.settings['saikouisen_card_style']['backgrounds']['score']['mode'], 'solid')
@@ -348,10 +349,10 @@ class ServiceBoundaryTests(unittest.TestCase):
 
     def test_unmarked_local_session_upgrades_once_then_allows_legacy_style(self):
         session = self.model.path / 'session.json'
-        saved = json.loads(session.read_text(encoding='utf-8'))
+        saved = read_document(session)
         saved['settings'].pop('player_style_version', None)
         saved['settings']['theme'] = 'saikouisen'
-        session.write_text(json.dumps(saved), encoding='utf-8')
+        write_document(session,saved)
         upgraded = Model(self.model.path)
         self.assertEqual(upgraded.settings['theme'], 'mleague')
         upgraded.setting('theme', 'saikouisen')

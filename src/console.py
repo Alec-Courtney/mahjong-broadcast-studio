@@ -285,7 +285,9 @@ class Console(QMainWindow):
   if not model.event_store:
    self.workspace_menu.addAction('独立播出设置',lambda:self._open_settings_dialog(output=True))
   header=QWidget();header.setObjectName('consoleHeader');header_layout=QHBoxLayout(header);header_layout.setContentsMargins(12,8,12,8)
-  header_layout.addLayout(row(self.event_label,1,self.shortcut_button,self.workspace_menu_button,self.overlays,self.undo,self.redo));self.setMenuWidget(header)
+  self.history_recovery_button=button('历史局收支',lambda:self.workspace.recover_panel('history'))
+  self.history_recovery_button.setToolTip('找回历史局收支窗口到当前屏幕；直播中可直接使用')
+  header_layout.addLayout(row(self.event_label,1,self.history_recovery_button,self.shortcut_button,self.workspace_menu_button,self.overlays,self.undo,self.redo));self.setMenuWidget(header)
   # These preferences remain available in Settings; the live header stays short.
   self.language.setParent(header);self.language.hide();self.lock.setParent(header);self.lock.hide()
   self.workspace=DockWorkspace(self,model)
@@ -306,6 +308,7 @@ class Console(QMainWindow):
   from hand_history_panel import HandHistoryPanel
   self.hand_history=HandHistoryPanel(self);self.workspace.add_panel('history','逐局收支',self.hand_history)
   self.workspace.attach_menu(self.panel_menu);self.workspace.initialize()
+  self.workspace_menu.addMenu(self.panel_menu)
   from hotkeys import ShortcutController
   actions={key:widget.click for key,widget in self.quick_actions.items() if key in ('riichi','tenpai','focus_ron','focus_tsumo','draw','next_hand','replay','commentary_show','commentary_hide')}
   actions.update(undo=self.undo.click,redo=self.redo.click,dora=lambda:self.focus_tile_target('dora'),meld=lambda:self.focus_tile_target('meld'),overlays=self.overlays.click,submit_win=self.settle_button.click)

@@ -104,7 +104,7 @@ class SettlementFlowTests(unittest.TestCase):
   with patch('overlays.final_settlement_summary',wraps=overlays.final_settlement_summary) as summary:
    self.ron();paid=copy.deepcopy(self.model.state);self.manager.replay()
    self.assertEqual(self.model.state,paid);self.assertIsNone(self.manager.settlement_data)
-   export=Path(self.tmp.name)/'small-result.json';self.model.export_data(export)
+   export=Path(self.tmp.name)/'small-result.mjbackup';self.model.export_data(export)
    self.advance(self.manager.animation.duration_ms/1000+.01);self.advance(.46);self.advance(self.manager.art.win_content_duration()+4.01);self.advance(.46)
    self.assertEqual(self.manager.stage,'players_in');self.assertEqual(self.model.state['phase'],'playing')
    self.model.import_data(export);self.assertIsNone(self.manager.settlement_data)
@@ -173,7 +173,7 @@ class SettlementFlowTests(unittest.TestCase):
   self.model.start_match()
   self.assertEqual(self.manager.windows['standings'].geometry(),original)
  def test_terminal_total_stops_timer_and_import_cancels_forced_views(self):
-  export=Path(self.tmp.name)/'original.json';self.model.export_data(export)
+  export=Path(self.tmp.name)/'original.mjbackup';self.model.export_data(export)
   self.model.field('roundIndex',7);self.model.field('dealer',3)
   self.final_ron();self.to_hand();self.manager.set_bottom_mode('total_result');self.advance(2.01)
   self.assertEqual(self.manager.stage,'settlement_total');self.assertEqual(self.manager.settlement_progress(),1.)

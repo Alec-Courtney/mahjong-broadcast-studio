@@ -226,21 +226,31 @@ class SessionRepository:
         self._locked_write(directory / 'session.json', encoded)
 
     def export(self, filename, directory, state, settings, last_info, event=None):
-        from media_store import export_assets
+        from media_store import manage_photos, asset_project_root
+        from backup_package import write_package
         from state_snapshots import mutable_copy
         state = mutable_copy(state)
-        assets = export_assets(state, Path(directory))
+        manage_photos(state,Path(directory),strict=True)
         data = self.payload(state, settings, last_info, event)
-        data.update(format='MahjongOverlayStudio', asset_version=1, assets=assets)
-        atomic_json(filename, data, max_bytes=MAX_SESSION_BYTES)
+        return write_package(filename,data,storage=directory,source_base=asset_project_root(directory))
 
     def read(self, filename, *, expected_event_id=None, observe=True, local=False):
         source = Path(filename)
-        if source.stat().st_size > (MAX_LOCAL_SESSION_BYTES if local else MAX_SESSION_BYTES):
-            raise ValueError('本地赛事数据超过256MiB' if local else '数据文件超过50MB')
+        if not local:
+            from backup_package import read_package
+            data,embedded,kind=read_package(source)
+            if kind!='event':raise ValueError('请选择完整赛事备份包，不能使用仅含设置的备份包')
+            return self.decode_payload(data,embedded,expected_event_id=expected_event_id)
+        if source.stat().st_size > MAX_LOCAL_SESSION_BYTES:raise ValueError('本地赛事数据超过256MiB')
+        encoded=source.read_bytes()
+        data=json.loads(encoded.decode('utf-8-sig'),parse_constant=reject_constant)
+        result=self.decode_payload(data,expected_event_id=expected_event_id)
+        if observe:self.observe(source,encoded)
+        return result
+
+    def decode_payload(self,data,embedded=None,*,expected_event_id=None):
+        """Validate portable and internal documents through the same model rules."""
         try:
-            encoded = source.read_bytes()
-            data = json.loads(encoded.decode('utf-8-sig'), parse_constant=reject_constant)
             if (not isinstance(data, dict) or data.get('version') not in (5, 6)
                     or not isinstance(data.get('state'), dict)):
                 raise ValueError('不支持的数据文件格式或版本')
@@ -259,11 +269,10 @@ class SessionRepository:
         from media_store import decode_assets
         if data.get('asset_version', 1) != 1:
             raise ValueError('不支持的媒体素材版本')
-        embedded = decode_assets(data['assets']) if 'assets' in data else None
+        if embedded is None and 'assets' in data:embedded=decode_assets(data['assets'])
         if data.get('event') is not None:
             from event_metadata import validate_event
             validate_event(data['event'], state)
         if expected_event_id is not None and (not data.get('event') or data['event'].get('id') != expected_event_id):
             raise ValueError('已保存的赛事编号与当前工作区不一致，原文件已保留')
-        if observe:self.observe(source, encoded)
         return state, settings, info, embedded, data.get('event')

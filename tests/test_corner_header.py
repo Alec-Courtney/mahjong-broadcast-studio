@@ -38,7 +38,7 @@ class CornerHeaderTests(unittest.TestCase):
     def test_custom_logo_survives_export_import_without_original_path(self):
         path=self.logo();self.model.configure_corner_header({'corner_logo':str(path),'corner_season':'27–28','corner_date':'Nov. 03','corner_match':'12'})
         config=self.model.state['broadcast']['config'];self.assertTrue(config['corner_logo'].startswith('assets/imported/logos/'))
-        transfer=self.directory/'transfer.json';self.model.export_data(transfer);path.unlink()
+        transfer=self.directory/'transfer.mjbackup';self.model.export_data(transfer);path.unlink()
         target=Model(self.directory/'second');target.import_data(transfer)
         self.assertEqual(target.state['broadcast']['config']['corner_season'],'27–28')
         image=corner_logo(target,target.state['broadcast']['config']['corner_logo'])

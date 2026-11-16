@@ -12,12 +12,16 @@ class DemoSession:
 
     @property
     def backup_path(self):
-        return self.model.path / 'demo-restore.json'
+        return self.model.path / 'demo-restore.mjbackup'
 
     def restore(self):
         backup = self.backup_path
-        if not self.active or not backup.is_file():
+        legacy=self.model.path/'demo-restore.json'
+        if not self.active or not (backup.is_file() or legacy.is_file()):
             raise ValueError('没有可恢复的测试前数据')
-        self.model.import_data(backup, replace_settings=True, clear_history=True,
+        from backup_package import convert_legacy,EXTENSION
+        target=backup
+        if not target.is_file():convert_legacy(legacy)
+        self.model.import_data(target, replace_settings=True, clear_history=True,
                                allow_event_kind_change=True)
         return backup

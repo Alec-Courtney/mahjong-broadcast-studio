@@ -77,7 +77,7 @@ class SettingsTransferTests(unittest.TestCase):
         self.source.field('dealer', 3)
         self.source.draw()
         self.source.matches.confirm_finished()
-        filename = self.root/'event.json'
+        filename = self.root/'event.mjbackup'
         export_event_settings(self.source, filename)
 
         self.target_store.create('文件创建的赛事', 'team_league', settings_file=filename)
@@ -124,7 +124,7 @@ class SettingsTransferTests(unittest.TestCase):
         self.target.matches.confirm_finished()
         original_event = self.target.event['id']
         ledger = copy.deepcopy(self.target.state['broadcast']['matches'])
-        filename = self.root/'event.json'
+        filename = self.root/'event.mjbackup'
         export_event_settings(self.source, filename)
         import_event_settings(self.target, filename)
         self.assertEqual(self.target.event['id'], original_event)

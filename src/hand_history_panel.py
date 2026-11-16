@@ -165,6 +165,74 @@ class HandHistoryPanel(QGroupBox):
             self.main.error(str(error))
 
 
+class ArchivedHandHistoryWidget(QWidget):
+    """Read recorded payment facts with exactly the desk's deposit accounting."""
+    def __init__(self, parent, record):
+        super().__init__(parent)
+        from ui_widgets import note
+        from ranking_order import match_seats
+        self.record = record
+        self.hands = list(reversed(record.get('hands', [])))
+        layout = QVBoxLayout(self)
+        layout.addWidget(note('导播录制的原始逐局收支，包含本局交出的立直棒。点击任意小局查看详情。'))
+        self.correction_note = note('')
+        if record.get('final_score_corrected_at'):
+            scores = {r['id']:r['score'] for r in record['results']}
+            last = record['hands'][-1] if record['hands'] else None
+            differences = [p['name']+' '+signed(scores[p['id']]-after)
+                           for p,after in zip(last['players'],last['after_scores'])] if last else []
+            self.correction_note.setText('本半庄有终局成绩更正；逐局记录保留。最终持点相对最后一局：'+' / '.join(differences))
+        layout.addWidget(self.correction_note)
+        profiles = {r['id']:r for r in record['results']}
+        seats = match_seats(record) or list(profiles)
+        self.history = make_table(['历史小局', '结算结果']+[profiles[pid]['name'] for pid in seats])
+        self.history.setRowCount(len(self.hands))
+        for index, hand in enumerate(self.hands):
+            title, detail = summary(hand)
+            put(self.history,index,0,hand['label']).setToolTip(title+'\n'+detail)
+            put(self.history,index,1,title.split(' · ',1)[-1])
+            deltas = {p['id']:d for p,d in zip(hand['players'],hand_deltas(hand))}
+            for column,pid in enumerate(seats,2):put(self.history,index,column,signed(deltas[pid]),deltas[pid])
+        layout.addWidget(self.history, 2)
+        self.detail_title, self.detail_note = QLabel(), QLabel()
+        for label in (self.detail_title,self.detail_note):label.setWordWrap(True);layout.addWidget(label)
+        self.details = make_table(['选手','本局交棒','结算前点数','本局收支（含交棒）','结算后点数'])
+        self.details.setMinimumHeight(190)
+        layout.addWidget(self.details, 1)
+        self.history.currentCellChanged.connect(self.show_hand)
+        if self.hands:self.history.setCurrentCell(0,0)
+        else:self.detail_note.setText('此半庄未保存逐局记录。')
+
+    def show_hand(self,index,*_):
+        if not 0<=index<len(self.hands):return
+        hand=self.hands[index]
+        title,detail=summary(hand)
+        self.detail_title.setText(title)
+        yaku=(hand.get('win_info') or {}).get('yaku',[])
+        self.detail_note.setText(detail+(' · 役种：'+'、'.join(yaku) if yaku else ''))
+        before=hand.get('context',{}).get('scores',hand['before_scores'])
+        paid=hand.get('context',{}).get('riichi_paid',[bool(p.get('riichi')) for p in hand['players']])
+        self.details.setRowCount(4)
+        for index,(p,a,b,d,stick) in enumerate(zip(hand['players'],before,hand['after_scores'],hand_deltas(hand),paid)):
+            for col,value in enumerate((p['name'],'1,000' if stick else '0',points(a),signed(d),points(b))):
+                put(self.details,index,col,value,d if col==3 else None)
+
+
+class ArchivedHandHistoryDialog(QDialog):
+    def __init__(self,parent,record,settings):
+        super().__init__(parent)
+        from desk_theme import apply_theme
+        from ui_widgets import button, row
+        self.setWindowTitle('半庄逐局收支 · '+record.get('title','半庄'))
+        screen=self.screen().availableGeometry()
+        self.resize(min(1100,screen.width()-40),min(700,screen.height()-60))
+        layout=QVBoxLayout(self)
+        self.ledger=ArchivedHandHistoryWidget(self,record)
+        layout.addWidget(self.ledger,1)
+        layout.addLayout(row(1,button('关闭',self.close)))
+        apply_theme(self,settings)
+
+
 class HandCorrectionDialog(QDialog):
     def __init__(self, main, hand_id):
         super().__init__(main)

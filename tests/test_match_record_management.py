@@ -53,6 +53,64 @@ class MatchRecordManagementTests(unittest.TestCase):
         return copy.deepcopy((self.model.state, self.model.settings, self.model.event, self.model.undo,
                               self.model.redo, self.model.last_transition))
 
+    def test_broadcast_final_correction_preserves_hands_penalties_and_survives_table_edits(self):
+        match = self.finish()
+        self.model.records.save_penalty(match['id'],scope='player',target=self.seats[0],points=5,time=TIME,reason='迟到')
+        match = self.model.records.penalty_match(match['id'])
+        table = {key:copy.deepcopy(value) for key,value in self.model.state.items() if key!='broadcast'}
+        corrected = prepare_result(self.model,self.seats,[20000,40000,30000,30000],match_id=match['id'],title=match['title'])
+        record_result(self.store,corrected)
+        stored=self.model.records.penalty_match(match['id'])
+        for key in ('hands','penalties','recorded_at','config','profiles'):
+            self.assertEqual(stored.get(key),match.get(key))
+        self.assertEqual({key:value for key,value in self.model.state.items() if key!='broadcast'},table)
+        self.assertEqual({r['id']:r['rank'] for r in stored['results']}[self.seats[1]],1)
+        self.model.field('honba',4)
+        self.assertEqual(self.model.records.penalty_match(match['id'])['results'],stored['results'])
+        self.model.history('undo')
+        self.assertEqual(self.model.records.penalty_match(match['id'])['results'],stored['results'])
+        self.model.matches.start_next()
+        self.assertEqual(self.model.records.penalty_match(match['id'])['results'],stored['results'])
+        self.assertEqual(Model(self.model.path).state['broadcast']['matches'][0],stored)
+
+    def test_broadcast_correction_rejects_stale_preview_and_failed_save_without_changes(self):
+        match=self.finish()
+        candidate=prepare_result(self.model,self.seats,[20000,40000,30000,30000],match_id=match['id'])
+        before=self.snapshot()
+        saved=(self.model.path/'session.json').read_bytes()
+        with patch.object(self.model.repository,'save',side_effect=OSError('disk full')):
+            with self.assertRaises(OSError):record_result(self.store,candidate)
+        self.assertEqual(self.snapshot(),before)
+        self.assertEqual((self.model.path/'session.json').read_bytes(),saved)
+        self.model.records.update_recorded_at(match['id'],LATER)
+        with self.assertRaisesRegex(ValueError,'已改变'):record_result(self.store,candidate)
+
+    def test_double_click_opens_both_correction_and_recorded_payments_and_keeps_buttons(self):
+        from event_workspace import ResultEntryDialog
+        from hand_history import hand_deltas
+        from hand_history_panel import signed
+        self.model.riichi(0)
+        match=self.finish()
+        owner=QWidget();owner.model=self.model
+        workspace=EventWorkspaceDialog(owner);dialog=ResultsDialog(workspace)
+        visited=[]
+        def visit(editor):
+            self.assertEqual([editor.tabs.tabText(i) for i in range(2)],['成绩更正','逐局收支'])
+            self.assertEqual(editor.ledger.history.item(0,2).text(),signed(hand_deltas(match['hands'][0])[0]))
+            visited.append(True)
+            return editor.result()
+        try:
+            self.assertTrue(dialog.edit_button.isEnabled())
+            self.assertTrue(dialog.history_button.isEnabled())
+            with patch.object(ResultEntryDialog,'exec',new=visit):
+                dialog.table.cellDoubleClicked.emit(0,0)
+                dialog.edit_button.click()
+            self.assertEqual(len(visited),2)
+            self.assertIn('已选第 1 条',dialog.status.text())
+        finally:
+            dialog.deleteLater();workspace._allow_close=True;workspace.close();owner.deleteLater()
+            APP.sendPostedEvents(None,QEvent.Type.DeferredDelete);APP.processEvents()
+
     def test_record_time_starts_at_save_and_survives_correction_penalty_and_restart(self):
         match = self.manual()
         self.assertEqual(match['recorded_at'], TIME)

@@ -59,6 +59,23 @@ def _atomic_bytes(target, raw):
 def archive_import_file(storage, source, category='data', *, event_owned=False):
     """Retain validated JSON or the unmodified source before portrait cropping."""
     source=Path(source)
+    if category=='data' and source.suffix.lower()=='.mjbackup':
+        # Keep the original portable archive without loading gigabytes into RAM.
+        import os,shutil,uuid
+        from backup_package import digest_source, MAX_TOTAL, MAX_METADATA
+        digest,size=digest_source(source)
+        if not 0<size<=MAX_TOTAL+MAX_METADATA:raise ValueError('备份包大小无效')
+        key=('imports/' if event_owned else 'assets/imported/documents/')+digest+'.mjbackup'
+        target=(Path(storage) if event_owned else asset_project_root(storage))/key
+        if target.is_file() and digest_source(target)==(digest,size):return key
+        target.parent.mkdir(parents=True,exist_ok=True)
+        temporary=target.with_name('.import-'+uuid.uuid4().hex+'.tmp')
+        try:
+            shutil.copyfile(source,temporary)
+            if digest_source(temporary)!=(digest,size):raise ValueError('备份包在导入期间改变，请重试')
+            os.replace(temporary,target)
+        finally:temporary.unlink(missing_ok=True)
+        return key
     if category not in ('data','images'):raise ValueError('导入原档分类无效')
     limit=MAX_DOCUMENT_BYTES if category=='data' else MAX_TOTAL_BYTES
     if not source.is_file() or not 0<source.stat().st_size<=limit:raise ValueError('导入原档为空或超出大小限制')

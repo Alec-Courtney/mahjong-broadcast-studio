@@ -14,6 +14,7 @@ ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'src'))
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QImage,QColor
 from model import Model
+from backup_test_support import read_document, write_document
 from media_store import resolve_media_path
 from event_store import BUILTIN_DEMO_ID,EventStore
 from event_results import prepare_result,record_result
@@ -59,16 +60,16 @@ class EventTests(unittest.TestCase):
     def test_invalid_target_does_not_replace_current_event(self):
         first=self.model.event['id'];self.store.create('目标赛事','individual_league');target=self.model.path/'session.json';self.store.open(first)
         before=copy.deepcopy((self.model.event,self.model.state,self.model.settings,self.model.path))
-        payload=json.loads(target.read_text(encoding='utf-8'));payload['settings']['speed']='bad';target.write_text(json.dumps(payload),encoding='utf-8')
+        payload=read_document(target);payload['settings']['speed']='bad';write_document(target,payload)
         with self.assertRaises(ValueError):self.store.open(payload['event']['id'])
         self.assertEqual((self.model.event,self.model.state,self.model.settings,self.model.path),before)
     def test_import_is_new_event_and_embeds_metadata(self):
         self.store.update(planned_games=8,report_columns={'individual':['name','rank','points']})
-        target=self.root/'portable.json';self.model.export_data(target);first=self.model.event['id'];self.store.import_new(target)
+        target=self.root/'portable.mjbackup';self.model.export_data(target);first=self.model.event['id'];self.store.import_new(target)
         self.assertNotEqual(first,self.model.event['id']);self.assertEqual(self.model.event['planned_games'],8)
         self.assertEqual(reports.columns(self.model.event),['name','rank','points']);self.assertEqual(len(self.store.list_events()),2)
         imported = self.model.path
-        archived, = (imported/'imports').glob('*.json')
+        archived, = (imported/'imports').glob('*.mjbackup')
         self.assertEqual(archived.read_bytes(), target.read_bytes())
         self.store.delete(self.model.event['id'], self.model.event['name'])
         self.assertFalse(imported.exists())

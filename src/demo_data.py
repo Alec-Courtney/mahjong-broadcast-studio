@@ -97,7 +97,8 @@ def load_into(model, scenario_id='live_full'):
     with tempfile.TemporaryDirectory(prefix='mahjong-demo-import-',dir=model.path) as temporary:
         path = Path(temporary) / 'session.json'
         path.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
-        model.import_data(path)
+        from backup_package import convert_legacy
+        model.import_data(convert_legacy(path))
     if payload['settings'].get('show_yaku') and model.last_info:
         model.setting('show_yaku', True)
     return model

@@ -382,7 +382,25 @@ class DockWorkspace(QObject):
         dock.show()
         dock.raise_()
         if dock.isFloating():
+            screens = [screen.availableGeometry() for screen in QApplication.screens()]
+            dock.setGeometry(visible_geometry(dock.geometry(), screens))
             dock.activateWindow()
+        return dock
+
+    def recover_panel(self, identity):
+        """Retrieve one panel during a broadcast without reloading any state."""
+        dock = self.docks[identity]
+        screen = self.window.screen().availableGeometry()
+        with self.paused():
+            dock.setFloating(True)
+            width, height = min(1060, screen.width()-32), min(450, screen.height()-64)
+            dock.setGeometry(visible_geometry(QRect(screen.center().x()-width//2,
+                screen.center().y()-height//2, width, height), [screen]))
+            dock.showNormal()
+            dock.raise_()
+            dock.activateWindow()
+        self._sync_panel_button(identity)
+        self.schedule_save()
         return dock
 
     def _sync_panel_button(self,key):

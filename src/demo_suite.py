@@ -306,7 +306,7 @@ def save_scene(model,root,key,number,description,features,asset_root=None):
     model.asset_root=project_root
     # Call the actual save implementation; generation's no-op avoids repeated I/O.
     Model.save(model)
-    portable=root/'portable'/f'{number:02d}-{key}.json';portable.parent.mkdir(exist_ok=True);model.export_data(portable)
+    portable=root/'portable'/f'{number:02d}-{key}.mjbackup';portable.parent.mkdir(exist_ok=True);model.export_data(portable)
     rows=reports.individual_rows(model.state,model.event)
     return dict(key=key,id=model.event['id'],name=model.event['name'],kind=model.event['kind'],description=description,features=features,
         players=len(rows),confirmed_matches=len(reports.confirmed_matches(model.state)),recorded_hands=sum(len(m['hands']) for m in reports.confirmed_matches(model.state)),

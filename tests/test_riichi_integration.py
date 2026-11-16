@@ -157,7 +157,7 @@ class RiichiIntegrationTests(unittest.TestCase):
         self.assertEqual(self.manager.animation.lines,[(-1000,0),(0,0),(0,0),(0,0)])
 
     def test_import_new_match_and_identity_replacement_discard_unfinished_display_masks(self):
-        source=Path(self.tmp.name)/'before-declarations.json';self.model.export_data(source)
+        source=Path(self.tmp.name)/'before-declarations.mjbackup';self.model.export_data(source)
         self.model.riichi(0);self.model.riichi(1);self.model.import_data(source,clear_history=True)
         self.assertFalse(self.manager.riichi_queue.busy);self.assertFalse(self.manager._riichi_holds)
         self.assertIs(self.manager.riichi_display_state(),self.model.state)
@@ -201,6 +201,15 @@ class RiichiIntegrationTests(unittest.TestCase):
         self.now.return_value=107.5;self.manager.tick();self.assertIsNone(queue.active);self.assertFalse(self.manager.content_visible('riichi_effect'))
         self.assertEqual(self.audio.play.call_args_list, [call(1), call(2), call(3)])
         self.audio.stop.assert_called()
+
+    def test_sound_device_failure_is_reported_without_losing_the_declaration(self):
+        failures=[]
+        self.manager.display_configuration.failed.connect(failures.append)
+        self.audio.play.return_value=False;self.audio.error='声音输出设备不可用'
+        self.model.riichi(0)
+        self.assertTrue(self.model.state['players'][0]['riichi'])
+        self.assertTrue(self.manager.riichi_queue.busy)
+        self.assertEqual(failures,['声音输出设备不可用'])
 
     def test_effect_window_is_transparent_and_always_click_through(self):
         self.model.settings['locked']=False;self.model.riichi(0)

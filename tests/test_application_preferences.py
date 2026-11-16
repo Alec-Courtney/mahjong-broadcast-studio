@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QApplication
 from application_preferences import APPLICATION_KEYS, capture_preferences
 from event_store import EventStore
 from model import Model
+from backup_test_support import read_document, write_document
 
 APP = QApplication.instance() or QApplication([])
 
@@ -42,12 +43,12 @@ class ApplicationPreferenceTests(unittest.TestCase):
         self.model.setting('overlay_font_scale', 1.25)
         self.model.field('honba', 3)
         preferences = self.set_preferences()
-        export = self.root / 'old-export.json'
+        export = self.root / 'old-export.mjbackup'
         self.model.export_data(export)
-        payload = json.loads(export.read_text(encoding='utf-8'))
+        payload = read_document(export)
         payload['settings'].update(console_theme='dark', console_font_size=10,
                                    settings_font_size=10, language='zh_CN')
-        export.write_text(json.dumps(payload), encoding='utf-8')
+        write_document(export,payload)
         second = self.store.create('新团队赛事', 'team_league')
         self.assertEqual(capture_preferences(self.model.settings), preferences)
         self.assertNotIn('overlay_font_scale', self.model.settings)
@@ -81,7 +82,7 @@ class ApplicationPreferenceTests(unittest.TestCase):
         stale = self.root / 'session.json'
         payload = json.loads((self.model.path / 'session.json').read_text(encoding='utf-8'))
         payload['settings'].update(console_theme='dark', console_font_size=9)
-        stale.write_text(json.dumps(payload), encoding='utf-8')
+        write_document(stale,payload)
         restarted = Model(self.root)
         EventStore(restarted)
         self.assertEqual(restarted.event['id'], second)

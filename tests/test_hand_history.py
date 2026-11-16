@@ -176,7 +176,7 @@ class HandHistoryTests(unittest.TestCase):
         self.assertEqual(self.model.state, corrected)
         restored = Model(self.model.path)
         self.assertEqual(restored.state, corrected)
-        target = Path(self.tmp.name) / 'export.json'
+        target = Path(self.tmp.name) / 'export.mjbackup'
         self.model.export_data(target)
         self.control.import_data(target)
         self.assertEqual(self.control.state, corrected)

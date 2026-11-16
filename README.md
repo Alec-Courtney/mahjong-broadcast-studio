@@ -6,14 +6,13 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 
 ## 快速开始
 
-### 下载 Windows 便携版
+### 下载 Windows 安装版
 
-**[下载 Windows x64 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.2-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [预览版说明](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.2-preview) · [本版更新](docs/releases/v0.1.2-preview.md)
+**[下载 0.1.4 安装程序](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.4/MahjongOverlayStudio-0.1.4-Setup.exe)** · [完整更新包](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.4) · [更新与迁移说明](docs/releases/v0.1.4.md)
 
-1. 把整个 ZIP 解压到可写的个人文件夹，例如 `文档\MahjongStudio`。
-2. 双击 `MahjongOverlayStudio.exe`。保留同目录的 `_internal` 文件夹。包内附有 `START-HERE.txt`。
+运行安装程序即可安装或更新。已有安装版会自动识别原目录，保留新增赛事与素材；请在直播结束后退出程序再更新。导入素材仍托管到安装目录的 `assets/imported/`，本地实时存档继续兼容比分监听助手。
 
-程序首次运行时在 EXE 同级创建 `data/`，保存赛事、进度和全局设置。导入的素材按需存入同级的 `assets/imported/`。便携版自带手动计分、赛事管理和 OBS 画面输出所需的运行库。牌面识别 Demo 可从源码按需安装。
+0.1.4 对外迁移改用 `.mjbackup`，图片和音乐独立存放在包内。安装包在更新时自动把安装目录内的旧赛事 JSON 转成原路径同名包，原文件保留；需要一并转换的外部旧备份可先放到原安装目录的 `legacy-backups/` 后再更新，没有程序内手动转换入口。日常操作不会自动新增备份包。[备份包结构](docs/BACKUP_PACKAGE_FORMAT.md)
 
 ### 从源码启动
 
@@ -31,7 +30,7 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 
 ## 导入演示赛事
 
-在「赛事管理 → 赛事库」点击「导入完整赛事 JSON」，选择下面任一文件。每份 JSON 已内嵌选手肖像，导入后会在赛事库新增一场独立赛事。[演示说明](demo-suite/README.md)
+安装版 `demo-suite/` 提供可直接导入的 `.mjbackup` 示例。在「赛事管理 → 赛事库」点击「导入完整赛事备份包」。以下源码 JSON 作为演示底稿保留，可放入安装目录的 `legacy-backups/` 后重新运行安装更新，静默生成同名包再导入，导入后会新增一场独立赛事。[演示说明](demo-suite/README.md)
 
 - 团队积分赛包含 10 队 40 人和 50 个已归档半庄，可查看个人与团队积分、逐局记录和技术统计。[团队赛 JSON](demo-suite/team-league-demo.json)
 - 个人积分赛包含 16 人和 20 个已归档半庄，可查看个人榜单、历场结果和技术统计。[个人赛 JSON](demo-suite/individual-league-demo.json)

@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'src'))
 from PySide6.QtWidgets import QApplication
 from model import Model
+from backup_test_support import read_document, write_document
 from event_store import EventStore
 from session_repository import atomic_json
 
@@ -145,7 +146,7 @@ class StateTransactionIntegrityTests(unittest.TestCase):
     def test_cosmetic_json_reformat_does_not_conflict_with_an_identical_save(self):
         other = Model(self.root)
         path = self.root/'session.json'
-        payload = json.loads(path.read_text(encoding='utf-8'))
+        payload = read_document(path)
         path.write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True), encoding='utf-8')
         other.save()
         other.set_score(0, 34000)
@@ -159,7 +160,7 @@ class StateTransactionIntegrityTests(unittest.TestCase):
 
     def test_startup_uses_the_same_version_and_settings_guards_as_import(self):
         path = self.root/'session.json'
-        original = json.loads(path.read_text(encoding='utf-8'))
+        original = read_document(path)
         for patch_value in ('future_version', 'invalid_windows'):
             with self.subTest(value=patch_value):
                 payload = copy.deepcopy(original)
@@ -184,7 +185,7 @@ class StateTransactionIntegrityTests(unittest.TestCase):
             with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
                 list(pool.map(lambda value: atomic_json(path, {'value': value}), (1, 2)))
         self.assertEqual(len(set(sources)), 2)
-        self.assertIn(json.loads(path.read_text(encoding='utf-8'))['value'], (1, 2))
+        self.assertIn(read_document(path)['value'], (1, 2))
         self.assertFalse(list(self.root.glob('.concurrent.json.*.tmp')))
 
     def test_atomic_write_failure_leaves_no_temporary_file(self):
@@ -211,13 +212,13 @@ class StateTransactionIntegrityTests(unittest.TestCase):
 
     def test_managed_import_cannot_change_type_or_identity(self):
         store = EventStore(self.model)
-        target = self.root/'another-kind.json'
+        target = self.root/'another-kind.mjbackup'
         self.model.export_data(target)
-        payload = json.loads(target.read_text(encoding='utf-8'))
+        payload = read_document(target)
         payload['event']['kind'] = 'team_league'
         payload['state']['broadcast']['config']['event_mode'] = 'team'
         payload['event']['id'] = 'f'*32
-        target.write_text(json.dumps(payload), encoding='utf-8')
+        write_document(target,payload)
         before = self.snapshot()
         with self.assertRaisesRegex(ValueError, '比赛类型'):self.model.import_data(target)
         self.assertEqual(self.snapshot(), before)
@@ -226,14 +227,14 @@ class StateTransactionIntegrityTests(unittest.TestCase):
     def test_rejected_reload_preserves_memory_and_does_not_acknowledge_foreign_identity(self):
         EventStore(self.model)
         path = self.model.path/'session.json'
-        saved = json.loads(path.read_text(encoding='utf-8'))
+        saved = read_document(path)
         saved['event']['id'] = 'f'*32
-        path.write_text(json.dumps(saved), encoding='utf-8')
+        write_document(path,saved)
         before = self.snapshot()
         with self.assertRaisesRegex(ValueError, '赛事编号'):self.model.reload_current()
         self.assertEqual(self.snapshot(), before)
         with self.assertRaisesRegex(ValueError, '重新载入'):self.model.set_score(0, 34000)
-        self.assertEqual(json.loads(path.read_text(encoding='utf-8'))['event']['id'], 'f'*32)
+        self.assertEqual(read_document(path)['event']['id'], 'f'*32)
 
 
 if __name__ == '__main__':unittest.main()

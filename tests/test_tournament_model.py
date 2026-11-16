@@ -12,6 +12,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'src'))
 from PySide6.QtWidgets import QApplication
 from model import Model
+from backup_test_support import read_document, write_document
 import tournament as t
 APP=QApplication.instance() or QApplication([])
 
@@ -63,9 +64,9 @@ class TournamentModelTests(unittest.TestCase):
   self.win()
   with self.assertRaises(ValueError):self.m.configure_broadcast({'seats':['p1','p2','p3','p4']})
  def test_import_validation_is_transactional(self):
-  self.win();target=Path(self.tmp.name)/'export.json';self.m.export_data(target)
-  original=copy.deepcopy(self.m.state);bad=json.loads(target.read_text(encoding='utf-8'));bad['state']['broadcast']['roster'][0]['base_points']=float('nan')
-  target.write_text(json.dumps(bad),encoding='utf-8')
+  self.win();target=Path(self.tmp.name)/'export.mjbackup';self.m.export_data(target)
+  original=copy.deepcopy(self.m.state);bad=read_document(target);bad['state']['broadcast']['roster'][0]['base_points']=float('nan')
+  write_document(target,bad)
   with self.assertRaises(ValueError):self.m.import_data(target)
   self.assertEqual(self.m.state,original)
   self.m.export_data(target);self.m.start_match();self.m.import_data(target);self.assertEqual(self.m.state,original)

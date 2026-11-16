@@ -50,7 +50,7 @@ class MatchOpeningIntegrationTests(unittest.TestCase):
         reference=self.model.state['broadcast']['config']['opening_title']
         self.assertTrue(reference.startswith('assets/imported/backgrounds/'))
         self.assertEqual(resolve_media_path(self.model.path,reference).read_bytes(),path.read_bytes())
-        transfer=self.root/'portable.json';self.model.export_data(transfer);path.unlink()
+        transfer=self.root/'portable.mjbackup';self.model.export_data(transfer);path.unlink()
         target=Model(self.root/'second');target.import_data(transfer)
         self.assertTrue(resolve_media_path(target.path,reference).is_file())
         from match_opening import prepare_opening

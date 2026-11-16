@@ -4,8 +4,9 @@ import math
 from pathlib import Path
 import sys
 import tempfile
+import subprocess
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import wave
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -107,28 +108,24 @@ class PostMatchAudioTests(unittest.TestCase):
         for left, right in ((6.,20.9),(25.,38.9)):
             self.assertTrue(all(value == 0 for value in mixed[round(left*48000)*2:round(right*48000)*2]))
 
-    def test_playback_uses_local_recordings_and_falls_back_individually(self):
+    def test_playback_uses_only_the_same_installed_cues_on_every_machine(self):
         folder = Path(self.directory.name) / 'local-cues'
         graph = folder / 'postmatch_audio' / 'graph_reveal.wav'
         layout = folder / 'postmatch_audio' / 'layout_sweep.wav'
         player = audio.PostMatchAudio(cache_dir=folder / 'cache')
         options = dict(chart_hold=0., stats_hold=0., music_enabled=False, sfx_volume=1.)
-        with patch.object(audio, 'LOCAL_REFERENCE_RESOURCES', folder):
+        with patch.object(audio, 'ROOT', folder):
             bundled = player.prepare(**options)
             self.assertIsInstance(bundled, Path, player.error)
             stereo = array('h', [8192, -8192, -8192, 8192])
             audio._write_pcm(graph, stereo * (round(2.667 * audio.SAMPLE_RATE) // 2))
             graph_only = player.prepare(**options)
             self.assertIsInstance(graph_only, Path, player.error)
-            self.assertNotEqual(graph_only, bundled)
+            self.assertEqual(graph_only, bundled)
             audio._write_pcm(layout, stereo * (round(1.6 * audio.SAMPLE_RATE) // 2))
             recovered = player.prepare(**options)
             self.assertIsInstance(recovered, Path, player.error)
-            self.assertNotEqual(recovered, graph_only)
-            with wave.open(str(recovered), 'rb') as track:
-                for start in (2., 6.087):
-                    track.setpos(round(start * audio.SAMPLE_RATE))
-                    self.assertEqual(track.readframes(2), stereo.tobytes())
+            self.assertEqual(recovered, graph_only)
             layout.write_bytes(b'invalid recording')
             self.assertEqual(player.prepare(**options), graph_only)
             graph.write_bytes(b'invalid recording')
@@ -140,6 +137,19 @@ class PostMatchAudioTests(unittest.TestCase):
         with patch.object(audio.shutil, 'which', return_value=None):
             audio.mix_soundtrack(target, chart_hold=0., stats_hold=0., music_path=self.track, sfx_enabled=False)
         self.assertTrue(target.is_file())
+
+    def test_common_audio_formats_decode_without_a_system_ffmpeg(self):
+        converter=audio.audio_converter()
+        self.assertTrue(converter)
+        for suffix in ('mp3','flac','ogg','m4a','aac','wav'):
+            path=Path(self.directory.name)/('compatibility.'+suffix)
+            with self.subTest(format=suffix):
+                subprocess.run([converter,'-y','-v','error','-i',str(self.music),'-t','0.15','-ar','44100','-ac','1',str(path)],
+                    check=True,capture_output=True,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+                with patch.object(audio.shutil,'which',return_value=None):
+                    samples=audio._decode_music(path,.2)
+                self.assertGreater(len(samples),1000)
+                self.assertGreater(max(map(abs,samples)),100)
 
     def test_muted_prepare_and_transport_do_not_touch_a_sound_device(self):
         player = audio.PostMatchAudio()
@@ -182,6 +192,21 @@ class PostMatchAudioTests(unittest.TestCase):
             player.close()
         self.assertEqual(sum(value.startswith('open ') for value in commands), 1)
         self.assertTrue(any(value.endswith('from 23967') for value in commands))
+
+    def test_legacy_filename_rejection_uses_one_shot_pcm_and_keeps_transport_controls(self):
+        player=audio.PostMatchAudio()
+        player.path=self.track;player.duration=39.467
+        native=Mock();native.position.return_value=1.2
+        player._effects=native
+        with patch.object(player,'_command',side_effect=RuntimeError('invalid long filename')):
+            self.assertTrue(player.play(),player.error)
+            native.play.assert_called_once_with(self.track,loop=False,position=0.)
+            self.assertTrue(player.pause());native.pause.assert_called_once()
+            self.assertTrue(player.resume())
+            native.play.assert_called_with(self.track,loop=False,position=1.2)
+            self.assertTrue(player.seek(2.5))
+            native.play.assert_called_with(self.track,loop=False,position=2.5)
+            self.assertTrue(player.stop());native.close.assert_called()
 
     def test_selected_music_has_a_separate_loop_and_effects_file_is_silent_during_holds(self):
         player = audio.PostMatchAudio(cache_dir=Path(self.directory.name)/'independent')

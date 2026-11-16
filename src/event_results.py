@@ -33,15 +33,15 @@ def prepare_result(model, seats, scores, node_id='', match_id=None, title='补�
     tournament._integer(initial_dealer,'起家席位',0,3)
     prior=next((m for m in model.state['broadcast']['matches'] if m['id']==match_id),None)
     if match_id and not prior:raise ValueError('待更正成绩不存在')
-    if prior and (prior['id']==model.state['id'] or prior.get('source')!='manual'):
-        raise ValueError('直播成绩请在导播台更正；此处仅更正补录成绩')
+    if prior and not prior.get('committed'):
+        raise ValueError('请先确认该半庄成绩，再进行更正')
     if prior and prior.get('seats') and seats != prior['seats']:
         raise ValueError('更正只调整最终持点，参赛人和席位保留')
     if not prior:
         from event_roster import require_visible_seats
         require_visible_seats(model.state, seats)
     if prior:node_id=prior.get('bracket_node_id','')
-    if node_id:
+    if node_id and not prior:
         from event_schedule import node_matches,resolve_sources,validate_sources
         node=next((n for n in model.event['bracket']['nodes'] if n['id']==node_id),None)
         if not node:raise ValueError('淘汰桌不存在')
@@ -66,7 +66,11 @@ def prepare_result(model, seats, scores, node_id='', match_id=None, title='补�
         results=results,initial_scores=[state['rules']['startPoints']]*4,initial_players=[],partial=False,
         config=copy.deepcopy(state['broadcast']['config']))
     if node_id:record['bracket_node_id']=node_id
-    if prior:record['_replaces_record']=prior['id']
+    if prior:
+        # A final-score decision must not erase the recorded hands, technical
+        # facts, historical profiles or penalties of a broadcast half-game.
+        record = dict(prior, results=results, title=title, initial_dealer=initial_dealer,
+                      _replaces_record=prior['id'], _expected_record=prior)
     return record
 
 
@@ -77,6 +81,8 @@ def record_result(store, record):
     by_id={r['id']:r for r in record['results']};ordered=[by_id[pid] for pid in record['seats']];prior=next((m for m in model.state['broadcast']['matches'] if m['id']==record['id']),None)
     if replacement and (replacement!=record['id'] or prior is None):
         raise ValueError('待更正半庄记录已删除，请重新打开成绩记录')
+    if prior and record.get('_expected_record') is not None and prior != record['_expected_record']:
+        raise ValueError('该半庄记录已改变，请重新预览成绩')
     checked=prepare_result(model,[r['id'] for r in ordered],[r['score'] for r in ordered],
         node_id=record.get('bracket_node_id',''),match_id=record['id'] if prior else None,title=record['title'],initial_dealer=record.get('initial_dealer',0))
     # Compare the whole result snapshot, including team identity and presentation
@@ -85,4 +91,4 @@ def record_result(store, record):
     # Corrections retain their original historical profiles in prepare_result.
     if sorted(checked['results'],key=lambda r:r['id'])!=sorted(record['results'],key=lambda r:r['id']):
         raise ValueError('计分规则或名册在预览后已改变，请重新预览')
-    return model.records.write_manual(record)
+    return model.records.write_result(record)

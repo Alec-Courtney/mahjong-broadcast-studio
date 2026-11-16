@@ -91,6 +91,7 @@ QListWidget::item,QTreeWidget::item{padding:10px 9px;min-height:22px;border-radi
 QListWidget::item:selected,QTreeWidget::item:selected{background:%(selected)s;color:%(text)s}
 QListWidget::item:hover,QTreeWidget::item:hover{background:%(hover)s}
 QTableWidget,QTableView{background:%(panel)s;alternate-background-color:%(bg)s;gridline-color:%(border)s;selection-background-color:%(selected)s;selection-color:%(text)s;border:1px solid %(border)s}
+QTableWidget::item:selected,QTableView::item:selected,QTableWidget::item:selected:!active,QTableView::item:selected:!active{background:%(primary)s;color:white}
 QHeaderView::section{background:%(field)s;color:%(text)s;padding:8px;border:0;border-bottom:1px solid %(border)s}
 QMenuBar,QMenu{background:%(panel)s;color:%(text)s}QMenu{border:1px solid %(border)s;padding:5px}
 QMenu::item{padding:7px 22px}QMenu::item:selected,QMenuBar::item:selected{background:%(selected)s}

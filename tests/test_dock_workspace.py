@@ -80,6 +80,20 @@ class DockWorkspaceTests(unittest.TestCase):
         self.assertTrue(control.isChecked())
         self.assertEqual(self.model.state, before)
 
+    def test_header_recovers_hidden_offscreen_history_during_live_without_state_changes(self):
+        workspace=self.ui.workspace;dock=workspace.docks['history']
+        self.model.riichi(0)
+        before=copy.deepcopy((self.model.state,self.model.undo,self.model.redo,self.model.last_transition))
+        settings=copy.deepcopy({key:value for key,value in self.model.settings.items() if key!='console_layout'})
+        dock.setFloating(True);dock.move(30000,30000);dock.close()
+        workspace.panel_toolbar.hide()
+        self.assertTrue(self.ui.history_recovery_button.isVisible())
+        self.ui.history_recovery_button.click();APP.processEvents()
+        self.assertTrue(dock.isVisible());self.assertTrue(dock.isFloating())
+        self.assertTrue(self.ui.screen().availableGeometry().contains(dock.geometry()))
+        self.assertEqual((self.model.state,self.model.undo,self.model.redo,self.model.last_transition),before)
+        self.assertEqual({key:value for key,value in self.model.settings.items() if key!='console_layout'},settings)
+
     def test_native_edge_preview_and_docking_work_without_using_an_arrow(self):
         workspace=self.ui.workspace;before=copy.deepcopy(self.model.state)
         original=workspace.docks['dora'].geometry()

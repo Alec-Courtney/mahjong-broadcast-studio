@@ -1,5 +1,6 @@
 # Mahjong Broadcast Studio
 
+> Windows 0.1.4: [Installer](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.4/MahjongOverlayStudio-0.1.4-Setup.exe) · [Automatic migration](docs/releases/v0.1.4.md). The installer automatically converts existing legacy event JSON in place; portable transfers now use `.mjbackup`; local `session.json` remains compatible with score listeners.
 [简体中文](README.md) · **English** · [日本語](README.ja.md)
 
 A Windows desktop app for riichi mahjong broadcasts and OBS overlays, built with Python and PySide6. The broadcast desk handles live table input and cues. The event workspace manages rosters, schedules, standings, and exports.

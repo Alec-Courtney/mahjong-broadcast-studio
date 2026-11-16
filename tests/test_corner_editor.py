@@ -70,7 +70,7 @@ class CornerEditorTests(unittest.TestCase):
         self.assertEqual((config['corner_top_size'],config['corner_bottom_size']),(87,39))
         self.assertEqual((config['corner_top_tracking'],config['corner_bottom_tracking']),(3.2,1.8))
         self.assertTrue(self.manager.enabled['corner_header'])
-        transfer=Path(self.temp.name)/'transfer.json';self.model.export_data(transfer)
+        transfer=Path(self.temp.name)/'transfer.mjbackup';self.model.export_data(transfer)
         target=Model(Path(self.temp.name)/'imported');target.import_data(transfer)
         self.assertEqual(corner_texts(target.state['broadcast']['config']),('FINALS 27','Nov. 03'))
         self.assertEqual(target.state['broadcast']['config']['corner_match'],'12')

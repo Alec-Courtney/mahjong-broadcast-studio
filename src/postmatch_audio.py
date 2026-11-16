@@ -19,16 +19,11 @@ import sys
 import uuid
 import wave
 
-from app_paths import LOCAL_REFERENCE_RESOURCES, ROOT
+from app_paths import ROOT
 
 ASSET_DIR = ROOT / 'resources' / 'postmatch_audio'
 SAMPLE_RATE = 48000
 CHANNELS = 2
-_LOCAL_RECORDING_FRAMES = {
-    'title_axes_reveal': round(.78 * SAMPLE_RATE),
-    'graph_reveal': round(2.667 * SAMPLE_RATE),
-    'layout_sweep': round(1.6 * SAMPLE_RATE),
-}
 ENTRY_DURATION = 5.967
 TRANSITION_DURATION = 3.0
 FADE_OUT = .5
@@ -90,19 +85,16 @@ def _pcm(path, max_seconds=None):
         return result
 
 
-def _local_recordings():
-    """Load optional local cues that fit their time slots and mix limits."""
-    folder = LOCAL_REFERENCE_RESOURCES / 'postmatch_audio'
-    recordings = {}
-    for name, frames in _LOCAL_RECORDING_FRAMES.items():
-        try:
-            samples = _pcm(folder / (name + '.wav'), (frames + 1) / SAMPLE_RATE)
-        except (OSError, EOFError, ValueError, wave.Error):
-            continue
-        peak = max(map(abs, samples), default=0)
-        if len(samples) == frames * CHANNELS and 0 < peak <= EFFECT_PEAK_LIMIT * 32768:
-            recordings[name] = samples
-    return recordings
+def audio_converter():
+    """Prefer the shipped decoder so a clean Windows install is self-contained."""
+    bundled = ROOT / 'resources' / 'audio' / 'ffmpeg.exe'
+    if bundled.is_file():
+        return str(bundled)
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except (ImportError, RuntimeError):
+        return shutil.which('ffmpeg')
 
 
 def _decode_music(path, seconds):
@@ -118,9 +110,9 @@ def _decode_music(path, seconds):
         if not result:
             raise ValueError('背景音乐中没有可用的声音')
         return result
-    converter = shutil.which('ffmpeg')
+    converter = audio_converter()
     if not converter:
-        raise ValueError('此音乐格式需要 ffmpeg；可先选择 48kHz 立体声 PCM WAV')
+        raise ValueError('音频解码组件缺失，请重新运行新版安装包修复')
     command = [converter, '-nostdin', '-hide_banner', '-loglevel', 'error',
                '-i', str(path), '-t', f'{seconds:.6f}', '-vn', '-ac', '2',
                '-ar', str(SAMPLE_RATE), '-f', 's16le', '-']
@@ -265,6 +257,10 @@ class _WaveFormat(ctypes.Structure):
                 ('cbSize', ctypes.c_ushort)]
 
 
+class _WaveTime(ctypes.Structure):
+    _fields_ = [('kind', ctypes.c_uint32), ('value', ctypes.c_uint32), ('reserved', ctypes.c_uint32)]
+
+
 class _WaveHeader(ctypes.Structure):
     _fields_ = [('lpData', ctypes.c_void_p), ('dwBufferLength', ctypes.c_uint32),
                 ('dwBytesRecorded', ctypes.c_uint32), ('dwUser', ctypes.c_size_t),
@@ -280,6 +276,7 @@ class _WaveLoopPlayer:
         self._header = None
         self._buffer = None
         self.paused = False
+        self._offset = 0.
 
     @property
     def active(self):
@@ -300,6 +297,8 @@ class _WaveLoopPlayer:
                 getattr(device, name).argtypes = [ctypes.c_void_p]
                 getattr(device, name).restype = ctypes.c_uint
             device.waveOutOpen.restype = ctypes.c_uint
+            device.waveOutGetPosition.argtypes = [ctypes.c_void_p, ctypes.POINTER(_WaveTime), ctypes.c_uint]
+            device.waveOutGetPosition.restype = ctypes.c_uint
             device.waveOutGetErrorTextW.argtypes = [ctypes.c_uint, ctypes.c_wchar_p, ctypes.c_uint]
             self._device = device
         return self._device
@@ -310,10 +309,12 @@ class _WaveLoopPlayer:
             self._device.waveOutGetErrorTextW(result, detail, len(detail))
             raise RuntimeError(detail.value or ('声音设备错误 '+str(result)))
 
-    def play(self, path):
+    def play(self, path, *, loop=True, position=0.):
         self.close()
         device = self._library()
         samples = _pcm(path)
+        self._offset = max(0., float(position))
+        samples = samples[round(self._offset*SAMPLE_RATE)*CHANNELS:]
         if not samples:
             raise ValueError('背景音乐中没有可用的声音')
         if sys.byteorder != 'little':
@@ -327,8 +328,9 @@ class _WaveLoopPlayer:
         self._handle = handle
         try:
             self._check(device.waveOutPrepareHeader(handle, ctypes.byref(self._header), ctypes.sizeof(_WaveHeader)))
-            self._header.dwFlags |= 0x00000004 | 0x00000008  # WHDR_BEGINLOOP | WHDR_ENDLOOP
-            self._header.dwLoops = 0xFFFFFFFF
+            if loop:
+                self._header.dwFlags |= 0x00000004 | 0x00000008  # WHDR_BEGINLOOP | WHDR_ENDLOOP
+                self._header.dwLoops = 0xFFFFFFFF
             self._check(device.waveOutWrite(handle, ctypes.byref(self._header), ctypes.sizeof(_WaveHeader)))
             self.paused = False
         except Exception:
@@ -339,6 +341,13 @@ class _WaveLoopPlayer:
         if self.active and not self.paused:
             self._check(self._device.waveOutPause(self._handle))
             self.paused = True
+
+    def position(self):
+        if not self.active:return self._offset
+        value = _WaveTime(2,0,0)  # TIME_SAMPLES, with the documented byte/ms alternatives.
+        self._check(self._device.waveOutGetPosition(self._handle,ctypes.byref(value),ctypes.sizeof(value)))
+        seconds = value.value / (SAMPLE_RATE if value.kind==2 else SAMPLE_RATE*CHANNELS*2 if value.kind==4 else 1000)
+        return self._offset + seconds
 
     def resume(self):
         if self.active and self.paused:
@@ -384,6 +393,8 @@ class PostMatchAudio:
         self._effects_finished = False
         self._music_enabled = True
         self._music = _WaveLoopPlayer()
+        self._effects = _WaveLoopPlayer()
+        self._native_effects = False
         self._active_music_path = None
 
     @property
@@ -421,7 +432,6 @@ class PostMatchAudio:
             recordings = {}
             resources = []
             if sfx_enabled and sfx_volume:
-                recordings = _local_recordings()
                 resources = [ASSET_DIR/(cue.name+'.wav') for cue in sound_cues(chart_hold)
                              if cue.name not in recordings]
             metadata = [(str(p), p.stat().st_size, p.stat().st_mtime_ns) for p in resources]
@@ -430,7 +440,7 @@ class PostMatchAudio:
             arguments = dict(chart_hold=chart_hold, stats_hold=stats_hold, music_path=music,
                              music_volume=music_volume, sfx_volume=sfx_volume,
                              music_enabled=music_enabled, sfx_enabled=sfx_enabled)
-            key = hashlib.sha256(json.dumps([8, arguments, fingerprint, metadata], sort_keys=True).encode()).hexdigest()[:24]
+            key = hashlib.sha256(json.dumps([9, arguments, fingerprint, metadata], sort_keys=True).encode()).hexdigest()[:24]
             target = self.cache_dir/(key+'-effects.wav')
             valid = False
             if sfx_enabled and sfx_volume and target.is_file():
@@ -480,18 +490,26 @@ class PostMatchAudio:
         if self._opened_path == self.path:
             return
         if self._opened_path is not None:
-            self._command(f'close {self._alias}')
+            if self._native_effects:self._effects.close()
+            else:self._command(f'close {self._alias}')
             self._opened_path = None
-        self._command(f'open "{self.path}" type waveaudio alias {self._alias}')
+        self._native_effects = False
+        try:
+            self._command(f'open "{self.path}" type waveaudio alias {self._alias}')
+        except (RuntimeError, OSError):
+            # MCI rejects long or Unicode filenames on some Windows systems.
+            # waveOut consumes our decoded PCM buffer directly, with no path parser.
+            self._native_effects = True
         self._opened_path = self.path
-        self._command(f'set {self._alias} time format milliseconds')
+        if not self._native_effects:self._command(f'set {self._alias} time format milliseconds')
 
     def _play_effects(self, position):
         if self.path is None or self._effects_finished:
             return
         self._open()
         self._paused = max(0., min(float(position), self.duration))
-        self._command(f'play {self._alias} from {round(self._paused*1000)}')
+        if self._native_effects:self._effects.play(self.path,loop=False,position=self._paused)
+        else:self._command(f'play {self._alias} from {round(self._paused*1000)}')
         self._playing = True
 
     def play(self, position=0., preserve_music=True):
@@ -519,8 +537,12 @@ class PostMatchAudio:
         try:
             self._music.pause()
             if self.path is not None and self._opened_path is not None and self._playing:
-                self._command(f'pause {self._alias}')
-                self._paused = float(self._command(f'status {self._alias} position'))/1000
+                if self._native_effects:
+                    self._effects.pause()
+                    self._paused = self._effects.position()
+                else:
+                    self._command(f'pause {self._alias}')
+                    self._paused = float(self._command(f'status {self._alias} position'))/1000
                 self._playing = False
             return True
         except Exception as error:
@@ -557,7 +579,8 @@ class PostMatchAudio:
         if self._opened_path is None:
             return True
         try:
-            self._command(f'close {self._alias}')
+            if self._native_effects:self._effects.close()
+            else:self._command(f'close {self._alias}')
             self._opened_path = None
             return True
         except Exception as error:

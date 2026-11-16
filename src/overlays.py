@@ -1503,7 +1503,8 @@ class OverlayManager:
   if sequence==self._riichi_sound_sequence:return
   self._riichi_sound_sequence=sequence
   if sequence is None:self.riichi_audio.stop()
-  else:self.riichi_audio.play(sequence)
+  elif not self.riichi_audio.play(sequence):
+   self.display_configuration.failed.emit(getattr(self.riichi_audio,'error','') or '立直音效播放失败，请检查声音输出设备')
  def _clear_riichi_presentation(self,update_art=True):
   before=self.riichi_display_state();had_holds=bool(self._riichi_holds)
   self.riichi_queue.clear();self._riichi_holds.clear()

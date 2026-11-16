@@ -3,8 +3,11 @@ import os,sys
 # Broadcast capture windows retain physical pixel dimensions across monitor DPI.
 if sys.platform=='win32':os.environ['QT_ENABLE_HIGHDPI_SCALING']='0'
 sys.path.insert(0,str(Path(__file__).parent/'src'))
+if __name__=='__main__' and '--migrate-backups' in sys.argv:
+ from backup_migration import migration_main
+ sys.exit(migration_main(sys.argv[1:]))
 from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QFont,QFontDatabase
+from PySide6.QtGui import QFont,QFontDatabase,QIcon
 from PySide6.QtCore import QLocale,QTranslator,QLibraryInfo
 from model import Model
 from model import ROOT,APP_DIR
@@ -33,6 +36,9 @@ def main():
  parser.add_argument('--ui-only',action='store_true',help='仅使用导播 UI，保存独立工作区，不载入赛事库')
  options,qt_args=parser.parse_known_args()
  QLocale.setDefault(QLocale('zh_CN'));app=QApplication([sys.argv[0],*qt_args]);app.setApplicationName('麻将转播控制台');app.setOrganizationName('LocalStudio')
+ from app_version import VERSION
+ app.setApplicationVersion(VERSION)
+ app.setWindowIcon(QIcon(str(ROOT/'resources/app_icon/mahjong_broadcast.ico')))
  translator=QTranslator(app)
  if translator.load('qtbase_zh_CN',QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):app.installTranslator(translator)
  if sys.platform=='win32':
@@ -52,8 +58,11 @@ def main():
   try:model.event_store.ensure_builtin_demo()
   except (OSError,ValueError) as error:demo_error='无法添加内置演示赛事。'+str(error)
  manager=OverlayManager(model);console=Console(model,manager);console.show()
+ from music_preload import MusicPreloader
+ music_cache=MusicPreloader(model)
  if demo_error:console.error(demo_error)
  result=app.exec()
+ music_cache.close()
  # Finish interrupted camera or recognition calls while Qt is still alive.
  from recognition_source_editor import wait_for_drained_workers
  wait_for_drained_workers()

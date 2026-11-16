@@ -1,5 +1,9 @@
 # Windows 运行库许可 / Windows runtime notices
 
+## 音频解码 / FFmpeg
+
+新版 Windows 包在 `_internal/resources/audio/ffmpeg.exe` 内置 FFmpeg 7.1 essentials（Gyan 构建），通过独立进程解码用户选择的音乐。该二进制来自 `imageio-ffmpeg==0.6.0` Windows wheel；FFmpeg 使用 GPL v3 或后续版本，随包提供 `GPL-3.0-only.txt`。Python 包许可见 `IMAGEIO-FFMPEG-LICENSE.txt`。对应源码、依赖和构建资料：[Gyan FFmpeg 7.1 发布](https://github.com/GyanD/codexffmpeg/releases/tag/7.1)、[FFmpeg 7.1 源码](https://ffmpeg.org/releases/ffmpeg-7.1.tar.xz)、[Gyan 构建资料](https://www.gyan.dev/ffmpeg/builds/)。
+
 ## Qt、PySide6 和 Shiboken
 
 Windows 基础版动态链接 Qt，并使用 Qt for Python 的 PySide6 Essentials 和 Shiboken6。Qt 的版权归 The Qt Company Ltd. 及贡献者所有。项目按 GNU LGPL v3 使用这些组件。LGPL v3 的条款包含 GPL v3，程序包随附两份原文。[LGPL v3](LGPL-3.0-only.txt) · [GPL v3](GPL-3.0-only.txt) · [Qt for Python](https://doc.qt.io/qtforpython-6/) · [PySide6 Essentials 6.12.0](https://pypi.org/project/PySide6-Essentials/6.12.0/)

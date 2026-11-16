@@ -197,7 +197,7 @@ class EventRuleIntegrityTests(unittest.TestCase):
         dialog = self.workspace()
         dialog.event_name.setText('待保存')
         dialog.new_name.setText('不应创建')
-        exported = Path(self.temp.name)/'import.json'
+        exported = Path(self.temp.name)/'import.mjbackup'
         self.model.export_data(exported)
         with patch.object(dialog, 'ask_event_change', return_value=QMessageBox.StandardButton.Cancel), \
              patch.object(self.store, 'create') as create, patch.object(self.store, 'import_new') as import_new, \

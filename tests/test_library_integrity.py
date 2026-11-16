@@ -102,7 +102,7 @@ class LibraryIntegrityTests(unittest.TestCase):
 
     def test_failed_create_or_import_does_not_leave_unlisted_event_snapshots(self):
         model, store = self.model_and_store()
-        exported = self.root/'portable.json'
+        exported = self.root/'portable.mjbackup'
         model.export_data(exported)
         original = model.event['id']
         directories = set((self.root/'events').iterdir())
@@ -216,7 +216,7 @@ class LibraryIntegrityTests(unittest.TestCase):
         source = self.portrait('original.png', '#224466')
         reference = import_media_file(model.path, source, 'photo')
         model.update(lambda state:state['players'][0].update(photo=reference))
-        transfer = self.root/'portable.json'
+        transfer = self.root/'portable.mjbackup'
         model.export_data(transfer)
         target = resolve_media_path(model.path, reference)
         original = target.read_bytes()
@@ -232,7 +232,7 @@ class LibraryIntegrityTests(unittest.TestCase):
         reference = import_media_file(model.path, source, 'photo')
         model.update(lambda state:state['players'][0].update(photo=reference))
         resolve_media_path(model.path, reference).write_bytes(replacement.read_bytes())
-        transfer = self.root/'portable.json'
+        transfer = self.root/'portable.mjbackup'
         with self.assertRaisesRegex(ValueError, '托管媒体素材校验失败'):
             model.export_data(transfer)
         self.assertFalse(transfer.exists())

@@ -479,7 +479,7 @@ def archive_match(s, committed=False):
     b = ensure_broadcast(s)
     if committed:b.pop('result_discarded',None)
     snapshot = dict(id=s['id'], title=s.get('title', ''), committed=committed, hands=copy.deepcopy(b['hands']), results=_match_results(s),
-                    seats=[p['id'] for p in s['players']], initial_scores=b['initial_scores'][:],
+                    seats=[p['id'] for p in s['players']], initial_dealer=s['initialDealer'], initial_scores=b['initial_scores'][:],
                     initial_players=copy.deepcopy(b['initial_players']), partial=b['partial'], config=copy.deepcopy(b['config']))
     if b.get('active_node_id'):snapshot['bracket_node_id']=b['active_node_id']
     index = next((i for i, m in enumerate(b['matches']) if m['id'] == s['id']), None)
@@ -499,6 +499,12 @@ def archive_match(s, committed=False):
         if previous.get('committed') and previous.get('config'):snapshot['config']=copy.deepcopy(previous['config'])
         if previous.get('bracket_node_id'):snapshot['bracket_node_id']=previous['bracket_node_id']
         if 'penalties' in previous:snapshot['penalties']=previous['penalties']
+        if previous.get('final_score_corrected_at'):
+            # A separate confirmed-result correction survives table edits,
+            # starting the next game and ordinary table undo/redo.
+            for key in ('results', 'title', 'initial_dealer', 'final_score_corrected_at',
+                        'hands', 'initial_scores', 'initial_players', 'partial'):
+                if key in previous:snapshot[key]=copy.deepcopy(previous[key])
         initial={p['id']:p for p in previous.get('initial_players',[])}
         legacy_profiles=[{key:result.get(key,initial.get(result['id'],{}).get(key,'')) for key in ('id','name','team','team_id','color','photo','team_logo')} for result in previous['results']]
         snapshot['profiles']=copy.deepcopy(previous.get('profiles') or legacy_profiles)

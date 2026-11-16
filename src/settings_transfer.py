@@ -95,17 +95,17 @@ def event_template(state, settings, event):
 
 
 def export_event_settings(model, filename):
-    from media_store import export_assets
+    from media_store import asset_project_root
+    from backup_package import write_package
 
     data = event_template(model.state, model.settings, model.event)
-    data['assets'] = export_assets(data, model.path)
-    atomic_json(filename, data, max_bytes=MAX_SESSION_BYTES)
+    write_package(filename,data,storage=model.path,source_base=asset_project_root(model.path),kind='settings')
 
 
 def read_event_settings(model, filename):
-    from media_store import decode_assets
+    from backup_package import read_package
 
-    data = _read_json(filename)
+    data,embedded,kind = read_package(filename)
     if data.get('format') == EVENT_FORMAT and type(data.get('version')) is int and data['version'] == 1:
         if not isinstance(data.get('kind'), str) or data['kind'] not in KINDS:
             raise ValueError('赛事设置的比赛类型无效')
@@ -114,8 +114,8 @@ def read_event_settings(model, filename):
                         rules=_select(data.get('rules'), RULE_FIELDS),
                         broadcast=_select(data.get('broadcast'), CONFIG_FIELDS),
                         display=_select(data.get('display'), DISPLAY_FIELDS))
-        return template, decode_assets(data.get('assets', {}))
-    if data.get('version') in (5, 6) and isinstance(data.get('state'), dict):
+        return template, embedded
+    if kind=='event' and data.get('version') in (5, 6) and isinstance(data.get('state'), dict):
         state, settings, _, embedded, event = model.repository.read(filename, observe=False)
         if event:
             return event_template(state, settings, event), embedded

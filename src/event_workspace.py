@@ -197,7 +197,16 @@ class NodeDialog(QDialog):
 class ResultEntryDialog(QDialog):
     def __init__(self,parent,record=None,node=None):
         super().__init__(parent);self.workspace=parent;self.model=parent.model;self.record=record;self.node=node;self.preview=None
-        self.setWindowTitle('补录 / 更正其他桌成绩');self.resize(620,520);layout=QVBoxLayout(self)
+        self.setWindowTitle('半庄成绩更正与逐局收支' if record else '补录其他桌成绩');self.resize(620,560)
+        if record:
+            from hand_history_panel import ArchivedHandHistoryWidget
+            from PySide6.QtWidgets import QTabWidget
+            self.resize(1080,700)
+            outer=QVBoxLayout(self);self.tabs=QTabWidget();outer.addWidget(self.tabs)
+            score_page=QWidget();self.tabs.addTab(score_page,'成绩更正');layout=QVBoxLayout(score_page)
+            self.ledger=ArchivedHandHistoryWidget(self,record);self.tabs.addTab(self.ledger,'逐局收支')
+        else:layout=QVBoxLayout(self)
+        self.event_id=self.model.event['id']
         self.title=QLineEdit(record['title'] if record else node['name'] if node else '补录半庄');layout.addLayout(row('记录标题',self.title))
         self.initial_dealer=choice([(f'席位 {i+1}',i) for i in range(4)]);selected(self.initial_dealer,record.get('initial_dealer',0) if record else 0);layout.addLayout(row('起家',self.initial_dealer));self.initial_dealer.currentIndexChanged.connect(self.invalidate)
         self.seats=[];self.scores=[];self.results=QLabel();self.results.setWordWrap(True)
@@ -218,7 +227,11 @@ class ResultEntryDialog(QDialog):
             score=integer(-1000000000,1000000000,100);score.setValue(scores.get(sources[i],self.model.state['broadcast']['config']['start_points']))
             self.seats.append(combo);self.scores.append(score);form.addRow(f'席位 {i+1}',row(combo,score))
             combo.currentIndexChanged.connect(self.invalidate);score.valueChanged.connect(self.invalidate)
-        layout.addLayout(form);layout.addWidget(note('填写半庄最终持点。补录只增加成绩与顺位，不生成逐局技术统计。总持点应包含终局供托；罚分导致的差额由裁判核实。'))
+        layout.addLayout(form);layout.addWidget(note('填写半庄最终持点并预览积分。总持点应包含终局供托；罚分导致的差额由裁判核实。'))
+        if record and record.get('source')!='manual':
+            layout.addWidget(note('更正仅调整本半庄最终成绩与入账积分，原始逐局收支、技术统计及判罚保留。当前导播台点数不变；与逐局记录不同的部分会标注为终局更正。'))
+        else:layout.addWidget(note('补录只增加成绩与顺位，不生成逐局技术统计。'))
+        self.title.textChanged.connect(self.invalidate)
         layout.addWidget(button('计算并预览积分',self.calculate));layout.addWidget(self.results,1)
         self.error=QLabel();self.error.setWordWrap(True);self.error.setObjectName('error');layout.addWidget(self.error)
         self.confirm=button('确认保存成绩',self.save);self.confirm.setEnabled(False);layout.addLayout(row(button('取消',self.reject),1,self.confirm))
@@ -228,6 +241,9 @@ class ResultEntryDialog(QDialog):
     def calculate(self):
         from event_results import prepare_result
         try:
+            if self.model.event['id']!=self.event_id:raise ValueError('赛事已切换，请重新打开成绩记录')
+            if self.record and next((r for r in self.model.state['broadcast']['matches'] if r['id']==self.record['id']),None)!=self.record:
+                raise ValueError('该半庄记录已改变，请重新打开成绩编辑')
             self.preview=prepare_result(self.model,[w.currentData() for w in self.seats],[w.value() for w in self.scores],
                 node_id=self.node['id'] if self.node else '',match_id=self.record['id'] if self.record else None,title=self.title.text().strip() or '补录半庄',initial_dealer=self.initial_dealer.currentData())
             self.results.setText('\n'.join(f"{r['rank']}位  {r['name']}   {r['score']:,}点   {r['points']:+.1f} pt" for r in self.preview['results']))
@@ -236,6 +252,7 @@ class ResultEntryDialog(QDialog):
     def save(self):
         from event_results import record_result
         try:
+            if self.model.event['id']!=self.event_id:raise ValueError('赛事已切换，请重新打开成绩记录')
             if self.preview is None:raise ValueError('请先预览积分')
             record_result(self.workspace.store,self.preview);self.accept()
         except Exception as error:self.error.setText(str(error))
@@ -265,13 +282,15 @@ class ResultsDialog(QDialog):
         self.status.setWordWrap(True)
         self.status.setProperty('i18n_literal',True)
         layout.addWidget(self.status)
-        self.edit_button=button('更正选中补录成绩',self.edit)
+        self.edit_button=button('更正选中半庄成绩',self.edit)
+        self.history_button=button('查看逐局收支',self.show_hand_history)
         self.edit_time_button=button('修改记录时间',self.edit_record_time)
         self.penalties_button=button('选中半庄的判罚',self.penalties)
         self.delete_button=button('删除选中半庄记录',self.delete)
-        layout.addLayout(row(self.edit_button,self.edit_time_button,self.penalties_button,self.delete_button,1,button('关闭',self.close)))
+        layout.addLayout(row(self.edit_button,self.history_button,self.edit_time_button,self.penalties_button,self.delete_button,1,button('关闭',self.close)))
         self.table.itemSelectionChanged.connect(self.select_record)
         self.table.currentCellChanged.connect(self.select_record)
+        self.table.cellDoubleClicked.connect(lambda *_:self.edit())
         self.workspace.model.changed.connect(self.reload)
         self.reload()
 
@@ -289,7 +308,12 @@ class ResultsDialog(QDialog):
             with QSignalBlocker(self.table):
                 self.table.clearSelection()
                 self.table.setRangeSelected(QTableWidgetSelectionRange(start,0,start+1,self.table.columnCount()-1),True)
-        self.edit_button.setEnabled(bool(record and record.get('source')=='manual'))
+        self.edit_button.setEnabled(record is not None)
+        self.history_button.setEnabled(bool(record and record.get('hands')))
+        self.history_button.setToolTip('查看导播录制的逐局收支和详情；补录成绩没有逐局记录')
+        if record:
+            from event_results import recorded_time
+            self.status.setText(f"已选第 {self.table.currentRow()//2+1} 条：{record.get('title') or '半庄'} · {recorded_time(record)} · "+' / '.join(r['name'] for r in record['results']))
         self.edit_time_button.setEnabled(record is not None)
         self.penalties_button.setEnabled(record is not None)
         self.delete_button.setEnabled(record is not None)
@@ -358,10 +382,17 @@ class ResultsDialog(QDialog):
     def edit(self):
         record=self.selected_record()
         if not record:return
-        if record.get('source')!='manual':self.workspace.status.setText('直播半庄请在导播台更正；此处可更正补录成绩。');return
         dialog=ResultEntryDialog(self.workspace,record=record)
         try:
             if dialog.exec()==QDialog.DialogCode.Accepted:self.reload();self.workspace.refresh_reports();self.workspace.refresh_bracket()
+        finally:dialog.deleteLater()
+
+    def show_hand_history(self):
+        from hand_history_panel import ArchivedHandHistoryDialog
+        record=self.selected_record()
+        if not record:return
+        dialog=ArchivedHandHistoryDialog(self,record,self.workspace.model.settings)
+        try:dialog.exec()
         finally:dialog.deleteLater()
 
     def edit_record_time(self):
@@ -512,7 +543,7 @@ class EventWorkspaceDialog(SettingsWindow):
         return widget.item(index,0).data(Qt.ItemDataRole.UserRole) if index>=0 and widget.item(index,0) else None
     def build_library(self):
         page=self.page();page.addWidget(QLabel('打开赛事，继续上次的比赛和设置'))
-        page.addWidget(note('首次使用可双击列表中的「【演示】」赛事，也可点「导入完整赛事 JSON」选择 demo-suite 文件夹里的示例。计分与试播步骤见「备份与说明」。'))
+        page.addWidget(note('首次使用可双击列表中的「【演示】」赛事，也可点「导入完整赛事备份包」选择 demo-suite 文件夹里的示例。计分与试播步骤见「备份与说明」。'))
         self.library_events = {}
         self.library=table(['赛事名称','赛制','选手','已确认半庄','状态']);self.library.setMinimumHeight(235);page.addWidget(self.library)
         self.library.cellDoubleClicked.connect(lambda *_:self.open_selected())
@@ -520,7 +551,7 @@ class EventWorkspaceDialog(SettingsWindow):
         self.library_delete = button('删除选中赛事', self.delete_selected)
         self.library.currentItemChanged.connect(self.update_library_actions)
         page.addLayout(row(button('打开选中赛事', self.open_selected), self.library_history,
-            button('刷新赛事库', self.refresh_library), button('导入完整赛事 JSON', self.import_event),
+            button('刷新赛事库', self.refresh_library), button('导入完整赛事备份包', self.import_event),
             1, self.library_delete))
         form=QFormLayout();self.new_name=QLineEdit();self.new_name.setPlaceholderText('例如：秋季联赛 · A组');self.new_name.setMaxLength(100)
         self.new_kind=choice([(label,key) for key,label in KINDS.items()])
@@ -631,13 +662,13 @@ class EventWorkspaceDialog(SettingsWindow):
             self._event_context_change.finish(skip=self);self.nav.setCurrentRow(2)
         self.run(create,'新赛事已创建，可在名册中添加选手和选择四席')
     def choose_event_template(self):
-        filename,_=QFileDialog.getOpenFileName(self,tr('选择赛事设置文件'),'','JSON (*.json)')
+        filename,_=QFileDialog.getOpenFileName(self,tr('选择赛事设置文件'),'','赛事备份包 (*.mjbackup)')
         if filename:
             self.settings_file=filename
             self.refresh_library()
             selected(self.settings_source,'file')
     def import_event(self):
-        filename,_=QFileDialog.getOpenFileName(self,'导入为独立赛事','','JSON (*.json)')
+        filename,_=QFileDialog.getOpenFileName(self,'导入为独立赛事','','赛事备份包 (*.mjbackup)')
         if filename and self.prepare_event_change():self.run(lambda:(self.store.import_new(filename),self._event_context_change.finish(skip=self)),'已导入为独立赛事，原赛事已保留')
     def build_general(self):
         self.event_settings_host=QWidget();host_layout=QVBoxLayout(self.event_settings_host);host_layout.setContentsMargins(8,4,8,0)
@@ -665,12 +696,12 @@ class EventWorkspaceDialog(SettingsWindow):
         page.insertWidget(0,transfer);page.addStretch()
     def export_event_template(self):
         filename,_=QFileDialog.getSaveFileName(self,tr('导出赛事设置'),
-            safe_name(self.model.event['name'])+'-赛事设置.json','JSON (*.json)')
+            safe_name(self.model.event['name'])+'-赛事设置.mjbackup','赛事备份包 (*.mjbackup)')
         if filename:
             from settings_transfer import export_event_settings
             self.run(lambda:export_event_settings(self.model,filename),tr('已导出当前赛事的已保存设置'))
     def import_event_template(self):
-        filename,_=QFileDialog.getOpenFileName(self,tr('导入赛事设置'),'','JSON (*.json)')
+        filename,_=QFileDialog.getOpenFileName(self,tr('导入赛事设置'),'','赛事备份包 (*.mjbackup)')
         if filename and self.prepare_event_change():
             from settings_transfer import import_event_settings
             def load():
@@ -1704,14 +1735,14 @@ class EventWorkspaceDialog(SettingsWindow):
         page=self.page()
         page.addWidget(note('练习计分时，先打开演示赛事并返回导播台。在「计分」选择和牌者、和牌方式与番符，荣和还要选择放铳者。核对预览后点「提交结算」。本局结束后点「下一局」，半庄结束后在「半庄管理」记录积分。'))
         page.addWidget(note('要接入 OBS，请在「赛事设置 → 画面与设备 → 播出窗口」点击「导出 OBS 窗口捕获场景」，再在 OBS 的「场景集合 → 导入」选择导出的文件。'))
-        page.addWidget(button('导出完整赛事 JSON（含照片）',self.backup_event));page.addWidget(button('导入为另一个独立赛事',self.import_event))
+        page.addWidget(button('导出完整赛事备份包（含素材）',self.backup_event));page.addWidget(button('导入为另一个独立赛事',self.import_event))
         page.addWidget(button('前往赛事设置文件',lambda:self.select_settings_category('rules')))
-        page.addWidget(note('自动保存目录为 data/events/赛事编号/。完整赛事 JSON 包含规则、名册、比赛进度、榜单配置与淘汰赛程，可用于跨电脑搬移。'))
-        page.addWidget(note('完整备份会嵌入已选用的照片、队徽、标题卡、背景和音乐。分享备份前请核对个人信息和素材授权。只公布成绩时可导出 Excel 或图片。'))
+        page.addWidget(note('自动保存目录为 data/events/赛事编号/。完整赛事备份包 包含规则、名册、比赛进度、榜单配置与淘汰赛程，可用于跨电脑搬移。'))
+        page.addWidget(note('完整备份包将照片、队徽、标题卡、背景和音乐作为独立文件保存。分享备份前请核对个人信息和素材授权。只公布成绩时可导出 Excel 或图片。'))
         self.location=QLabel();self.location.setWordWrap(True);self.location.setProperty('i18n_literal',True);page.addWidget(self.location);page.addStretch()
     def backup_event(self):
-        path,_=QFileDialog.getSaveFileName(self,'备份完整赛事',str(self.export_dir()/(safe_name(self.model.event['name'])+'.json')),'JSON (*.json)')
-        if path:self.run(lambda:self.model.export_data(path),'完整赛事已导出，包含照片与赛事设置')
+        path,_=QFileDialog.getSaveFileName(self,'备份完整赛事',str(self.export_dir()/(safe_name(self.model.event['name'])+'.mjbackup')),'赛事备份包 (*.mjbackup)')
+        if path:self.run(lambda:self.model.export_data(path),'完整赛事备份包已导出，包含音乐、照片与赛事设置')
     def ensure_event_settings(self):
         factory=getattr(self.main,'broadcast_panel',None)
         if self.broadcast_settings is not None or factory is None:

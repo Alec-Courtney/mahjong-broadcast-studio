@@ -318,7 +318,7 @@ class TeamSeatSelectionTests(unittest.TestCase):
         logo = self.model.state['broadcast']['teams'][team_ids[0]]['team_logo']
         self.assertTrue(resolve_media_path(self.model.path,logo).is_file())
         self.assertFalse(any(p.get('team_id') for p in self.model.state['broadcast']['roster']))
-        portable = self.root/'empty-team.json'
+        portable = self.root/'empty-team.mjbackup'
         self.model.export_data(portable)
         saved, _, _, embedded, _ = self.model.read_data(portable)
         self.assertEqual(saved['broadcast']['teams'][team_ids[0]]['team_logo'], logo)

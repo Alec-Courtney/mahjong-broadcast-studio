@@ -21,6 +21,7 @@ from identity_media import load_identity_image
 from match_opening import prepare_opening
 from media_store import archive_import_file,import_media_file,resolve_media_path
 from model import Model
+from backup_test_support import read_document, write_document
 from postmatch_player import PostMatchPlayback
 from session_repository import atomic_json
 
@@ -76,6 +77,21 @@ class ManagedMediaTests(unittest.TestCase):
         return dict(photo=self.model.state['players'][0]['photo'],team_logo=self.model.state['players'][0]['team_logo'],
                     corner_logo=config['corner_logo'],postmatch_music_path=config['postmatch_music_path'],
                     postmatch_background_path=config['postmatch_background_path'],opening_title=config['opening_title'])
+
+    def test_repeat_imports_and_score_or_volume_edits_do_not_duplicate_source_media(self):
+        refs=self.import_all()
+        def files():return {p.relative_to(self.project).as_posix():(p.stat().st_size,p.stat().st_mtime_ns,hashlib.sha256(p.read_bytes()).hexdigest())
+                           for p in (self.project/'assets/imported').rglob('*') if p.is_file()}
+        first=files()
+        for index in range(3):
+            self.assertEqual(self.import_all(),refs)
+            self.model.set_score(0,26000+index*100)
+            self.model.configure_postmatch({'postmatch_music_volume':.4+index*.1})
+        self.assertEqual(files(),first)
+        target=self.root/'same.mjbackup'
+        for _ in range(3):self.model.export_data(target)
+        self.assertEqual(list(self.root.glob('*.mjbackup')),[target])
+        self.assertEqual(files(),first)
 
     def test_all_selected_media_use_one_fixed_project_library_and_survive_source_removal(self):
         store=EventStore(self.model)
@@ -140,8 +156,8 @@ class ManagedMediaTests(unittest.TestCase):
         self.assertTrue(resolve_media_path(restarted.path,refs['postmatch_music_path']).is_file())
 
     def test_json_transfer_embeds_music_background_logo_and_archives_original_json(self):
-        refs=self.import_all();target=self.root/'transfer.json';self.model.export_data(target)
-        original=target.read_bytes();payload=json.loads(original)
+        refs=self.import_all();target=self.root/'transfer.mjbackup';self.model.export_data(target)
+        original=target.read_bytes();payload=read_document(target)
         self.assertEqual(len(payload['assets']),5)
         self.assertTrue(set(refs.values())<=payload['assets'].keys())
         self.move_directory(self.project,self.root/'source-project-offline')
@@ -149,11 +165,11 @@ class ManagedMediaTests(unittest.TestCase):
         destination=self.root/'destination';restored=Model(destination/'data',asset_root=destination)
         restored.import_data(target)
         for reference in refs.values():self.assertTrue(resolve_media_path(restored.path,reference).is_file())
-        retained=list((destination/'assets'/'imported'/'documents').glob('*.json'))
+        retained=list((destination/'assets'/'imported'/'documents').glob('*.mjbackup'))
         self.assertEqual(len(retained),1);self.assertEqual(retained[0].read_bytes(),original)
         store=EventStore(restored);store.import_new(target)
         self.assertTrue(resolve_media_path(restored.path,refs['postmatch_music_path']).is_file())
-        self.assertEqual(len(list((destination/'assets'/'imported'/'documents').glob('*.json'))),1)
+        self.assertEqual(len(list((destination/'assets'/'imported'/'documents').glob('*.mjbackup'))),1)
         target.unlink();self.assertIsNotNone(corner_logo(restored,refs['corner_logo']))
 
     def test_legacy_relative_media_are_resolved_before_original_json_is_archived(self):
@@ -162,13 +178,15 @@ class ManagedMediaTests(unittest.TestCase):
         state['broadcast']['config'].update(corner_logo=self.logo.name,postmatch_background_path=self.background.name,
                                             postmatch_music_path=self.music.name)
         source=self.sources/'legacy.json';atomic_json(source,self.model.repository.payload(state,{},None))
-        original=source.read_bytes();self.model.import_data(source)
+        from backup_package import convert_legacy
+        original=source.read_bytes();converted=convert_legacy(source);converted_bytes=converted.read_bytes();self.model.import_data(converted)
+        self.assertEqual(source.read_bytes(),original)
         self.move_directory(self.sources,self.root/'external-offline')
         config=self.model.state['broadcast']['config']
         self.assertIsNotNone(corner_logo(self.model,config['corner_logo']))
         self.assertTrue(resolve_media_path(self.model.path,config['postmatch_music_path']).is_file())
-        retained=list((self.project/'assets'/'imported'/'documents').glob('*.json'))
-        self.assertEqual(retained[0].read_bytes(),original)
+        retained=list((self.project/'assets'/'imported'/'documents').glob('*.mjbackup'))
+        self.assertEqual(retained[0].read_bytes(),converted_bytes)
 
     def test_original_photo_is_retained_before_any_cropping(self):
         original=self.portrait.read_bytes();reference=archive_import_file(self.model.path,self.portrait,category='images')
@@ -192,19 +210,18 @@ class ManagedMediaTests(unittest.TestCase):
             self.model.configure_postmatch({'postmatch_music_path':str(self.music)})
             reference=self.model.state['broadcast']['config']['postmatch_music_path']
             self.assertTrue(resolve_media_path(self.model.path,reference).is_file())
-            with self.assertRaisesRegex(ValueError,'素材总大小'):
-                self.model.export_data(self.root/'too-large.json')
-        self.assertFalse((self.root/'too-large.json').exists())
+            self.model.export_data(self.root/'too-large.mjbackup')
+        self.assertTrue((self.root/'too-large.mjbackup').is_file())
 
     def test_rejected_or_failed_import_does_not_replace_state_or_history(self):
-        self.import_all();target=self.root/'transfer.json';self.model.export_data(target)
+        self.import_all();target=self.root/'transfer.mjbackup';self.model.export_data(target)
         before=copy.deepcopy((self.model.state,self.model.settings,self.model.undo,self.model.redo,self.model.last_transition))
         with patch.object(self.model.repository,'save',side_effect=OSError('disk unavailable')):
             with self.assertRaises(OSError):self.model.import_data(target)
         self.assertEqual((self.model.state,self.model.settings,self.model.undo,self.model.redo,self.model.last_transition),before)
-        payload=json.loads(target.read_text(encoding='utf-8'))
+        payload=read_document(target)
         music_key=next(key for key in payload['assets'] if '/music/' in key)
-        payload['assets'][music_key]['sha256']='bad';target.write_text(json.dumps(payload),encoding='utf-8')
+        payload['assets'][music_key]['sha256']='bad';write_document(target,payload)
         with self.assertRaisesRegex(ValueError,'校验'):self.model.import_data(target)
         self.assertEqual((self.model.state,self.model.settings,self.model.undo,self.model.redo,self.model.last_transition),before)
 

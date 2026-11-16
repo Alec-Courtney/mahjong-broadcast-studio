@@ -6,7 +6,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import wave
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
@@ -54,6 +54,7 @@ class SettingsPreviewTests(unittest.TestCase):
         panel = self.dialog
         preview = panel.riichi_preview
         self.assertIsNone(preview.snapshot)
+
         selected(panel.riichi_preview_seat, 2)
         self.assertFalse(preview.timer.isActive())
         before = copy.deepcopy(self.model.state)
@@ -81,6 +82,17 @@ class SettingsPreviewTests(unittest.TestCase):
         self.store.create('另一场赛事', 'team_league')
         self.assertFalse(preview.timer.isActive())
         self.assertIsNone(preview.snapshot)
+
+    def test_existing_riichi_preview_also_auditions_audio_without_a_separate_button(self):
+        from PySide6.QtWidgets import QPushButton
+        audio=Mock();audio.play.return_value=True
+        before=copy.deepcopy(self.model.state)
+        with patch('riichi_audio.RiichiAudio',return_value=audio):
+            self.dialog.riichi_preview_button.click()
+            audio.play.assert_called_once_with(1)
+            self.dialog.stop_riichi_preview();audio.stop.assert_called()
+        self.assertEqual(self.model.state,before)
+        self.assertFalse(any(b.text()=='试听立直音效' for b in self.dialog.findChildren(QPushButton)))
 
     def test_qualification_preview_renders_pending_title_manual_content_and_layout(self):
         panel = self.dialog

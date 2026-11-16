@@ -7,6 +7,7 @@ from PySide6.QtCore import QPoint,Qt
 from PySide6.QtGui import QImage,QColor
 from PySide6.QtWidgets import QApplication
 from model import Model
+from backup_test_support import read_document, write_document
 from media_store import resolve_media_path
 from overlays import OverlayManager
 from console import Console,LayoutDialog
@@ -32,16 +33,16 @@ class EventStorageTests(unittest.TestCase):
   source=self.photo();self.assign(source);reference=self.model.state['players'][0]['photo']
   self.assertTrue(reference.startswith('assets/imported/images/'));self.assertTrue(resolve_media_path(self.model.path,reference).is_file())
   self.model.settle(dict(type='ron',winner=1,loser=0,han=3,fu=30),None);self.model.commit_match()
-  before=copy.deepcopy(self.model.state);target=self.root/'event.json';self.model.export_data(target)
-  data=json.loads(target.read_text(encoding='utf-8'));self.assertEqual(len(data['assets']),1)
+  before=copy.deepcopy(self.model.state);target=self.root/'event.mjbackup';self.model.export_data(target)
+  data=read_document(target);self.assertEqual(len(data['assets']),1)
   source.unlink();resolve_media_path(self.model.path,reference).unlink()
   relocated=Model(self.root/'other');relocated.import_data(target)
   self.assertEqual(relocated.state,before);self.assertFalse(QImage(str(relocated.path/reference)).isNull())
   restarted=Model(relocated.path);self.assertEqual(restarted.state,before)
  def test_corrupt_asset_rejected_without_changing_session(self):
-  self.assign(self.photo());target=self.root/'event.json';self.model.export_data(target)
-  payload=json.loads(target.read_text(encoding='utf-8'));next(iter(payload['assets'].values()))['sha256']='bad'
-  target.write_text(json.dumps(payload),encoding='utf-8');before=copy.deepcopy(self.model.state)
+  self.assign(self.photo());target=self.root/'event.mjbackup';self.model.export_data(target)
+  payload=read_document(target);next(iter(payload['assets'].values()))['sha256']='bad'
+  write_document(target,payload);before=copy.deepcopy(self.model.state)
   with self.assertRaisesRegex(ValueError,'校验'):self.model.import_data(target)
   self.assertEqual(self.model.state,before)
  def test_old_records_keep_profile_snapshot_after_live_rename_and_rephoto(self):
@@ -57,8 +58,8 @@ class EventStorageTests(unittest.TestCase):
   self.assertEqual(result['name'],'测试选手');self.assertEqual(result['photo'],photo)
  def test_missing_photo_is_reported_at_export(self):
   self.model.update(lambda state:state['players'][0].update(photo='missing.png'))
-  with self.assertRaisesRegex(ValueError,'照片文件缺失'):self.model.export_data(self.root/'bad.json')
-  self.assertFalse((self.root/'bad.json').exists())
+  with self.assertRaisesRegex(ValueError,'照片文件缺失'):self.model.export_data(self.root/'bad.mjbackup')
+  self.assertFalse((self.root/'bad.mjbackup').exists())
  def test_complete_leagues_have_photos_and_recorded_data_for_every_player(self):
   for scenario,players,matches in [('team_complete',40,50),('individual_complete',16,20)]:
    load_into(self.model,scenario);state=self.model.state;broadcast=state['broadcast']
@@ -140,8 +141,8 @@ class LayoutTypographyTests(unittest.TestCase):
   self.model.setting('locked',True);before=self.manager.player_group_snapshot();window.wheelEvent(wheel);window.mousePressEvent(press);window.mouseMoveEvent(move)
   self.assertEqual(self.manager.player_group_snapshot(),before)
  def test_invalid_font_settings_do_not_replace_event(self):
-  target=Path(self.tmp.name)/'event.json';self.model.export_data(target);data=json.loads(target.read_text(encoding='utf-8'));data['settings']['overlay_font_scale']=4
-  target.write_text(json.dumps(data),encoding='utf-8');before=copy.deepcopy(self.model.state)
+  target=Path(self.tmp.name)/'event.mjbackup';self.model.export_data(target);data=read_document(target);data['settings']['overlay_font_scale']=4
+  write_document(target,data);before=copy.deepcopy(self.model.state)
   with self.assertRaisesRegex(ValueError,'字号'):self.model.import_data(target)
   self.assertEqual(self.model.state,before)
 
