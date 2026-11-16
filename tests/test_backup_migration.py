@@ -10,6 +10,7 @@ os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'src'))
 from PySide6.QtWidgets import QApplication
 from backup_migration import migrate_installation
+from app_version import VERSION
 from backup_package import read_package,json_bytes
 from event_store import EventStore
 from model import Model
@@ -42,4 +43,4 @@ class BackupMigrationTests(unittest.TestCase):
             result=migrate_installation(root)
             self.assertEqual(len(result['errors']),1);self.assertEqual(result['errors'][0]['file'],'missing.json')
             self.assertEqual(old.read_bytes(),raw);self.assertFalse(old.with_suffix('.mjbackup').exists())
-            self.assertTrue((root/'data/backup-migration-0.1.4.json').is_file())
+            self.assertTrue((root/'data'/('backup-migration-'+VERSION+'.json')).is_file())

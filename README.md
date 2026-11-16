@@ -8,11 +8,11 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 
 ### 下载 Windows 安装版
 
-**[下载 0.1.4 安装程序](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.4/MahjongOverlayStudio-0.1.4-Setup.exe)** · [完整更新包](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.4) · [更新与迁移说明](docs/releases/v0.1.4.md)
+**[下载 0.1.3-preview 安装程序](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.3-preview/MahjongOverlayStudio-0.1.3-preview-Setup.exe)** · [完整更新包](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.3-preview) · [更新与迁移说明](docs/releases/v0.1.3-preview.md)
 
 运行安装程序即可安装或更新。已有安装版会自动识别原目录，保留新增赛事与素材；请在直播结束后退出程序再更新。导入素材仍托管到安装目录的 `assets/imported/`，本地实时存档继续兼容比分监听助手。
 
-0.1.4 对外迁移改用 `.mjbackup`，图片和音乐独立存放在包内。安装包在更新时自动把安装目录内的旧赛事 JSON 转成原路径同名包，原文件保留；需要一并转换的外部旧备份可先放到原安装目录的 `legacy-backups/` 后再更新，没有程序内手动转换入口。日常操作不会自动新增备份包。[备份包结构](docs/BACKUP_PACKAGE_FORMAT.md)
+0.1.3-preview 对外迁移改用 `.mjbackup`，图片和音乐独立存放在包内。安装包在更新时自动把安装目录内的旧赛事 JSON 转成原路径同名包，原文件保留；需要一并转换的外部旧备份可先放到原安装目录的 `legacy-backups/` 后再更新，没有程序内手动转换入口。日常操作不会自动新增备份包。[备份包结构](docs/BACKUP_PACKAGE_FORMAT.md)
 
 ### 从源码启动
 

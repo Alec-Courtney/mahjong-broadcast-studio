@@ -66,7 +66,7 @@ def build(output, compiler=None):
         else:shutil.copyfile(ROOT/'demo-suite'/name,target)
     shutil.copyfile(ROOT/'resources/demo/roster.json',bundle/'demo-suite/roster.json')
     documentation=bundle/'docs';documentation.mkdir(exist_ok=True)
-    for path in (ROOT/'docs/releases/v0.1.4.md',ROOT/'docs/BACKUP_PACKAGE_FORMAT.md'):
+    for path in (ROOT/('docs/releases/v'+VERSION+'.md'),ROOT/'docs/BACKUP_PACKAGE_FORMAT.md'):
         shutil.copyfile(path,documentation/path.name)
     manifest = dict(version=VERSION,events_bundled=False,files={})
     for path in sorted(bundle.rglob('*')):
@@ -74,7 +74,8 @@ def build(output, compiler=None):
     (output/'bundle-manifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
     if compiler is not None:
         subprocess.run([str(compiler.resolve()),'/DProjectRoot='+str(ROOT),'/DBundleDir='+str(bundle),
-                        '/DOutputDir='+str(output),'/DAppVersion='+VERSION,str(ROOT/'scripts/windows-installer.iss')],check=True)
+                        '/DOutputDir='+str(output),'/DAppVersion='+VERSION,
+                        '/DVersionInfoVersion='+VERSION.split('-')[0]+'.0',str(ROOT/'scripts/windows-installer.iss')],check=True)
 
 
 if __name__=='__main__':

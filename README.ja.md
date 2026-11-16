@@ -1,6 +1,6 @@
 # Mahjong Broadcast Studio
 
-> Windows 0.1.4: [Installer](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.4/MahjongOverlayStudio-0.1.4-Setup.exe) · [Automatic migration](docs/releases/v0.1.4.md). The installer automatically converts existing legacy event JSON in place; portable transfers now use `.mjbackup`; local `session.json` remains compatible with score listeners.
+> Windows 0.1.3-preview: [Installer](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.3-preview/MahjongOverlayStudio-0.1.3-preview-Setup.exe) · [Automatic migration](docs/releases/v0.1.3-preview.md). The installer automatically converts existing legacy event JSON in place; portable transfers now use `.mjbackup`; local `session.json` remains compatible with score listeners.
 [简体中文](README.md) · [English](README.en.md) · **日本語**
 
 リーチ麻雀大会の配信と OBS へのオーバーレイ出力に使える Windows アプリです。Python と PySide6 で構築しています。配信操作画面で対局の進行と画面表示を操作し、大会管理画面で選手名簿、対局日程、順位表、成績の出力を管理できます。

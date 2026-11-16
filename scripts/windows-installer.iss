@@ -3,6 +3,7 @@
 AppId={{958755AD-379A-4C80-A9F5-CB1F3DE54FA9}
 AppName=Mahjong Broadcast Studio
 AppVersion={#AppVersion}
+VersionInfoVersion={#VersionInfoVersion}
 AppPublisher=Mahjong Broadcast Studio
 DefaultDirName={localappdata}\Programs\MahjongBroadcastStudio
 DefaultGroupName=Mahjong Broadcast Studio
@@ -84,6 +85,6 @@ begin
                 SW_HIDE, ewWaitUntilTerminated, ConversionExit) then
       RaiseException('Unable to run backup migration. Existing JSON files were preserved.');
     if ConversionExit <> 0 then
-      RaiseException('Some legacy backups could not be converted. Existing JSON files were preserved. See data\backup-migration-0.1.4.json.');
+      RaiseException('Some legacy backups could not be converted. Existing JSON files were preserved. See data\backup-migration-{#AppVersion}.json.');
   end;
 end;
