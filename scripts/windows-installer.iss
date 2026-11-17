@@ -68,7 +68,6 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   AppDir, BackupDir: String;
-  ConversionExit: Integer;
 begin
   if CurStep = ssInstall then begin
     AppDir := ExpandConstant('{app}');
@@ -78,13 +77,5 @@ begin
       BackupTree(AppDir + '\data', BackupDir + '\data');
       BackupTree(AppDir + '\assets\imported', BackupDir + '\assets\imported');
     end;
-  end;
-  if CurStep = ssPostInstall then begin
-    AppDir := ExpandConstant('{app}');
-    if not Exec(AppDir + '\MahjongOverlayStudio.exe', '--migrate-backups --root "' + AppDir + '"', AppDir,
-                SW_HIDE, ewWaitUntilTerminated, ConversionExit) then
-      RaiseException('Unable to run backup migration. Existing JSON files were preserved.');
-    if ConversionExit <> 0 then
-      RaiseException('Some legacy backups could not be converted. Existing JSON files were preserved. See data\backup-migration-{#AppVersion}.json.');
   end;
 end;

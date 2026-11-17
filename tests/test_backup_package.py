@@ -47,7 +47,7 @@ class BackupPackageTests(unittest.TestCase):
 
     def test_converter_writes_sibling_preserves_original_and_new_app_rejects_legacy(self):
         path=self.legacy();raw=path.read_bytes()
-        with self.assertRaisesRegex(ValueError,'转换'):self.model.import_data(path)
+        with self.assertRaisesRegex(ValueError,r'\.mjbackup'):self.model.import_data(path)
         target=convert_legacy(path)
         self.assertEqual(target,path.with_suffix('.mjbackup'));self.assertEqual(path.read_bytes(),raw)
         state,_,_,_,_=self.model.read_data(target);self.assertEqual(state,self.model.state)
@@ -79,7 +79,7 @@ class BackupPackageTests(unittest.TestCase):
         music=self.root/'large.wav'
         with wave.open(str(music),'wb') as f:
             f.setparams((2,2,48000,0,'NONE','not compressed'))
-            for _ in range(34):f.writeframes(b'\0'*(1024*1024))
+            for _ in range(56):f.writeframes(b'\0'*(1024*1024))
         self.model.configure_postmatch({'postmatch_music_path':str(music)})
         self.model.update(lambda s:s['players'][0].update(photo=str(self.picture())))
         backup=self.root/'large.mjbackup';self.model.export_data(backup)
@@ -88,7 +88,7 @@ class BackupPackageTests(unittest.TestCase):
         data,assets,_=read_package(backup);self.assertEqual(len(assets),2)
         key=data['state']['broadcast']['config']['postmatch_music_path']
         self.assertEqual(hashlib.sha256(assets[key]).hexdigest(),Path(key).stem)
-        self.assertGreater(len(assets[key]),32*1024**2)
+        self.assertGreater(len(assets[key]),50_000_000)
         # Remove every original source and still import a complete independent event.
         import shutil
         shutil.rmtree(self.root/'source');music.unlink();(self.root/'portrait.png').unlink()

@@ -1,6 +1,6 @@
 # Mahjong Broadcast Studio
 
-> Windows 0.1.3-preview: [Installer](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.3-preview/MahjongOverlayStudio-0.1.3-preview-Setup.exe) · [Automatic migration](docs/releases/v0.1.3-preview.md). The installer automatically converts existing legacy event JSON in place; portable transfers now use `.mjbackup`; local `session.json` remains compatible with score listeners.
+> Windows 0.1.3-preview: [Installer](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.3-preview/MahjongOverlayStudio-0.1.3-preview-Setup.exe) · [Update guide](docs/releases/v0.1.3-preview.md). Backups now separate event data and media in `.mjbackup`, resolving import/export failures for legacy JSON backups over 50 MB. Export creates a backup package; import restores event data and media.
 [简体中文](README.md) · [English](README.en.md) · **日本語**
 
 リーチ麻雀大会の配信と OBS へのオーバーレイ出力に使える Windows アプリです。Python と PySide6 で構築しています。配信操作画面で対局の進行と画面表示を操作し、大会管理画面で選手名簿、対局日程、順位表、成績の出力を管理できます。
@@ -34,7 +34,7 @@
 
 ## デモ大会をインポートする
 
-大会管理の大会一覧（「赛事管理 → 赛事库」）で「导入完整赛事 JSON」を押し、以下のファイルを選びます。どの JSON にも選手の肖像が含まれており、それぞれ独立した大会として追加されます。[デモの説明](demo-suite/README.md)
+大会管理の大会一覧（「赛事管理 → 赛事库」）で「导入完整赛事备份包」を押し、インストール先の `demo-suite/` にある `.mjbackup` を選びます。以下の JSON はデモの元データです。[デモの説明](demo-suite/README.md)
 
 - チームリーグは10チーム・40名で、終了した50半荘の記録があります。個人・チーム順位、局ごとの記録、選手の統計を確認できます。[チームリーグの JSON](demo-suite/team-league-demo.json)
 - 個人リーグは16名で、終了した20半荘の成績、個人順位、選手の統計を確認できます。[個人リーグの JSON](demo-suite/individual-league-demo.json)

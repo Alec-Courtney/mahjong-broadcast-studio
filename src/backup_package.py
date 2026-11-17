@@ -169,7 +169,7 @@ class PackageAssets(Mapping):
 
 def read_package(filename):
     source=Path(filename)
-    if source.suffix.lower()!=EXTENSION:raise ValueError('新版只导入 .mjbackup 备份包；请先用转换工具转换旧 JSON')
+    if source.suffix.lower()!=EXTENSION:raise ValueError('请选择 .mjbackup 格式的完整赛事备份包')
     try:
         with zipfile.ZipFile(source) as z:
             infos=z.infolist();names=[i.filename for i in infos]

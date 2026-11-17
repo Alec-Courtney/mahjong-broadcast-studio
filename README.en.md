@@ -1,6 +1,6 @@
 # Mahjong Broadcast Studio
 
-> Windows 0.1.3-preview: [Installer](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.3-preview/MahjongOverlayStudio-0.1.3-preview-Setup.exe) · [Automatic migration](docs/releases/v0.1.3-preview.md). The installer automatically converts existing legacy event JSON in place; portable transfers now use `.mjbackup`; local `session.json` remains compatible with score listeners.
+> Windows 0.1.3-preview: [Installer](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.3-preview/MahjongOverlayStudio-0.1.3-preview-Setup.exe) · [Update guide](docs/releases/v0.1.3-preview.md). Backups now separate event data and media in `.mjbackup`, resolving import/export failures for legacy JSON backups over 50 MB. Export creates a backup package; import restores event data and media.
 [简体中文](README.md) · **English** · [日本語](README.ja.md)
 
 A Windows desktop app for riichi mahjong broadcasts and OBS overlays, built with Python and PySide6. The broadcast desk handles live table input and cues. The event workspace manages rosters, schedules, standings, and exports.
@@ -34,7 +34,7 @@ The interface supports Simplified Chinese and Japanese. Choose a language in **S
 
 ## Import a demo event
 
-In **Event Management → Event Library** (`赛事管理 → 赛事库`), click **Import Full Event JSON** (`导入完整赛事 JSON`) and choose one of the files below. Each JSON includes its player portraits and imports as a separate event. [Demo guide](demo-suite/README.md)
+In **Event Management → Event Library** (`赛事管理 → 赛事库`), click **Import Full Event Backup** (`导入完整赛事备份包`) and choose a `.mjbackup` example from the installed `demo-suite/` folder. The source JSON files below are demo templates. [Demo guide](demo-suite/README.md)
 
 - The team league has 10 teams, 40 players, and 50 archived hanchan. It includes team and individual standings, hand records, and player statistics. [Team league JSON](demo-suite/team-league-demo.json)
 - The individual league has 16 players and 20 archived hanchan, with player standings, match results, and player statistics. [Individual league JSON](demo-suite/individual-league-demo.json)

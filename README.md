@@ -12,7 +12,7 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 
 运行安装程序即可安装或更新。已有安装版会自动识别原目录，保留新增赛事与素材；请在直播结束后退出程序再更新。导入素材仍托管到安装目录的 `assets/imported/`，本地实时存档继续兼容比分监听助手。
 
-0.1.3-preview 对外迁移改用 `.mjbackup`，图片和音乐独立存放在包内。安装包在更新时自动把安装目录内的旧赛事 JSON 转成原路径同名包，原文件保留；需要一并转换的外部旧备份可先放到原安装目录的 `legacy-backups/` 后再更新，没有程序内手动转换入口。日常操作不会自动新增备份包。[备份包结构](docs/BACKUP_PACKAGE_FORMAT.md)
+0.1.3-preview 调整赛事备份文件结构，将数据与素材分开保存，解决旧版单个 JSON 备份超过 50 MB 时无法导入、导出的问题。导出备份时生成 `.mjbackup`，导入时还原赛事与素材。[备份包结构](docs/BACKUP_PACKAGE_FORMAT.md)
 
 ### 从源码启动
 
@@ -30,7 +30,7 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 
 ## 导入演示赛事
 
-安装版 `demo-suite/` 提供可直接导入的 `.mjbackup` 示例。在「赛事管理 → 赛事库」点击「导入完整赛事备份包」。以下源码 JSON 作为演示底稿保留，可放入安装目录的 `legacy-backups/` 后重新运行安装更新，静默生成同名包再导入，导入后会新增一场独立赛事。[演示说明](demo-suite/README.md)
+安装版 `demo-suite/` 提供可直接导入的 `.mjbackup` 示例。在「赛事管理 → 赛事库」点击「导入完整赛事备份包」。源码中的 JSON 作为演示底稿保留；安装版附带可直接导入的备份包，导入后新增一场独立赛事。[演示说明](demo-suite/README.md)
 
 - 团队积分赛包含 10 队 40 人和 50 个已归档半庄，可查看个人与团队积分、逐局记录和技术统计。[团队赛 JSON](demo-suite/team-league-demo.json)
 - 个人积分赛包含 16 人和 20 个已归档半庄，可查看个人榜单、历场结果和技术统计。[个人赛 JSON](demo-suite/individual-league-demo.json)

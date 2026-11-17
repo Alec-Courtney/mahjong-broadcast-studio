@@ -3,9 +3,6 @@ import os,sys
 # Broadcast capture windows retain physical pixel dimensions across monitor DPI.
 if sys.platform=='win32':os.environ['QT_ENABLE_HIGHDPI_SCALING']='0'
 sys.path.insert(0,str(Path(__file__).parent/'src'))
-if __name__=='__main__' and '--migrate-backups' in sys.argv:
- from backup_migration import migration_main
- sys.exit(migration_main(sys.argv[1:]))
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont,QFontDatabase,QIcon
 from PySide6.QtCore import QLocale,QTranslator,QLibraryInfo
