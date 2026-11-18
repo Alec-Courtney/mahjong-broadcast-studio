@@ -22,8 +22,25 @@ def palette(settings):
     return PALETTES.get(settings.get('console_theme'), PALETTES['dark'])
 
 
-def stylesheet(settings):
+def stylesheet(settings, *, control_font_height=None):
     c = dict(palette(settings))
+    size_settings = settings if control_font_height is not None else {}
+    from typography import desk_length
+
+    def length(value, minimum=0):
+        return desk_length(value, size_settings, minimum)
+
+    font_height = control_font_height or 0
+    field_y = length(2, 1)
+    c.update(field_x=length(7, 4), field_y=field_y,
+             field_min=max(font_height, length(28, 22)),
+             primary_min=max(font_height, length(32, 24)),
+             choice_x=length(4, 3), choice_y=length(3, 2),
+             panel_padding=length(6, 3), dock_padding=length(7, 4),
+             spin_min=max(font_height, length(30, 23)),
+             step_width=length(28, 19), step_arrow=length(16, 11))
+    c['step_gutter'] = 2 * c['step_width'] + length(4, 3)
+
     controls = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parents[1])) / 'resources' / 'controls'
     theme = 'light' if settings.get('console_theme') == 'light' else 'dark'
     for symbol in ('plus', 'minus'):
@@ -37,8 +54,10 @@ QWidget#consoleHeader{background:%(panel)s;border-bottom:1px solid %(border)s}
 QGroupBox{background:%(panel)s;border:1px solid %(border)s;border-radius:6px;margin-top:12px;padding:12px 9px 8px}
 QGroupBox::title{subcontrol-origin:margin;left:12px;padding:0 5px;color:%(muted)s}
 QGroupBox[tileTarget="true"]{border:2px solid %(accent)s}
-QGroupBox[panelBody="true"]{margin-top:0;padding:6px;border-radius:4px}
-QPushButton,QComboBox,QSpinBox,QDoubleSpinBox,QDateTimeEdit,QLineEdit,QKeySequenceEdit{border:1px solid %(border)s;border-radius:4px;background:%(field)s;color:%(text)s;min-height:28px;padding:2px 7px}
+QGroupBox[panelBody="true"]{margin-top:0;padding:%(panel_padding)dpx;border-radius:4px}
+QGroupBox#doraPanel[panelBody="true"]{padding-top:0;padding-bottom:0}
+QPushButton,QComboBox,QSpinBox[buttonSymbols="PlusMinus"],QSpinBox[buttonSymbols="UpDownArrows"],QDoubleSpinBox,QDateTimeEdit,QLineEdit,QKeySequenceEdit{border:1px solid %(border)s;border-radius:4px;background:%(field)s;color:%(text)s;min-height:%(field_min)dpx;padding:%(field_y)dpx %(field_x)dpx}
+QPushButton[compactButton="true"]{min-height:%(field_min)dpx;padding:%(choice_y)dpx %(choice_x)dpx}
 QPushButton:hover{background:%(hover)s;border-color:%(accent)s}
 QPushButton:checked{background:%(selected)s;border-color:%(accent)s}
 QPushButton:disabled{color:%(muted)s;background:%(panel)s}
@@ -55,7 +74,7 @@ QToolButton#handEditAction,QToolButton#handEditApply{background:%(field)s;color:
 QToolButton#handEditAction:hover{background:%(hover)s;border-color:%(accent)s}
 QToolButton#handEditApply{background:%(primary)s;color:white;border-color:%(primary)s;font-weight:600}
 QToolButton#handEditAction:disabled,QToolButton#handEditApply:disabled{background:%(panel)s;color:%(muted)s;border-color:%(border)s}
-QPushButton#primary{background:%(primary)s;color:white;border-color:%(primary)s;min-height:32px}
+QPushButton#primary{background:%(primary)s;color:white;border-color:%(primary)s;min-height:%(primary_min)dpx}
 QPushButton#primary:disabled{background:%(panel)s;color:%(muted)s;border-color:%(border)s}
 QPushButton#riichi:checked{background:#b23241;color:white;border-color:#db6876}
 QPushButton#tenpai:checked{background:#916124;color:white;border-color:#be975f}
@@ -67,20 +86,21 @@ QLabel#draftPreview[published="true"]{background:%(published)s;border-left-color
 QScrollArea{border:0;background:transparent}QScrollArea>QWidget>QWidget{background:%(panel)s}
 QCheckBox{spacing:6px}QCheckBox::indicator{width:15px;height:15px;border:1px solid %(border)s;background:%(field)s;border-radius:3px}
 QCheckBox::indicator:checked{background:%(primary)s;border:2px solid %(accent)s}
-QSpinBox,QDoubleSpinBox{padding:2px 60px 2px 7px;min-height:30px}
-QSpinBox::up-button,QDoubleSpinBox::up-button{subcontrol-origin:border;subcontrol-position:center right;width:28px;height:30px;background:%(field)s;border-left:1px solid %(border)s;border-top-right-radius:4px;border-bottom-right-radius:4px}
-QSpinBox::down-button,QDoubleSpinBox::down-button{subcontrol-origin:border;subcontrol-position:center right;right:28px;width:28px;height:30px;background:%(field)s;border-left:1px solid %(border)s}
+QSpinBox[buttonSymbols="PlusMinus"],QSpinBox[buttonSymbols="UpDownArrows"],QDoubleSpinBox{padding:%(field_y)dpx %(step_gutter)dpx %(field_y)dpx %(field_x)dpx;min-height:%(spin_min)dpx}
+QSpinBox#playerScore{background:%(field)s;color:%(text)s;min-height:%(field_min)dpx}
+QSpinBox[buttonSymbols="PlusMinus"]::up-button,QSpinBox[buttonSymbols="UpDownArrows"]::up-button,QDoubleSpinBox::up-button{subcontrol-origin:border;subcontrol-position:center right;width:%(step_width)dpx;height:%(spin_min)dpx;background:%(field)s;border-left:1px solid %(border)s;border-top-right-radius:4px;border-bottom-right-radius:4px}
+QSpinBox[buttonSymbols="PlusMinus"]::down-button,QSpinBox[buttonSymbols="UpDownArrows"]::down-button,QDoubleSpinBox::down-button{subcontrol-origin:border;subcontrol-position:center right;right:%(step_width)dpx;width:%(step_width)dpx;height:%(spin_min)dpx;background:%(field)s;border-left:1px solid %(border)s}
 QDoubleSpinBox[compactUma="true"]{padding-right:48px}
 QDoubleSpinBox[compactUma="true"]::up-button{width:22px}
 QDoubleSpinBox[compactUma="true"]::down-button{right:22px;width:22px}
-QSpinBox::up-button:hover,QSpinBox::down-button:hover,QDoubleSpinBox::up-button:hover,QDoubleSpinBox::down-button:hover{background:%(hover)s}
-QSpinBox::up-button:pressed,QSpinBox::down-button:pressed,QDoubleSpinBox::up-button:pressed,QDoubleSpinBox::down-button:pressed{background:%(selected)s}
-QSpinBox::up-button:disabled,QSpinBox::down-button:disabled,QDoubleSpinBox::up-button:disabled,QDoubleSpinBox::down-button:disabled{background:%(panel)s}
-QSpinBox::up-arrow,QSpinBox::down-arrow,QDoubleSpinBox::up-arrow,QDoubleSpinBox::down-arrow{width:16px;height:16px}
-QSpinBox::up-arrow,QDoubleSpinBox::up-arrow{image:url("%(step_plus)s")}
-QSpinBox::down-arrow,QDoubleSpinBox::down-arrow{image:url("%(step_minus)s")}
-QSpinBox::up-arrow:disabled,QDoubleSpinBox::up-arrow:disabled{image:url("%(step_plus_disabled)s")}
-QSpinBox::down-arrow:disabled,QDoubleSpinBox::down-arrow:disabled{image:url("%(step_minus_disabled)s")}
+QSpinBox[buttonSymbols="PlusMinus"]::up-button:hover,QSpinBox[buttonSymbols="UpDownArrows"]::up-button:hover,QSpinBox[buttonSymbols="PlusMinus"]::down-button:hover,QSpinBox[buttonSymbols="UpDownArrows"]::down-button:hover,QDoubleSpinBox::up-button:hover,QDoubleSpinBox::down-button:hover{background:%(hover)s}
+QSpinBox[buttonSymbols="PlusMinus"]::up-button:pressed,QSpinBox[buttonSymbols="UpDownArrows"]::up-button:pressed,QSpinBox[buttonSymbols="PlusMinus"]::down-button:pressed,QSpinBox[buttonSymbols="UpDownArrows"]::down-button:pressed,QDoubleSpinBox::up-button:pressed,QDoubleSpinBox::down-button:pressed{background:%(selected)s}
+QSpinBox[buttonSymbols="PlusMinus"]::up-button:disabled,QSpinBox[buttonSymbols="UpDownArrows"]::up-button:disabled,QSpinBox[buttonSymbols="PlusMinus"]::down-button:disabled,QSpinBox[buttonSymbols="UpDownArrows"]::down-button:disabled,QDoubleSpinBox::up-button:disabled,QDoubleSpinBox::down-button:disabled{background:%(panel)s}
+QSpinBox[buttonSymbols="PlusMinus"]::up-arrow,QSpinBox[buttonSymbols="UpDownArrows"]::up-arrow,QSpinBox[buttonSymbols="PlusMinus"]::down-arrow,QSpinBox[buttonSymbols="UpDownArrows"]::down-arrow,QDoubleSpinBox::up-arrow,QDoubleSpinBox::down-arrow{width:%(step_arrow)dpx;height:%(step_arrow)dpx}
+QSpinBox[buttonSymbols="PlusMinus"]::up-arrow,QSpinBox[buttonSymbols="UpDownArrows"]::up-arrow,QDoubleSpinBox::up-arrow{image:url("%(step_plus)s")}
+QSpinBox[buttonSymbols="PlusMinus"]::down-arrow,QSpinBox[buttonSymbols="UpDownArrows"]::down-arrow,QDoubleSpinBox::down-arrow{image:url("%(step_minus)s")}
+QSpinBox[buttonSymbols="PlusMinus"]::up-arrow:disabled,QSpinBox[buttonSymbols="UpDownArrows"]::up-arrow:disabled,QDoubleSpinBox::up-arrow:disabled{image:url("%(step_plus_disabled)s")}
+QSpinBox[buttonSymbols="PlusMinus"]::down-arrow:disabled,QSpinBox[buttonSymbols="UpDownArrows"]::down-arrow:disabled,QDoubleSpinBox::down-arrow:disabled{image:url("%(step_minus_disabled)s")}
 QTextEdit,QPlainTextEdit{background:%(field)s;color:%(text)s;border:1px solid %(border)s;border-radius:4px;padding:6px}
 QTabWidget::pane{border:1px solid %(border)s;background:%(bg)s}
 QTabBar{background:%(bg)s}
@@ -95,7 +115,7 @@ QTableWidget::item:selected,QTableView::item:selected,QTableWidget::item:selecte
 QHeaderView::section{background:%(field)s;color:%(text)s;padding:8px;border:0;border-bottom:1px solid %(border)s}
 QMenuBar,QMenu{background:%(panel)s;color:%(text)s}QMenu{border:1px solid %(border)s;padding:5px}
 QMenu::item{padding:7px 22px}QMenu::item:selected,QMenuBar::item:selected{background:%(selected)s}
-QDockWidget{font-weight:500}QDockWidget::title{background:%(field)s;padding:7px;border:1px solid %(border)s}
+QDockWidget{font-weight:500}QDockWidget::title{background:%(field)s;padding:%(dock_padding)dpx;border:1px solid %(border)s}
 QToolBar#operatorNavigation{background:%(panel)s;border:0;spacing:7px;padding:7px 0 7px 7px}
 QToolBar#operatorNavigation QToolButton{background:%(panel)s;border:0;border-radius:4px;padding:12px 8px;color:%(text)s;text-align:left}
 QToolBar#operatorNavigation QToolButton:hover{background:%(selected)s}
@@ -122,7 +142,7 @@ QScrollBar::add-line,QScrollBar::sub-line{width:0;height:0}
 def apply_theme(root, settings):
     """Always regenerate from tokens; font scaling is applied exactly once."""
     from typography import apply_desk, desk_stylesheet
-    from PySide6.QtGui import QColor, QPalette
+    from PySide6.QtGui import QColor, QFont, QFontMetrics, QPalette
     settings = dict(settings)
     if root.property('settingsWindow'):
         settings['console_font_size'] = settings.get('settings_font_size', 14)
@@ -140,7 +160,14 @@ def apply_theme(root, settings):
     for role in (QPalette.ColorRole.Text, QPalette.ColorRole.WindowText, QPalette.ColorRole.ButtonText):
         native.setColor(QPalette.ColorGroup.Disabled, role, QColor(colors['muted']))
     if root.palette() != native: root.setPalette(native)
-    source = stylesheet(settings)
+    font_height = None
+    if root.property('deskScaleControls'):
+        family = settings.get('console_font_family')
+        font = QFont()
+        font.setFamilies([family] if family else ['Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans CJK JP'])
+        font.setPixelSize(round(settings.get('console_font_size', 14)))
+        font_height = QFontMetrics(font, root).height()
+    source = stylesheet(settings, control_font_height=font_height)
     rendered = desk_stylesheet(source, settings)
     if root.styleSheet() != rendered: root.setStyleSheet(rendered)
     root._typography_base_style = source

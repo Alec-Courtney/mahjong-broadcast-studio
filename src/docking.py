@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from PySide6.QtCore import QByteArray, QEvent, QObject, QRect, QTimer, Qt,QPoint
 from PySide6.QtGui import QColor,QCursor,QPainter,QPen
 from PySide6.QtWidgets import QApplication, QDockWidget, QMainWindow, QScrollArea,QWidget,QLabel,QHBoxLayout,QToolButton,QToolBar,QStyle
+from typography import desk_length
 
 from i18n import tr
 
@@ -213,13 +214,14 @@ class OperatorDock(QDockWidget):
 
 
 class DockWorkspace(QObject):
-    VERSION = 4
+    VERSION = 5
 
     def __init__(self, window, model):
         super().__init__(window)
         self.window, self.model = window, model
         self.docks = {}
         self.scrolls = {}
+        self._panel_widths = {}
         self._suspend = 0
         self._ready = False
         self._locked = False
@@ -261,7 +263,8 @@ class DockWorkspace(QObject):
         dock.setToolTip(tr('拖动标题栏调整位置；双击标题栏切换独立窗口'))
         scroll = QScrollArea(dock)
         scroll.setWidgetResizable(True)
-        scroll.setMinimumSize(330 if identity == 'yaku' else minimum_width, 40)
+        self._panel_widths[identity] = 330 if identity == 'yaku' else minimum_width
+        scroll.setMinimumSize(self._panel_widths[identity], 40)
         scroll.setFrameShape(QScrollArea.Shape.NoFrame)
         if hasattr(widget, 'setTitle'):
             widget.setTitle('')
@@ -281,8 +284,6 @@ class DockWorkspace(QObject):
         dock.setWidget(scroll)
         if identity == 'tiles':
             dock.setMinimumHeight(138)
-        elif identity == 'quick':
-            scroll.setMaximumHeight(widget.layout().itemAt(0).sizeHint().height() + 6)
         elif identity == 'history':
             dock.setMinimumHeight(230)
         self.docks[identity], self.scrolls[identity] = dock, scroll
@@ -292,6 +293,33 @@ class DockWorkspace(QObject):
             signal.connect(self.schedule_save)
         dock.installEventFilter(self)
         return dock
+
+    def update_panel_metrics(self):
+        settings = self.model.settings
+        for key, scroll in self.scrolls.items():
+            minimum = 240 if key == 'yaku' else 180
+            scroll.setMinimumWidth(min(self._panel_widths[key], desk_length(self._panel_widths[key], settings, minimum)))
+            layout = scroll.widget().layout()
+            if layout is None:
+                continue
+            horizontal = desk_length(3 if key == 'players' else 5, settings, 2)
+            vertical = desk_length(3 if key in ('players', 'tiles', 'quick') else 5, settings, 2)
+            layout.setContentsMargins(horizontal, vertical, horizontal, vertical)
+            layout.setSpacing(desk_length(5, settings, 2))
+        self.fit_panel_heights()
+        self._sized_window_height = None
+        QTimer.singleShot(0, self._reclaim_unused_space)
+
+    def fit_panel_heights(self):
+        if 'history' not in self.docks:
+            return
+        height = self.window.height()
+        for key in ('round', 'score', 'waits', 'yaku', 'meld', 'dora', 'players'):
+            if key in ('round', 'score', 'waits', 'meld'):
+                minimum = desk_length(40, self.model.settings, 32)
+            else:
+                minimum = 40 if height >= 720 else 22
+            self.scrolls[key].setMinimumHeight(minimum)
 
     def attach_menu(self, menu):
         self.menu = menu
@@ -320,7 +348,7 @@ class DockWorkspace(QObject):
         for key in self.panel_buttons:self._sync_panel_button(key)
 
     def reset_layout(self, checked=False, save=True):
-        """Keep every live panel exposed; only optional commentary starts hidden."""
+        """Open the default desk with history in its own window."""
         del checked
         self.end_drag()
         with self.paused():
@@ -345,6 +373,7 @@ class DockWorkspace(QObject):
             self.window.addDockWidget(top, d['quick'])
             self.window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, d['commentary'])
             self.window.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, d['history'])
+            self._float_history()
             for dock in d.values():
                 dock.show()
             d['commentary'].hide()
@@ -359,6 +388,15 @@ class DockWorkspace(QObject):
             self.set_locked(False, save=False)
         if save:
             self.save()
+
+    def _float_history(self):
+        dock = self.docks['history']
+        area = self.window.screen().availableGeometry()
+        width = min(860, round(area.width() * .75))
+        height = min(400, round(area.height() * .52))
+        geometry = QRect(area.right() - width - 19, area.bottom() - height - 19, width, height)
+        dock.setFloating(True)
+        dock.setGeometry(visible_geometry(geometry, [area]))
 
     def set_locked(self, locked, save=True):
         self._locked = bool(locked)
@@ -385,22 +423,6 @@ class DockWorkspace(QObject):
             screens = [screen.availableGeometry() for screen in QApplication.screens()]
             dock.setGeometry(visible_geometry(dock.geometry(), screens))
             dock.activateWindow()
-        return dock
-
-    def recover_panel(self, identity):
-        """Retrieve one panel during a broadcast without reloading any state."""
-        dock = self.docks[identity]
-        screen = self.window.screen().availableGeometry()
-        with self.paused():
-            dock.setFloating(True)
-            width, height = min(1060, screen.width()-32), min(450, screen.height()-64)
-            dock.setGeometry(visible_geometry(QRect(screen.center().x()-width//2,
-                screen.center().y()-height//2, width, height), [screen]))
-            dock.showNormal()
-            dock.raise_()
-            dock.activateWindow()
-        self._sync_panel_button(identity)
-        self.schedule_save()
         return dock
 
     def _sync_panel_button(self,key):
@@ -538,7 +560,7 @@ class DockWorkspace(QObject):
         self._save_timer.stop()
         data = self.model.settings.get('console_layout')
         with self.paused():
-            if isinstance(data, dict) and data.get('version') in (1, 2, 3,self.VERSION):
+            if isinstance(data, dict) and data.get('version') in (1, 2, 3, 4, self.VERSION):
                 try:
                     def decode(key):
                         value = data.get(key, '')
@@ -550,15 +572,21 @@ class DockWorkspace(QObject):
                         self.window.restoreGeometry(geometry)
                     # Earlier layouts hid live controls behind tabs or reserved
                     # a mostly empty full-width row for the tile palette.
-                    if data.get('version') in (3,self.VERSION) and state and not self.window.restoreState(state, data['version']):
-                        self.reset_layout(save=False)
+                    saved_docks = data['version'] in (3, 4, self.VERSION)
+                    if saved_docks and state:
+                        if not self.window.restoreState(state, data['version']):
+                            self.reset_layout(save=False)
+                        elif data['version'] < self.VERSION and not self.docks['history'].isFloating():
+                            history = self.docks['history']
+                            visible = not history.isHidden()
+                            self._float_history()
+                            history.setVisible(visible)
                     self._remove_tabs();self._automatic_rows=False
                     self.set_locked(data.get('locked', False), save=False)
                     self.window.navigation_handle.restore_width(data.get('navigation_width'))
                     if hasattr(self.window, 'set_yakuman_expanded'):
-                        self.window.set_yakuman_expanded(data.get('yakuman_expanded', False)
-                                                        if data.get('version') in (3,self.VERSION) else False)
-                    self._migrating_legacy = data.get('version') not in (3,self.VERSION)
+                        self.window.set_yakuman_expanded(data.get('yakuman_expanded', False) if saved_docks else False)
+                    self._migrating_legacy = not saved_docks
                 except (ValueError, TypeError):
                     self.reset_layout(save=False)
             self.recover_windows(save=False)
@@ -629,10 +657,12 @@ class DockWorkspace(QObject):
         self._sized_window_height = self.window.height()
         available = self.window.height() - header - self.window.statusBar().height()
         if hasattr(self,'panel_toolbar'):available-=self.panel_toolbar.sizeHint().height()
-        top = max(64,self.docks['quick'].minimumSizeHint().height())
-        history = min(280, max(240, round(available * .28)))
-        middle = max(300, available - top - history - 15)
-        tiles = 366 if self.window.height() >= 900 else min(240, round(middle * .40))
+        top = self.docks['quick'].minimumSizeHint().height()
+        history_dock = self.docks['history']
+        history = 0 if history_dock.isFloating() or history_dock.isHidden() else min(280, max(230, round(available * .28)))
+        middle = max(0, available - top - history - 15)
+        compact = self.window.height() < 620 and self.model.settings.get('console_font_size', 14) <= 12
+        tiles = 366 if self.window.height() >= 900 else min(240, round(middle * (.56 if compact else .40)))
         player_content = self.scrolls['players'].widget().minimumSizeHint().height() + 40
         players = min(390, player_content, max(140, round(middle * .56)))
         round_height = min(158, max(75, round(middle * .18)))
@@ -641,9 +671,12 @@ class DockWorkspace(QObject):
         dora = 86 if middle >= 650 else 65
         meld = max(70, middle - players - round_height - dora - 15)
         score = min(520, max(210, round(middle * .64)))
-        waits = middle - score - 5
-        keys = ('quick', 'players', 'round', 'dora', 'score', 'meld', 'waits', 'yaku', 'tiles', 'history')
-        heights = (top, players, round_height, dora, score, meld, waits, middle - tiles - 5, tiles, history)
+        waits = max(0, middle - score - 5)
+        keys = ('quick', 'players', 'round', 'dora', 'score', 'meld', 'waits', 'yaku', 'tiles')
+        heights = (top, players, round_height, dora, score, meld, waits, max(0, middle - tiles - 5), tiles)
+        if history:
+            keys += ('history',)
+            heights += (history,)
         self.window.resizeDocks([self.docks[key] for key in keys], heights, Qt.Orientation.Vertical)
 
     def dispose(self):

@@ -8,11 +8,11 @@ Windows 上的日麻赛事导播与 OBS 字幕工具，使用 Python 和 PySide6
 
 ### 下载 Windows 安装版
 
-**[下载 0.1.3-preview 安装程序](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.3-preview/MahjongOverlayStudio-0.1.3-preview-Setup.exe)** · [完整更新包](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.3-preview) · [更新与迁移说明](docs/releases/v0.1.3-preview.md)
+**[下载 0.1.4-preview 安装程序](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.4-preview/MahjongOverlayStudio-0.1.4-preview-Setup.exe)** · [完整更新包](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.4-preview/Mahjong-Broadcast-Studio-0.1.4-preview-Update.zip) · [更新说明](docs/releases/v0.1.4-preview.md)
 
 运行安装程序即可安装或更新。已有安装版会自动识别原目录，保留新增赛事与素材；请在直播结束后退出程序再更新。导入素材仍托管到安装目录的 `assets/imported/`，本地实时存档继续兼容比分监听助手。
 
-0.1.3-preview 调整赛事备份文件结构，将数据与素材分开保存，解决旧版单个 JSON 备份超过 50 MB 时无法导入、导出的问题。导出备份时生成 `.mjbackup`，导入时还原赛事与素材。[备份包结构](docs/BACKUP_PACKAGE_FORMAT.md)
+0.1.4-preview 优化小屏导播台。文字、按钮和间距一起缩放，选手分数改为直接输入。逐局收支默认在独立窗口打开，最新一局也列在历史列表中。宝牌框的上下留白随面板高度调整。
 
 ### 从源码启动
 

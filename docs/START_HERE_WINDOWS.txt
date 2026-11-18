@@ -1,11 +1,12 @@
-Mahjong Broadcast Studio
+Mahjong Broadcast Studio 0.1.4-preview
 
 简体中文
+本版优化小屏导播台缩放、选手分数输入、独立逐局收支窗口和宝牌框留白。详见 docs/releases/v0.1.4-preview.md。
 1. 解压整个 Windows ZIP 到有写入权限的个人文件夹。
 2. 双击 MahjongOverlayStudio.exe。保留同目录的 _internal 文件夹。
 3. 点击「赛事管理 → 赛事库」，选择「【演示】M.League 团队积分赛」并点击「打开选中赛事」。
 4. 从「排名与结果」查看成绩。要在 OBS 中试播，点击「显示播出窗口」，亮色描边表示开启，再添加窗口捕获「麻将UI · 四家选手」。
-5. 导入其他赛制时，在「赛事库」点击「导入完整赛事 JSON」，选择 demo-suite 下的文件。
+5. 导入其他赛制时，在「赛事库」点击「导入完整赛事备份包」，选择 demo-suite 下的 .mjbackup 文件。
 
 首次运行会在 EXE 同级创建 data，保存赛事、进度和全局设置。导入素材后会按需创建同级的 assets/imported。迁移前可从「备份与说明」导出完整赛事。
 界面语言可在「系统设置 → 界面语言」选择简体中文或日本語。
@@ -16,7 +17,7 @@ English
 2. Double-click MahjongOverlayStudio.exe and keep the _internal folder beside it.
 3. In Event Management → Event Library (赛事管理 → 赛事库), open 【演示】M.League 团队积分赛 with 打开选中赛事.
 4. View standings under 排名与结果. For OBS, enable 显示播出窗口 and use Window Capture on 麻将UI · 四家选手.
-5. To try the other events, click 导入完整赛事 JSON in the event library and choose a file from demo-suite.
+5. To try the other events, use 导入完整赛事备份包 in the event library and choose a .mjbackup file from demo-suite.
 
 On first launch, the app creates data beside the executable for events, progress, and global settings. Imported media is saved to assets/imported as needed. Export a full event backup before moving it.
 The interface supports Simplified Chinese and Japanese. Switch in 系统设置 → 界面语言.
@@ -27,7 +28,7 @@ See LICENSE for the project license, licenses/WINDOWS_RUNTIME_NOTICES.md for run
 2. MahjongOverlayStudio.exe をダブルクリックします。同じ場所に _internal フォルダーを残してください。
 3. 大会一覧（赛事管理 → 赛事库）で 【演示】M.League 团队积分赛 を選び、打开选中赛事 で開きます。
 4. 排名与结果 で順位を確認します。OBS では 显示播出窗口 をオンにして、麻将UI · 四家选手 をウィンドウキャプチャします。
-5. ほかの大会を試すには、导入完整赛事 JSON を押し、demo-suite フォルダーから JSON を選びます。
+5. ほかの大会を試すには、导入完整赛事备份包 を押し、demo-suite フォルダーから .mjbackup を選びます。
 
 初回起動時に EXE と同じ場所に data が作成され、大会データ、進行状況、全体設定が保存されます。取り込んだ素材は必要に応じて assets/imported に保存されます。移行前に大会をバックアップしてください。
 初期画面は簡体字中国語です。「系统设置 → 界面语言」で「日本語」を選び、「保存」で切り替えられます。

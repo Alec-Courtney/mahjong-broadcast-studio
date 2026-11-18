@@ -140,7 +140,7 @@ class HandHistoryPanel(QGroupBox):
             self.latest_detail.setText('结算后常驻显示上一局详情；历史小局点击查看或修改。')
             for label in self.latest_scores:
                 label.clear()
-        history = list(reversed(hands[:-1]))
+        history = list(reversed(hands))
         self.row_ids = [hand['id'] for hand in history]
         self.history.setRowCount(len(history))
         for row, hand in enumerate(history):
@@ -151,14 +151,14 @@ class HandHistoryPanel(QGroupBox):
                 item.setToolTip(hand['players'][column - 1]['name'] + ' · ' + signed(delta) + ' 点（含交立直棒）\n点击查看 / 修改')
 
     def open_row(self, row, _column):
-        if row < len(self.row_ids):
+        if 0 <= row < len(self.row_ids):
             self.open_hand(self.row_ids[row])
 
     def open_hand(self, hand_id):
         if not hand_id:
             return
         try:
-            dialog = HandCorrectionDialog(self.main, hand_id)
+            dialog = HandCorrectionDialog(self.main, hand_id, parent=self.window())
             dialog.exec()
             dialog.deleteLater()
         except Exception as error:
@@ -234,8 +234,8 @@ class ArchivedHandHistoryDialog(QDialog):
 
 
 class HandCorrectionDialog(QDialog):
-    def __init__(self, main, hand_id):
-        super().__init__(main)
+    def __init__(self, main, hand_id, parent=None):
+        super().__init__(parent if parent is not None else main)
         self.main, self.model, self.hand_id = main, main.model, hand_id
         self.expected_state = self.model.state
         self.hand = copy.deepcopy(next(h for h in self.expected_state['broadcast']['hands'] if h['id'] == hand_id))

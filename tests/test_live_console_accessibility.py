@@ -9,10 +9,10 @@ from unittest.mock import patch
 
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'src'))
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont,QFontDatabase
+from PySide6.QtCore import QPoint,QPointF,Qt
+from PySide6.QtGui import QFont,QFontDatabase,QWheelEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication,QStyle,QStyleOptionSpinBox
+from PySide6.QtWidgets import QApplication,QSpinBox
 from console import Console
 from model import Model,YAKU
 from overlays import OverlayManager
@@ -57,15 +57,70 @@ class LiveConsoleAccessibilityTests(unittest.TestCase):
         self.assert_accessible(960,620)
 
     def test_four_score_editors_update_the_corresponding_seats(self):
-        for index,row in enumerate(self.ui.player_widgets):
-            row[2].setValue(30100+index*100);row[2].editingFinished.emit()
-            self.assertEqual(self.model.state['players'][index]['score'],30100+index*100)
-            for upward,expected in ((True,30200+index*100),(False,30100+index*100)):
-                reveal(row[2],APP);option=QStyleOptionSpinBox();row[2].initStyleOption(option)
-                control=QStyle.SubControl.SC_SpinBoxUp if upward else QStyle.SubControl.SC_SpinBoxDown
-                rect=row[2].style().subControlRect(QStyle.ComplexControl.CC_SpinBox,option,control,row[2])
-                QTest.mouseClick(row[2],Qt.MouseButton.LeftButton,pos=rect.center())
-                self.assertEqual(self.model.state['players'][index]['score'],expected)
+        expected = [30100, 30200, -1200, 30400]
+        for index, (_, _, score, _, _) in enumerate(self.ui.player_widgets):
+            reveal(score, APP);score.setFocus()
+            self.assertEqual(score.buttonSymbols(), QSpinBox.ButtonSymbols.NoButtons)
+            editor = score.lineEdit()
+            self.assertGreater(editor.width(), score.fontMetrics().horizontalAdvance(str(expected[index])))
+            editor.selectAll();QTest.keyClicks(editor, str(expected[index]))
+            self.assertNotEqual(self.model.state['players'][index]['score'], expected[index])
+            if index % 2:
+                score.clearFocus()
+            else:
+                QTest.keyClick(editor, Qt.Key.Key_Return)
+            self.assertEqual(self.model.state['players'][index]['score'], expected[index])
+            undo_count = len(self.model.undo)
+            for key in (Qt.Key.Key_Up, Qt.Key.Key_Down, Qt.Key.Key_PageUp, Qt.Key.Key_PageDown):
+                QTest.keyClick(editor, key)
+            for delta in (120, -120):
+                pos = editor.rect().center()
+                event = QWheelEvent(QPointF(pos), QPointF(editor.mapToGlobal(pos)), QPoint(),
+                                    QPoint(0, delta), Qt.MouseButton.NoButton,
+                                    Qt.KeyboardModifier.NoModifier, Qt.ScrollPhase.NoScrollPhase, False)
+                QApplication.sendEvent(editor, event)
+            self.assertEqual(score.value(), expected[index])
+            self.assertEqual(len(self.model.undo), undo_count)
+        self.assertEqual([seat['score'] for seat in self.model.state['players']], expected)
+
+    def test_compact_zoom_reduces_controls_and_keeps_seat_actions_reachable(self):
+        self.ui.resize(960, 540);settle(APP)
+        button = self.ui.navigation_buttons['settings']
+        baseline = (button.height(), self.ui.honba.height(), self.ui.programme_scroll.height())
+        self.model.setting('console_font_size', 11);settle(APP)
+        self.assertEqual((self.ui.width(), self.ui.height()), (960, 540))
+        self.assertLess(button.height(), baseline[0])
+        self.assertLess(self.ui.honba.height(), baseline[1])
+        self.assertLess(self.ui.programme_scroll.height(), baseline[2])
+        self.assert_accessible(960, 540)
+        for _, _, _, riichi, tenpai in self.ui.player_widgets:
+            for control in (riichi, tenpai):
+                reveal(control, APP)
+                self.assertTrue(visibility(control, self.ui)['visible'])
+        self.model.setting('console_font_size', 14);settle(APP)
+        self.assertEqual((button.height(), self.ui.honba.height(), self.ui.programme_scroll.height()), baseline)
+
+    def test_dora_padding_tracks_panel_height_within_bounds(self):
+        self.ui.resize(960, 540);settle(APP)
+        self.model.dora('3m')
+        dock = self.ui.workspace.docks['dora']
+        dock.setFloating(True)
+        panel = self.ui.target_boxes['dora']
+        indicator = self.ui.dora_row.itemAt(0).widget()
+        insets = []
+        for height in (30, 84, 180):
+            dock.resize(300, height);settle(APP)
+            expected = max(3, min(11, round(panel.contentsRect().height() * .10)))
+            margins = panel.layout().contentsMargins()
+            self.assertEqual((margins.top(), margins.bottom()), (expected, expected))
+            top = indicator.mapTo(panel, QPoint()).y()
+            bottom = panel.height() - top - indicator.height()
+            self.assertLessEqual(abs(top - bottom), 1)
+            self.assertTrue(visibility(indicator, dock)['visible'])
+            insets.append(expected)
+        self.assertEqual(insets[0], 3)
+        self.assertGreater(insets[1], insets[0])
+        self.assertEqual(insets[-1], 11)
 
     def test_round_honba_and_pot_inputs_update_the_live_state(self):
         self.ui.resize(960,620)

@@ -307,25 +307,34 @@ class HandHistoryUITests(unittest.TestCase):
         self.model.riichi(0)
         self.model.draw([0])
         panel = self.ui.hand_history
-        self.assertEqual(panel.history.rowCount(), 1)
+        latest_id = self.model.state['broadcast']['hands'][-1]['id']
+        self.assertEqual(panel.history.rowCount(), 2)
+        self.assertEqual(panel.row_ids, [latest_id, identity])
         self.assertIn('不听罚符', panel.latest_title.text())
         self.assertIn('交立直棒：选手一', panel.latest_detail.text())
+        history_window = self.ui.workspace.docks['history']
         for size in ((1520, 1050), (1280, 800), (960, 620)):
             self.ui.resize(*size)
             settle(APP)
-            self.assertTrue(self.ui.workspace.docks['history'].isVisible())
-            self.assertTrue(visibility(panel.edit_latest, self.ui)['visible'], size)
-            self.assertTrue(visibility(panel.history.horizontalHeader(), self.ui)['visible'], size)
+            self.assertTrue(history_window.isFloating())
+            self.assertTrue(visibility(panel.edit_latest, history_window)['visible'], size)
+            self.assertTrue(visibility(panel.history.horizontalHeader(), history_window)['visible'], size)
+
+        with patch.object(panel, 'open_hand') as open_hand:
+            panel.open_row(0, 1)
+            open_hand.assert_called_once_with(latest_id)
+
         def edit(dialog):
             self.assertIsInstance(dialog, HandCorrectionDialog)
             self.assertEqual(dialog.hand_id, identity)
+            self.assertEqual(dialog.parentWidget(), history_window)
             dialog.winner.setCurrentIndex(3)
             dialog.han.setValue(4)
             self.assertTrue(dialog.save_button.isEnabled(), dialog.error.text())
             QTest.mouseClick(dialog.save_button, Qt.MouseButton.LeftButton)
             return dialog.result()
         with patch.object(QDialog, 'exec', edit):
-            panel.open_row(0, 1)
+            panel.open_row(1, 1)
         self.assertEqual(self.model.state['broadcast']['hands'][0]['result']['winner'], 3)
         self.assertEqual([widgets[2].value() for widgets in self.ui.player_widgets], self.scores())
         self.assertEqual(self.manager.stage, 'table')

@@ -38,6 +38,12 @@ def overlay_font(size, bold=False, fallback='Microsoft YaHei'):
     return font
 
 
+def desk_length(pixels, settings, minimum=0):
+    """Scale control spacing from the default desk, with a readable upper range."""
+    size = min(17, settings.get('console_font_size', 14))
+    return max(minimum, round(pixels * size / 14))
+
+
 def desk_stylesheet(source, settings):
     family = settings.get('console_font_family', '').replace('"', '\\"')
     if family:

@@ -1,20 +1,18 @@
 # Mahjong Broadcast Studio
 
-> Windows 0.1.3-preview: [Installer](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.3-preview/MahjongOverlayStudio-0.1.3-preview-Setup.exe) · [Update guide](docs/releases/v0.1.3-preview.md). Backups now separate event data and media in `.mjbackup`, resolving import/export failures for legacy JSON backups over 50 MB. Export creates a backup package; import restores event data and media.
 [简体中文](README.md) · **English** · [日本語](README.ja.md)
 
 A Windows desktop app for riichi mahjong broadcasts and OBS overlays, built with Python and PySide6. The broadcast desk handles live table input and cues. The event workspace manages rosters, schedules, standings, and exports.
 
 ## Quick start
 
-### Download the portable Windows build
+### Download the Windows installer
 
-**[Download Windows x64 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.2-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [Preview release notes](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.2-preview) · [Detailed changes (Chinese)](docs/releases/v0.1.2-preview.md)
+**[Download the 0.1.4-preview installer](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.4-preview/MahjongOverlayStudio-0.1.4-preview-Setup.exe)** · [Update ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.4-preview/Mahjong-Broadcast-Studio-0.1.4-preview-Update.zip) · [Release notes (Chinese)](docs/releases/v0.1.4-preview.md)
 
-1. Extract the whole ZIP to a folder you can write to, such as `Documents\MahjongStudio`.
-2. Double-click `MahjongOverlayStudio.exe`. Keep `_internal` beside it and see `START-HERE.txt` for the first steps.
+Run the installer to install or update the app. When updating, exit the app after the broadcast and confirm that the installer has selected the existing folder. The update preserves events, scores, media, and settings.
 
-On first launch, the app creates `data/` beside the executable for events, progress, and global settings. It saves imported media under `assets/imported/` as needed. The portable build includes the runtime for manual scoring, event management, and OBS output. The optional tile-recognition demo can be set up from source.
+This preview improves the desk on small screens. Text, controls and spacing scale together. Player scores are typed directly. Hand history opens in a separate window and includes the latest hand in the list. Dora panel padding adapts to the panel height.
 
 ### Run from source
 

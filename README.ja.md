@@ -1,20 +1,18 @@
 # Mahjong Broadcast Studio
 
-> Windows 0.1.3-preview: [Installer](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.3-preview/MahjongOverlayStudio-0.1.3-preview-Setup.exe) · [Update guide](docs/releases/v0.1.3-preview.md). Backups now separate event data and media in `.mjbackup`, resolving import/export failures for legacy JSON backups over 50 MB. Export creates a backup package; import restores event data and media.
 [简体中文](README.md) · [English](README.en.md) · **日本語**
 
 リーチ麻雀大会の配信と OBS へのオーバーレイ出力に使える Windows アプリです。Python と PySide6 で構築しています。配信操作画面で対局の進行と画面表示を操作し、大会管理画面で選手名簿、対局日程、順位表、成績の出力を管理できます。
 
 ## クイックスタート
 
-### Windows ポータブル版をダウンロード
+### Windows インストーラーをダウンロード
 
-**[Windows x64 ZIP をダウンロード](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.2-preview/Mahjong-Broadcast-Studio-Windows-x64.zip)** · [プレビュー版のリリースノート](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/tag/v0.1.2-preview) · [変更点の詳細（中国語）](docs/releases/v0.1.2-preview.md)
+**[0.1.4-preview インストーラー](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.4-preview/MahjongOverlayStudio-0.1.4-preview-Setup.exe)** · [更新用 ZIP](https://github.com/Alec-Courtney/mahjong-broadcast-studio/releases/download/v0.1.4-preview/Mahjong-Broadcast-Studio-0.1.4-preview-Update.zip) · [変更点の詳細（中国語）](docs/releases/v0.1.4-preview.md)
 
-1. ZIP 全体を書き込み可能なフォルダーに展開します。例えば `Documents\MahjongStudio` に置きます。
-2. `MahjongOverlayStudio.exe` をダブルクリックします。同じ場所に `_internal` を残してください。初回の操作は `START-HERE.txt` に記載しています。
+インストーラーで新規インストールまたは更新ができます。更新する場合は配信を終了してアプリを閉じ、既存のインストール先を確認してください。大会、成績、素材、設定は引き継がれます。
 
-初回起動時に EXE と同じ場所に `data/` が作成され、大会、進行状況、全体設定が保存されます。取り込んだ素材は必要に応じて `assets/imported/` に保存されます。ポータブル版には手動での点数計算、大会管理、OBS 出力に必要なランタイムが同梱されています。牌認識デモはソース版で必要に応じて設定できます。
+小さい画面での操作性を改善しました。文字、ボタン、余白をまとめて拡大縮小できます。選手の点数は直接入力します。局ごとの収支は独立したウィンドウに表示され、最新の局も一覧に含まれます。ドラ表示の余白はパネルの高さに合わせて調整されます。
 
 ### ソースから起動
 

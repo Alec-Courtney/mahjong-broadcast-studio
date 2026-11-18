@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT / 'src'))
 from PySide6.QtCore import QEvent,QPoint,QPointF, QRect, Qt
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDockWidget,QMainWindow,QRubberBand
+from PySide6.QtWidgets import QAbstractButton,QApplication,QDockWidget,QMainWindow,QRubberBand
 from console import Console
 from glossary import get_term
 from docking import visible_geometry
@@ -66,7 +66,8 @@ class DockWorkspaceTests(unittest.TestCase):
         control = workspace.panel_buttons['history']
         before = copy.deepcopy(self.model.state)
         self.assertEqual(control.text(), '历史局收支')
-        dock.setFloating(True)
+        self.assertTrue(dock.isVisible())
+        self.assertTrue(dock.isFloating())
         APP.processEvents()
         self.assertTrue(control.isChecked())
         dock.close()
@@ -80,15 +81,30 @@ class DockWorkspaceTests(unittest.TestCase):
         self.assertTrue(control.isChecked())
         self.assertEqual(self.model.state, before)
 
-    def test_header_recovers_hidden_offscreen_history_during_live_without_state_changes(self):
+    def test_saved_docked_history_moves_to_its_own_window(self):
+        workspace = self.ui.workspace
+        history = workspace.docks['history']
+        history.setFloating(False)
+        self.ui.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, history)
+        self.assertFalse(history.isFloating())
+        layout = workspace.layout_value()
+        layout.update(version=4, state=bytes(self.ui.saveState(4).toBase64()).decode('ascii'))
+        self.model.settings['console_layout'] = layout
+        workspace.restore()
+        self.assertTrue(history.isFloating())
+        self.assertTrue(history.isVisible())
+
+    def test_only_panel_toolbar_recovers_hidden_offscreen_history_without_state_changes(self):
         workspace=self.ui.workspace;dock=workspace.docks['history']
         self.model.riichi(0)
         before=copy.deepcopy((self.model.state,self.model.undo,self.model.redo,self.model.last_transition))
         settings=copy.deepcopy({key:value for key,value in self.model.settings.items() if key!='console_layout'})
         dock.setFloating(True);dock.move(30000,30000);dock.close()
-        workspace.panel_toolbar.hide()
-        self.assertTrue(self.ui.history_recovery_button.isVisible())
-        self.ui.history_recovery_button.click();APP.processEvents()
+        history_button=workspace.panel_buttons['history']
+        matches=[control for control in self.ui.findChildren(QAbstractButton) if control.text()=='历史局收支']
+        self.assertEqual(matches,[history_button])
+        self.assertTrue(history_button.isVisible())
+        history_button.click();APP.processEvents()
         self.assertTrue(dock.isVisible());self.assertTrue(dock.isFloating())
         self.assertTrue(self.ui.screen().availableGeometry().contains(dock.geometry()))
         self.assertEqual((self.model.state,self.model.undo,self.model.redo,self.model.last_transition),before)

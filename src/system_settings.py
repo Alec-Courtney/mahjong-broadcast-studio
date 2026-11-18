@@ -39,13 +39,13 @@ class SystemSettingsDialog(SettingsWindow):
             control.setSuffix(' px')
         for label, control in (
             ('后台主题', self.theme), ('界面语言', self.language), ('导播台字体', self.console_font),
-            ('导播台字号', self.console_font_size), ('设置页面字号', self.settings_font_size),
+            ('导播台缩放', self.console_font_size), ('设置页面字号', self.settings_font_size),
             ('副露牌面尺寸', self.console_meld_tile_scale), ('听牌牌面尺寸', self.console_wait_tile_scale),
         ):
             form.addRow(label, control)
         form.addRow('', self.dock_animations)
         layout.addLayout(form)
-        layout.addWidget(note('字号即时保存。面板停靠动画只用于导播操作界面。'))
+        layout.addWidget(note('导播台缩放会同时调整文字、按钮和间距，调整后即时保存。'))
         layout.addWidget(note('牌面尺寸即时保存，仅调整导播台显示；80%为原大小，100%为默认大小。'))
         layout.addStretch()
         layout.addLayout(row(button('导出全局设置', self.export_file), button('导入全局设置', self.import_file), 1))

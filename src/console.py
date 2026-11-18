@@ -10,6 +10,7 @@ from artwork import tile,fmt,WAIT_TILE_FACE_RECT
 from i18n import LANGUAGES,tr,set_language,localize_widgets,LanguageController
 
 from desk_theme import stylesheet, apply_theme, palette as desk_palette
+from typography import desk_length
 from docking import DockWorkspace, NavigationResizeHandle, PanelCollection
 from color_input import ColorInput
 from capture_surface import reference_width
@@ -57,6 +58,25 @@ def combo(values):
  return c
 def spin(value=0,lo=0,hi=10000,step=1):
  s=integer(lo,hi,step);s.setValue(value);return s
+
+class PlayerScoreInput(QSpinBox):
+ def __init__(self,value=0):
+  super().__init__()
+  self.setObjectName('playerScore')
+  self.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
+  self.setFrame(False)
+  self.setKeyboardTracking(False)
+  self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+  self.setRange(-1000000000,1000000000)
+  self.setValue(value)
+  self.setAccessibleName('选手点数')
+  self.setToolTip('直接输入点数，按回车或离开输入框确认')
+
+ def stepBy(self,steps):
+  pass
+
+ def wheelEvent(self,event):
+  event.ignore()
 
 class OptionalCountSpinBox(QSpinBox):
  """An uncounted wall has no visible number; zero is a confirmed count."""
@@ -130,7 +150,6 @@ def tile_face_button(code,fn,scale=1.):
  control.setStyleSheet('QPushButton,QPushButton:hover,QPushButton:pressed,QPushButton:disabled{padding:0;margin:0;border:0;border-radius:0;min-height:0;background:transparent}')
  return control
 
-CHOICE_BUTTON_STYLE='QPushButton{padding:3px 4px;min-height:28px}'
 
 class SeatChoiceButton(QPushButton):
  def __init__(self,label,literal=True):
@@ -146,7 +165,7 @@ class SeatButtonSelector(QWidget):
  def clear(self):
   self._choice.clear();clear_layout(self.grid);self.buttons.clear()
  def addItem(self,label,value):
-  index=self._choice.count();self._choice.addItem(label,value);control=SeatChoiceButton(label,self.literal);control.setCheckable(True);control.clicked.connect(lambda _,i=index:self.setCurrentIndex(i));control.setProperty('i18nLiteral',self.literal);control.setMinimumWidth(0);control.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);control.setStyleSheet(CHOICE_BUTTON_STYLE);control.setProperty('operatorChoice',True);self.buttons.append(control);self.grid.addWidget(control,index//self.columns,index%self.columns);self._sync()
+  index=self._choice.count();self._choice.addItem(label,value);control=SeatChoiceButton(label,self.literal);control.setCheckable(True);control.clicked.connect(lambda _,i=index:self.setCurrentIndex(i));control.setProperty('i18nLiteral',self.literal);control.setMinimumWidth(0);control.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);control.setProperty('compactButton',True);control.setProperty('operatorChoice',True);self.buttons.append(control);self.grid.addWidget(control,index//self.columns,index%self.columns);self._sync()
  def count(self):return self._choice.count()
  def model(self):return self._choice.model()
  def currentIndex(self):return self._choice.currentIndex()
@@ -180,7 +199,7 @@ class ProfilesDialog(SettingsWindow):
   super().__init__(main);self.main=main;self.setWindowTitle('选手');self.setMinimumWidth(820);layout=QVBoxLayout(self);grid=QGridLayout();self.fields=[]
   for col,name in enumerate(['图片','姓名','点数','队伍','框色','队色']):grid.addWidget(QLabel(name),0,col)
   for i,p in enumerate(main.model.state['players']):
-   pic=button('选择');pic.setFixedWidth(75);name=QLineEdit(p['name']);name.setMaxLength(30);score=spin(display_score(main.model.state,i,main.model.settings.get('riichi_payment_mode')),-1000000000,1000000000,100);team=QLineEdit(p.get('team',''));team.setMaxLength(30);frame=ColorInput(p['color'],alpha=False);teamc=ColorInput(p['team_color'],alpha=False)
+   pic=button('选择');pic.setFixedWidth(75);name=QLineEdit(p['name']);name.setMaxLength(30);score=PlayerScoreInput(display_score(main.model.state,i,main.model.settings.get('riichi_payment_mode')));team=QLineEdit(p.get('team',''));team.setMaxLength(30);frame=ColorInput(p['color'],alpha=False);teamc=ColorInput(p['team_color'],alpha=False)
    if (main.model.event or {}).get('kind')=='team_league':
     team.setReadOnly(True);team.setToolTip(tr('请在赛事工作台的选手名册中选择所属队伍'))
     from event_roster import selected_profile
@@ -266,12 +285,13 @@ from settings_dialog import SettingsDialog as LayoutDialog
 class Console(QMainWindow):
  def __init__(self,model,manager):
   super().__init__()
-  self.setProperty('liveDeskInputs',True);guard_settings_input_wheel()
+  self.setProperty('liveDeskInputs',True);self.setProperty('deskScaleControls',True);guard_settings_input_wheel()
   self._closing=False
   self.model=model;self.manager=manager;self.selected=0;self.wait_drafts={};self.wait_dirty=set();self.draft=[];self.called_index=0;self.tile_target='meld';self.target_boxes={};self.target_buttons={};self.ready=False;self.yaku_buttons={}
   self.setWindowTitle('麻将转播控制台')
-  screen=QApplication.primaryScreen().availableGeometry()
-  self.resize(min(1520,screen.width()-40),min(1050,screen.height()-60));self.setMinimumSize(960,620);apply_theme(self,model.settings)
+  screen=self.screen().availableGeometry()
+  self.setMinimumSize(880,500)
+  self.resize(min(1520,screen.width()-24),min(1050,screen.height()-40));apply_theme(self,model.settings)
   set_language(model.settings.get('language','zh_CN'));self.language_controller=LanguageController(QApplication.instance());self.language_controller.track(self)
   self.lock=QCheckBox('锁定播出窗口');self.lock.setChecked(model.settings['locked'])
   self.overlays=display_button('显示播出窗口');self.overlays.setChecked(model.settings['show_overlays'])
@@ -279,15 +299,18 @@ class Console(QMainWindow):
   for control in (self.undo,self.redo):control.setIconSize(QSize(22,22));control.setMinimumWidth(36)
   self.language=combo(LANGUAGES);self.language.setProperty('i18nLiteral',True);self.language.setCurrentIndex(self.language.findData(model.settings.get('language','zh_CN')));self.language.currentIndexChanged.connect(self.change_language)
   self.event_label=QLabel();self.event_label.setProperty('i18nLiteral',True);self.event_label.setMaximumWidth(380)
+  self.event_label.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Preferred)
   self.shortcut_button=button('快捷键',lambda:self.shortcuts.open_dialog())
   self.workspace_menu_button=button('工作区');self.workspace_menu=QMenu(self.workspace_menu_button)
   self.workspace_menu.addAction('重新载入当前工作区',self.reload_workspace);self.workspace_menu_button.setMenu(self.workspace_menu)
   if not model.event_store:
    self.workspace_menu.addAction('独立播出设置',lambda:self._open_settings_dialog(output=True))
-  header=QWidget();header.setObjectName('consoleHeader');header_layout=QHBoxLayout(header);header_layout.setContentsMargins(12,8,12,8)
-  self.history_recovery_button=button('历史局收支',lambda:self.workspace.recover_panel('history'))
-  self.history_recovery_button.setToolTip('找回历史局收支窗口到当前屏幕；直播中可直接使用')
-  header_layout.addLayout(row(self.event_label,1,self.history_recovery_button,self.shortcut_button,self.workspace_menu_button,self.overlays,self.undo,self.redo));self.setMenuWidget(header)
+  header=QWidget();header.setObjectName('consoleHeader');self.header_layout=QHBoxLayout(header)
+  self.header_layout.addWidget(self.event_label,1)
+  self.header_layout.addStretch(1)
+  for control in (self.shortcut_button,self.workspace_menu_button,self.overlays,self.undo,self.redo):
+   self.header_layout.addWidget(control)
+  self.setMenuWidget(header)
   # These preferences remain available in Settings; the live header stays short.
   self.language.setParent(header);self.language.hide();self.lock.setParent(header);self.lock.hide()
   self.workspace=DockWorkspace(self,model)
@@ -492,8 +515,7 @@ class Console(QMainWindow):
    ('skip','跳过',self.manager.finish,False)]
   for key,label,callback,checkable in definitions:
    control=button(label,callback,checkable);control.setProperty('i18nLiteral',True)
-   if key=='draw_declaration':control.setStyleSheet(CHOICE_BUTTON_STYLE)
-   else:control.setMinimumWidth(55)
+   if key=='draw_declaration':control.setProperty('compactButton',True)
    if key in ('riichi','tenpai'):control.setObjectName(key)
    self.quick_actions[key]=control;self.quick_labels[key]=label
    # Hand progression belongs to the live score panel. The shortcut strip is
@@ -502,16 +524,22 @@ class Console(QMainWindow):
   first.addStretch()
   from programme import PAGE_BUTTONS
   self.programme_scroll=QScrollArea(self.quick_bar);self.programme_scroll.setWidgetResizable(True);self.programme_scroll.setFrameShape(QScrollArea.Shape.NoFrame)
-  self.programme_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff);self.programme_scroll.setFixedHeight(64)
-  body=QWidget();pages=QHBoxLayout(body);pages.setContentsMargins(1,1,1,1);pages.setSpacing(5);self.programme_buttons={}
+  self.programme_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+  body=QWidget();groups=QBoxLayout(QBoxLayout.Direction.LeftToRight,body)
+  groups.setContentsMargins(1,1,1,1);groups.setAlignment(Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignLeft)
+  self.programme_groups=(QWidget(body),QWidget(body))
+  for group in self.programme_groups:
+   group_layout=QHBoxLayout(group);group_layout.setContentsMargins(0,0,0,0);groups.addWidget(group)
+  pages,playback=(group.layout() for group in self.programme_groups)
+  self.programme_buttons={}
   for key,label in PAGE_BUTTONS:
    control=button(label,lambda _,page=key:self.run(lambda:self.manager.programme.toggle(page)),key not in ('opening','ending'))
-   control.setProperty('i18nLiteral',True);control.setProperty('operatorChoice',True);control.setStyleSheet(CHOICE_BUTTON_STYLE);control.setMinimumWidth(58)
+   control.setProperty('i18nLiteral',True);control.setProperty('operatorChoice',True);control.setProperty('compactButton',True)
    pages.addWidget(control);self.programme_buttons[key]=control
   self.programme_pause=button('暂停',self.manager.programme.pause_resume,True);self.programme_stop=button('停止',self.manager.programme.stop)
   self.programme_music=button('音乐',lambda:self.manager.programme.music.set_enabled(not self.manager.programme.music.enabled),True)
-  for control in (self.programme_pause,self.programme_stop,self.programme_music):control.setStyleSheet(CHOICE_BUTTON_STYLE);control.setMinimumWidth(48);pages.addWidget(control)
-  pages.addStretch();self.programme_scroll.setWidget(body);grid.addWidget(self.programme_scroll)
+  for control in (self.programme_pause,self.programme_stop,self.programme_music):control.setProperty('compactButton',True);playback.addWidget(control)
+  self.programme_scroll.setWidget(body);grid.addWidget(self.programme_scroll)
   self.quick_scene=combo([('对局','table'),('晋级战','qualification'),('赛后','review'),('净画面','clean')])
   self.quick_scene.setToolTip('播出场景');self.quick_scene.setMaximumWidth(100);self.quick_scene.activated.connect(lambda _:self.run(lambda:self.manager.apply_scene(self.quick_scene.currentData())))
   self.quick_bottom=combo([('选手信息','players'),('个人积分','individual'),('队伍积分','team')]);self.quick_bottom.setToolTip('底部显示');self.quick_bottom.setMaximumWidth(118)
@@ -536,6 +564,20 @@ class Console(QMainWindow):
   self.manager.programme.music.failed.connect(self.error)
   self.manager.postmatch.failed.connect(self.error)
   root.insertWidget(1,self.quick_bar)
+ def reflow_programme(self):
+  scroll=self.programme_scroll;body=scroll.widget();layout=body.layout()
+  margins=layout.contentsMargins()
+  available=scroll.width()-margins.left()-margins.right()
+  widths=[group.minimumSizeHint().width() for group in self.programme_groups]
+  wrap=max(widths)<=available<sum(widths)+layout.spacing()
+  direction=QBoxLayout.Direction.TopToBottom if wrap else QBoxLayout.Direction.LeftToRight
+  if layout.direction()!=direction:layout.setDirection(direction)
+  extent=scroll.horizontalScrollBar().sizeHint().height() if layout.minimumSize().width()>scroll.width() else 0
+  height=layout.sizeHint().height()+extent
+  if scroll.height()!=height or scroll.minimumHeight()!=height:scroll.setFixedHeight(height)
+  if 'quick' in self.workspace.scrolls:
+   quick=self.workspace.scrolls['quick']
+   quick.setFixedHeight(self.quick_bar.layout().sizeHint().height())
  def refresh_postmatch_actions(self):
   from programme import PAGE_BUTTONS
   controller=self.manager.programme;key=controller.current_key;playback=self.manager.postmatch
@@ -553,6 +595,7 @@ class Console(QMainWindow):
    blocker=QSignalBlocker(control);control.setChecked(value);del blocker
   self.quick_postmatch_status.setText(playback.status_text())
   self.programme_music.setToolTip(tr('独立播放背景音乐' if music_available else '请先选择本地音乐'))
+  self.reflow_programme()
  def build_commentary_panel(self):
   self.commentary_bar=QFrame();layout=QVBoxLayout(self.commentary_bar);layout.setContentsMargins(9,7,9,7);layout.setSpacing(6)
   self.quick_terms=self.broadcast_panel().create_quick_terms_widget(self.commentary_bar,columns=3);layout.addWidget(self.quick_terms)
@@ -664,29 +707,46 @@ class Console(QMainWindow):
   for control in (self.round,self.dealer):control.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
   left.addWidget(g)
   self.round.currentIndexChanged.connect(lambda:self.field('roundIndex',self.round.currentData()));self.dealer.currentIndexChanged.connect(lambda:self.field('dealer',self.dealer.currentData()));self.honba.valueChanged.connect(lambda v:self.field('honba',v));self.pot.valueChanged.connect(lambda v:self.field('pot',v*1000))
-  g,v=box('选手');self.player_grid=QGridLayout();self.player_grid.setSpacing(3);self.player_widgets=[];self.recognized_hands=[];self.player_wait_widgets=[]
+  g,v=box('选手');self.player_grid=QGridLayout();self.player_grid.setSpacing(3);self.player_widgets=[];self.player_action_rows=[];self.recognized_hands=[];self.player_wait_widgets=[]
   from recognized_hand import RecognizedHandWidget
   for i in range(4):
-   panel=QFrame();panel.setObjectName('playerControl');body=QVBoxLayout(panel);body.setContentsMargins(3,0,3,0);body.setSpacing(0);pv=QHBoxLayout();pv.setContentsMargins(0,0,0,0);pv.setSpacing(4);select=button('',lambda _,j=i:self.select(j));select.setProperty('i18nLiteral',True);select.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);score=spin(0,-1000000000,1000000000,100);score.setMinimumWidth(85);score.setMaximumWidth(125);score.editingFinished.connect(lambda j=i:self.edit_score(j));riichi=button('立直',lambda _,j=i:self.toggle_player_status(j,'riichi'),True);riichi.setObjectName('riichi');tenpai=button('听牌',lambda _,j=i:self.toggle_player_status(j,'tenpai'),True);tenpai.setObjectName('tenpai');riichi.setFixedWidth(48);tenpai.setFixedWidth(48);pv.addWidget(select,1);pv.addWidget(score);pv.addWidget(riichi);pv.addWidget(tenpai);body.addLayout(pv);hand=RecognizedHandWidget(i);body.addWidget(hand);self.recognized_hands.append(hand);self.player_grid.addWidget(panel,i,0);self.player_widgets.append((panel,select,score,riichi,tenpai))
-   score.valueChanged.connect(lambda _,j=i:self.edit_score(j));score.setToolTip('每次增减 100 点，也可直接输入点数')
+   panel=QFrame();panel.setObjectName('playerControl')
+   body=QVBoxLayout(panel);body.setContentsMargins(3,0,3,0);body.setSpacing(0)
+   actions=QGridLayout();actions.setContentsMargins(0,0,0,0);body.addLayout(actions)
+   self.player_action_rows.append(actions)
+   select=button('',lambda _,j=i:self.select(j));select.setProperty('i18nLiteral',True)
+   select.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed)
+   score=PlayerScoreInput()
+   score.setSizePolicy(QSizePolicy.Policy.Maximum,QSizePolicy.Policy.Fixed)
+   score.valueChanged.connect(lambda _,j=i:self.edit_score(j))
+   riichi=button('立直',lambda _,j=i:self.toggle_player_status(j,'riichi'),True);riichi.setObjectName('riichi')
+   tenpai=button('听牌',lambda _,j=i:self.toggle_player_status(j,'tenpai'),True);tenpai.setObjectName('tenpai')
+   actions.addWidget(select,0,0);actions.addWidget(score,0,1);actions.addWidget(riichi,0,2);actions.addWidget(tenpai,0,3);actions.setColumnStretch(0,1)
+   hand=RecognizedHandWidget(i);body.addWidget(hand);self.recognized_hands.append(hand)
+   self.player_grid.addWidget(panel,i,0);self.player_widgets.append((panel,select,score,riichi,tenpai))
    hand.edit_requested.connect(self.edit_recognized_hand)
    if hasattr(hand,'edit_finished'):hand.edit_finished.connect(self.hand_edit_finished)
    if hasattr(hand,'selection_changed'):hand.selection_changed.connect(self.hand_selection_changed)
    waits=PlayerWaitTiles();waits.edit_requested.connect(lambda j=i:self.edit_player_waits(j))
    remaining=OptionalCountSpinBox();remaining.setFixedWidth(108);remaining.setAccessibleName('山存量');remaining.setToolTip('修改后立即生效；清空表示未知')
    remaining.valueChanged.connect(lambda value,j=i:self.change_player_remaining(j,value))
-   wait_line=row(waits,'山存',remaining);wait_line.setSpacing(3);body.addLayout(wait_line)
+   wait_line=row(waits,'山存',remaining);wait_line.setSpacing(3)
+   wait_line.setContentsMargins(0,4,0,0);body.addLayout(wait_line)
    self.player_wait_widgets.append((waits,remaining))
   v.addLayout(self.player_grid)
   left.insertWidget(0,g)
-  g,v=box('宝牌');self.target_boxes['dora']=g
+  g,v=box('宝牌');g.setObjectName('doraPanel');self.target_boxes['dora']=g
   self.dora_board=QWidget();self.dora_board.setMinimumSize(1,1);self.dora_board.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Ignored);self.dora_board.installEventFilter(self)
   self.dora_row=QHBoxLayout(self.dora_board);self.dora_row.setContentsMargins(0,0,0,0);self.dora_row.setSpacing(7);self.dora_row.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
   v.addWidget(self.dora_board,1);left.addWidget(g)
   g,v=box('听牌');self.target_boxes['waits']=g;self.wait_owner=QLabel();self.wait_owner.setProperty('i18nLiteral',True);self.wait_enabled=QCheckBox('显示听牌');v.addLayout(row(self.wait_owner,self.wait_enabled))
-  self.remaining=OptionalCountSpinBox();self.remaining.setFixedWidth(108);self.remaining.setToolTip('首次随听牌提交；已播出后修改山存数量立即生效');self.clear_remaining_button=button('清除',lambda:self.remaining.setValue(-1));remaining_row=row('山存',self.remaining,self.clear_remaining_button);remaining_row.setSpacing(3);v.addLayout(remaining_row)
+  self.remaining=OptionalCountSpinBox();self.remaining.setFixedWidth(108);self.remaining.setToolTip('首次随听牌提交；已播出后修改山存数量立即生效')
+  self.clear_remaining_button=button('清除',lambda:self.remaining.setValue(-1))
+  self.remaining_fields=row('山存',self.remaining);self.remaining_fields.setSpacing(3)
+  self.remaining_row=QBoxLayout(QBoxLayout.Direction.LeftToRight);self.remaining_row.setSpacing(3)
+  self.remaining_row.addLayout(self.remaining_fields);self.remaining_row.addWidget(self.clear_remaining_button);v.addLayout(self.remaining_row)
   self.wait_no_yaku=button('无役',checkable=True);self.furiten=button('振听',checkable=True)
-  for control in (self.wait_no_yaku,self.furiten):control.setProperty('operatorChoice',True);control.setStyleSheet(CHOICE_BUTTON_STYLE)
+  for control in (self.wait_no_yaku,self.furiten):control.setProperty('operatorChoice',True);control.setProperty('compactButton',True)
   self.wait_no_yaku.setToolTip('开启后，点击已有待牌切换有役／无役，新增待牌直接设为无役');self.furiten.setToolTip('选中为振听，再次点击取消；随听牌草稿一起提交')
   v.addLayout(row(self.wait_no_yaku,self.furiten));self.furiten.toggled.connect(self.change_furiten);self.wait_no_yaku.toggled.connect(lambda _:self.refresh_wait_editor())
   self.wait_row=QGridLayout();self.wait_row.setSpacing(7);self.wait_row.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop);v.addLayout(self.wait_row)
@@ -740,9 +800,12 @@ class Console(QMainWindow):
   self.submit_wait_button.setEnabled(self.model.state['phase']=='playing' and not self.recognized_hands[self.selected].editing)
  def reflow_wait_tiles(self):
   if not hasattr(self,'wait_row'):return
-  width=self.target_boxes['waits'].contentsRect().width()-18
-  if 'waits' in self.workspace.scrolls:width=min(width,self.workspace.scrolls['waits'].viewport().width()-18)
-  tile_width=round(25*tile_scale(self.model.settings,'wait'));columns=max(1,min(7,(max(1,width)+7)//(tile_width+7)))
+  width=self.panel_content_width('waits') if 'waits' in self.workspace.scrolls else self.target_boxes['waits'].contentsRect().width()
+  remaining_width=self.remaining_fields.minimumSize().width()+self.clear_remaining_button.minimumSizeHint().width()+self.remaining_row.spacing()
+  direction=QBoxLayout.Direction.LeftToRight if remaining_width<=width else QBoxLayout.Direction.TopToBottom
+  if self.remaining_row.direction()!=direction:self.remaining_row.setDirection(direction)
+  spacing=self.wait_row.horizontalSpacing()
+  tile_width=round(25*tile_scale(self.model.settings,'wait'));columns=max(1,min(7,(max(1,width)+spacing)//(tile_width+spacing)))
   controls=[self.wait_row.itemAt(i).widget() for i in range(self.wait_row.count())]
   size=QSize(tile_width,round(36*tile_scale(self.model.settings,'wait')))
   for control in controls:control.ensurePolished();control.setFixedSize(size)
@@ -798,7 +861,7 @@ class Console(QMainWindow):
   g,v=box('牌面');self.picker_box=g;g.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding);g.installEventFilter(self);v.setSpacing(2);self.picker_target=QLabel();self.picker_target.setObjectName('muted');self.picker_target.setMinimumWidth(0);self.picker_target.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);v.addWidget(self.picker_target)
   self.picker_header=QWidget();self.picker_header.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);header=QGridLayout(self.picker_header);header.setContentsMargins(0,0,0,0);header.setSpacing(3);self.picker_target_keys=('meld','dora','waits','win_tile','ura','hand')
   for index,(key,title) in enumerate(zip(self.picker_target_keys,('副露','宝牌','听牌','和牌张','里指示','手牌'))):
-   b=button(title,lambda _,k=key:self.focus_tile_target(k),True);b.setMinimumWidth(0);b.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);b.setStyleSheet(CHOICE_BUTTON_STYLE);self.target_buttons[key]=b;header.addWidget(b,0,index)
+   b=button(title,lambda _,k=key:self.focus_tile_target(k),True);b.setMinimumWidth(0);b.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);b.setProperty('compactButton',True);self.target_buttons[key]=b;header.addWidget(b,0,index)
   self.picker_header_grid=header;v.addWidget(self.picker_header)
   self.picker_board=QWidget();self.picker_board.setMinimumSize(10,4);self.picker_board.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Ignored);self.picker_board.installEventFilter(self)
   grid=QGridLayout(self.picker_board);grid.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint);grid.setContentsMargins(0,0,0,0);grid.setSpacing(0);grid.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop);self.tile_buttons={}
@@ -845,6 +908,7 @@ class Console(QMainWindow):
   finally:self._picker_reflow_busy=False
  def resizeEvent(self,event):
   super().resizeEvent(event)
+  if hasattr(self,'workspace'):self.workspace.fit_panel_heights()
   if hasattr(self,'navigation_handle'):self.navigation_handle.fit_width()
   if hasattr(self,'picker_grid'):self.reflow_picker()
   if hasattr(self,'yaku_grid'):self.reflow_live_panels()
@@ -852,6 +916,12 @@ class Console(QMainWindow):
   if not hasattr(self,'dora_board') or getattr(self,'_dora_reflow_busy',False):return
   self._dora_reflow_busy=True
   try:
+   panel=self.target_boxes['dora'];layout=panel.layout();margins=layout.contentsMargins()
+   # The previous panel padding and layout margin totalled 11 px at the default zoom.
+   maximum=desk_length(11,self.model.settings)
+   inset=min(maximum,max(3,round(panel.contentsRect().height()*.10)))
+   if margins.top()!=inset or margins.bottom()!=inset:
+    layout.setContentsMargins(margins.left(),inset,margins.right(),inset)
    controls=[self.dora_row.itemAt(i).widget() for i in range(self.dora_row.count()) if self.dora_row.itemAt(i).widget()]
    if not controls:return
    count=len(controls);width=max(1,self.dora_board.width()-(count-1)*self.dora_row.spacing())
@@ -906,30 +976,49 @@ class Console(QMainWindow):
   self.reflow_round_controls()
   self.reflow_score_numbers()
   self.reflow_wait_tiles()
-  available=self.workspace.scrolls['yaku'].viewport().width()-26
+  available=self.panel_content_width('yaku')
   controls=[self.yaku_buttons[name] for name,_,_ in YAKU[:30]]
   columns=1
   for candidate in range(5,0,-1):
    widths=[max(control.minimumSizeHint().width() for control in controls[column::candidate]) for column in range(candidate)]
-   if sum(widths)+(candidate-1)*3<=available:columns=candidate;break
+   if sum(widths)+(candidate-1)*self.yaku_grid.horizontalSpacing()<=available:columns=candidate;break
   if columns!=getattr(self,'_yaku_columns',None):
    self._yaku_columns=columns
    for i,control in enumerate(controls):self.yaku_grid.removeWidget(control);self.yaku_grid.addWidget(control,i//columns,i%columns)
-  compact=self.workspace.scrolls['players'].viewport().width()<340
-  for _,_,_,riichi,tenpai in self.player_widgets:
-   riichi.setVisible(not compact);tenpai.setVisible(not compact)
+  self.reflow_players()
   required=self.workspace.scrolls['players'].widget().minimumSizeHint().height()+28
   editing=any(hand.editing for hand in self.recognized_hands)
   # Large desk tiles must leave room for native docking at the window edges.
-  minimum_cap=min(430 if editing else 390,max(160,self.height()//3)) if self.height()>=900 else 160
+  if self.height()>=900:
+   minimum_cap=min(430 if editing else 390,max(160,self.height()//3))
+  else:
+   player_title=self.workspace.docks['players'].titleBarWidget()
+   minimum_cap=player_title.sizeHint().height()+desk_length(40,self.model.settings,32)
   self.workspace.docks['players'].setMinimumHeight(min(required+12,minimum_cap))
+ def panel_content_width(self,key):
+  scroll=self.workspace.scrolls[key];body=scroll.widget()
+  margins=body.layout().contentsMargins()
+  return scroll.viewport().width()-(body.width()-body.contentsRect().width())-margins.left()-margins.right()
+ def reflow_players(self):
+  available=self.panel_content_width('players')
+  name_width=desk_length(66,self.model.settings,48)
+  for actions,(panel,select,score,riichi,tenpai) in zip(self.player_action_rows,self.player_widgets):
+   required=name_width+sum(control.sizeHint().width() for control in (score,riichi,tenpai))+3*actions.horizontalSpacing()
+   margins=panel.layout().contentsMargins()
+   compact=required>available-margins.left()-margins.right()
+   if actions.property('compact')==compact:continue
+   actions.setProperty('compact',compact)
+   for control in (riichi,tenpai):actions.removeWidget(control)
+   actions.addWidget(riichi,1 if compact else 0,0 if compact else 2)
+   actions.addWidget(tenpai,1 if compact else 0,1 if compact else 3)
  def eventFilter(self,obj,event):
   if self._closing:return False
-  if obj is getattr(self,'dora_board',None) and event.type() in (QEvent.Type.Resize,QEvent.Type.DevicePixelRatioChange):self.reflow_dora()
+  if obj in (getattr(self,'dora_board',None),self.target_boxes.get('dora')) and event.type() in (QEvent.Type.Resize,QEvent.Type.DevicePixelRatioChange):self.reflow_dora()
   if obj in (getattr(self,'picker_box',None),getattr(self,'picker_board',None)) and event.type() in (QEvent.Type.Resize,QEvent.Type.DevicePixelRatioChange) and hasattr(self,'picker_grid'):self.reflow_picker()
   if hasattr(self,'picker_target_keys') and hasattr(self,'picker_grid') and event.type() in (QEvent.Type.Show,QEvent.Type.Hide,QEvent.Type.FontChange) and any(obj is self.target_buttons[key] for key in self.picker_target_keys):self.reflow_picker()
   if hasattr(self,'workspace') and 'tiles' in self.workspace.scrolls and obj is self.workspace.scrolls['tiles'].viewport() and event.type()==QEvent.Type.Resize:self.reflow_picker()
   if hasattr(self,'workspace') and hasattr(self,'yaku_grid') and event.type()==QEvent.Type.Resize and any(obj is self.workspace.scrolls[key].viewport() for key in ('players','round','score','waits','yaku')):self.reflow_live_panels()
+  if hasattr(self,'programme_scroll') and event.type()==QEvent.Type.Resize and obj is self.programme_scroll.viewport():self.reflow_programme()
   # Activation and layout rebuilds can restore focus to an unrelated editor.
   # Only an operator click or keyboard navigation may change the tile target.
   explicit_focus=event.type()==QEvent.Type.FocusIn and event.reason() in (Qt.FocusReason.MouseFocusReason,Qt.FocusReason.TabFocusReason,Qt.FocusReason.BacktabFocusReason,Qt.FocusReason.ShortcutFocusReason)
@@ -1039,7 +1128,7 @@ class Console(QMainWindow):
   self.clear_remaining_button.setEnabled(value>=0);self.refresh_wait_preview()
  def build_score(self,middle):
   g,v=box('计分');self.score_box=g;self.hand_actions=QHBoxLayout();self.hand_actions.setSpacing(7);v.addLayout(self.hand_actions)
-  self.winner=SeatButtonSelector();self.loser=SeatButtonSelector();self.winner_buttons=self.winner.buttons;self.loser_buttons=self.loser.buttons;v.addLayout(row('和牌',self.winner));v.addLayout(row('放铳',self.loser));self.ron=button('荣和',lambda:self.win_kind('ron'),True);self.tsumo=button('自摸',lambda:self.win_kind('tsumo'),True);self.ron.setStyleSheet(CHOICE_BUTTON_STYLE);self.tsumo.setStyleSheet(CHOICE_BUTTON_STYLE);self.ron.setProperty('operatorChoice',True);self.tsumo.setProperty('operatorChoice',True);self.ron.setChecked(True);self.kind='ron';v.addLayout(row(self.ron,self.tsumo))
+  self.winner=SeatButtonSelector();self.loser=SeatButtonSelector();self.winner_buttons=self.winner.buttons;self.loser_buttons=self.loser.buttons;v.addLayout(row('和牌',self.winner));v.addLayout(row('放铳',self.loser));self.ron=button('荣和',lambda:self.win_kind('ron'),True);self.tsumo=button('自摸',lambda:self.win_kind('tsumo'),True);self.ron.setProperty('compactButton',True);self.tsumo.setProperty('compactButton',True);self.ron.setProperty('operatorChoice',True);self.tsumo.setProperty('operatorChoice',True);self.ron.setChecked(True);self.kind='ron';v.addLayout(row(self.ron,self.tsumo))
   self.win_tile=QLineEdit();self.win_tile.setMaximumWidth(84);self.win_tile.setMaxLength(3);self.win_tile.setPlaceholderText('点牌面');self.win_tile.setToolTip('点击此框后从下方选择和牌张，也可直接输入如 3m；根据该选手识别手牌辅助填写役种')
   self.ura_indicators=QLineEdit();self.ura_indicators.setPlaceholderText('点牌面');self.ura_indicators.setClearButtonEnabled(True);self.ura_indicators.setToolTip('点击此框后从下方依次选择里宝牌指示牌，也可输入如 4m1z；明宝牌和副露自动读取系统')
   self.win_fill_button=button('更新役种',lambda:self.inline_automation.update_win() if hasattr(self,'inline_automation') else None);self.win_fill_button.setEnabled(False)
@@ -1048,7 +1137,7 @@ class Console(QMainWindow):
   self.win_tile.editingFinished.connect(lambda:self.inline_automation.recalculate_win() if hasattr(self,'inline_automation') else None);self.ura_indicators.editingFinished.connect(lambda:self.inline_automation.recalculate_win() if hasattr(self,'inline_automation') else None)
   self.fu=FuSpinBox();self.fu.setMaximumWidth(108);self.han=spin(3,1,100);self.han.setMaximumWidth(108);self.linked=QCheckBox('番数联动');self.fu_buttons={};quick_fu=QHBoxLayout();quick_fu.setSpacing(3)
   for value in (30,40,50):
-   control=button(str(value)+'符',lambda _,n=value:self.choose_fu(n),True);control.setProperty('operatorChoice',True);control.setStyleSheet(CHOICE_BUTTON_STYLE);control.setMinimumWidth(0);control.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);self.fu_buttons[value]=control;quick_fu.addWidget(control)
+   control=button(str(value)+'符',lambda _,n=value:self.choose_fu(n),True);control.setProperty('operatorChoice',True);control.setProperty('compactButton',True);control.setMinimumWidth(0);control.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);self.fu_buttons[value]=control;quick_fu.addWidget(control)
   v.addLayout(quick_fu);self.score_numbers=QGridLayout();self.score_numbers.setSpacing(7);self.fu_label=QLabel('符');self.han_label=QLabel('番');v.addLayout(self.score_numbers);self.reflow_score_numbers()
   self.fu_hint=QLabel();self.fu_hint.setObjectName('muted');self.fu_hint.setWordWrap(True);self.fu_hint.hide();v.addWidget(self.fu_hint);v.addWidget(self.linked)
   for control in (self.winner,self.loser,self.fu,self.han):control.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);control.setMinimumWidth(0)
@@ -1107,7 +1196,8 @@ class Console(QMainWindow):
   if hasattr(self,'quick_actions') and 'draw' in self.quick_actions:
    actions=[self.quick_actions[key] for key in ('draw','draw_declaration','next_hand')]
    required=sum(max(control.minimumWidth(),control.minimumSizeHint().width()) for control in actions)+(len(actions)-1)*self.hand_actions.spacing()
-   self.hand_actions.setDirection(QBoxLayout.Direction.LeftToRight if required<=self.score_box.contentsRect().width()-18 else QBoxLayout.Direction.TopToBottom)
+   available=self.panel_content_width('score') if 'score' in self.workspace.scrolls else 0
+   self.hand_actions.setDirection(QBoxLayout.Direction.LeftToRight if required<=available else QBoxLayout.Direction.TopToBottom)
   narrow=self.workspace.scrolls['score'].viewport().width()<300 if 'score' in self.workspace.scrolls else False
   if narrow==getattr(self,'_score_numbers_narrow',None):return
   self._score_numbers_narrow=narrow
@@ -1237,16 +1327,16 @@ class Console(QMainWindow):
   g,v=box('役种');self.show_yaku=QCheckBox('和牌画面',g);self.show_yaku.setChecked(self.model.settings['show_yaku']);self.show_yaku.hide();self.yaku_grid=QGridLayout();self.yaku_grid.setSpacing(3)
   v.addLayout(row('和牌张',self.win_tile,'里指示牌',self.ura_indicators,self.win_fill_button));v.addWidget(self.win_assist_hint)
   for i,(name,closed,opened) in enumerate(YAKU[:30]):
-   b=button(name,lambda _,n=name:self.role_clicked(n),True);b.setMinimumWidth(0);b.setStyleSheet(CHOICE_BUTTON_STYLE);b.setProperty('operatorChoice',True);self.yaku_buttons[name]=b;self.yaku_grid.addWidget(b,i//5,i%5)
+   b=button(name,lambda _,n=name:self.role_clicked(n),True);b.setMinimumWidth(0);b.setProperty('compactButton',True);b.setProperty('operatorChoice',True);self.yaku_buttons[name]=b;self.yaku_grid.addWidget(b,i//5,i%5)
   self.bonuses=[];bonus_row=QHBoxLayout();bonus_row.setSpacing(5)
   for name in ['宝牌','赤宝牌','里宝牌']:
    vv=QVBoxLayout();vv.setSpacing(3);vv.addWidget(QLabel(name));s=spin(0,0,40);s.setMinimumWidth(94);s.setMaximumWidth(108);s.setSizePolicy(QSizePolicy.Policy.Ignored,QSizePolicy.Policy.Fixed);s.valueChanged.connect(self.bonus_changed);self.bonuses.append(s);vv.addWidget(s);bonus_row.addLayout(vv)
   bonus_row.addStretch(1)
-  v.addLayout(bonus_row);v.addLayout(self.yaku_grid);self.yaku_summary=QLabel('');self.yaku_summary.setObjectName('muted');v.addLayout(row(self.yaku_summary,1,button('清空',self.clear_yaku),button('更新和牌',self.update_info)))
+  v.insertLayout(0,bonus_row);v.addLayout(self.yaku_grid);self.yaku_summary=QLabel('');self.yaku_summary.setObjectName('muted');v.addLayout(row(self.yaku_summary,1,button('清空',self.clear_yaku),button('更新和牌',self.update_info)))
   self.yakuman_toggle=button('+ 役满',self.set_yakuman_expanded,True);self.yakuman_toggle.setObjectName('yakumanToggle');self.yakuman_toggle.setProperty('i18nLiteral',True);v.addWidget(self.yakuman_toggle)
   self.yakuman_body=QWidget(g);self.yakuman_body.setObjectName('yakumanBody');grid=QGridLayout(self.yakuman_body);grid.setContentsMargins(0,0,0,0);grid.setSpacing(3)
   for i,(name,closed,opened) in enumerate(YAKU[30:]):
-   b=button(name,lambda _,n=name:self.role_clicked(n),True);b.setStyleSheet(CHOICE_BUTTON_STYLE);b.setProperty('operatorChoice',True);self.yaku_buttons[name]=b;grid.addWidget(b,i//3,i%3)
+   b=button(name,lambda _,n=name:self.role_clicked(n),True);b.setProperty('compactButton',True);b.setProperty('operatorChoice',True);self.yaku_buttons[name]=b;grid.addWidget(b,i//3,i%3)
   v.addWidget(self.yakuman_body);self.yakuman_body.hide();right.addWidget(g);self.show_yaku.toggled.connect(lambda value:self.run(lambda:self.model.setting('show_yaku',value)) if self.ready else None)
  def set_yakuman_expanded(self,expanded):
   expanded=bool(expanded);self.yakuman_body.setVisible(expanded)
@@ -1306,8 +1396,6 @@ class Console(QMainWindow):
   b=QSignalBlocker(self.final_scores_hold);self.final_scores_hold.setValue(round(self.model.settings.get('final_scores_hold',4.)));del b
   b=QSignalBlocker(self.show_yaku);self.show_yaku.setChecked(self.model.settings['show_yaku']);del b
   b=QSignalBlocker(self.language);self.language.setCurrentIndex(self.language.findData(self.model.settings.get('language','zh_CN')));del b
-  for _,_,_,riichi,tenpai in self.player_widgets:
-   riichi.setFixedWidth(round((64 if self.model.settings.get('language')=='ja_JP' else 48)*self.model.settings.get('console_font_size',14)/12));tenpai.setFixedWidth(riichi.width())
   for widget,key in ((self.show_melds,'show_melds'),):
    blocker=QSignalBlocker(widget);widget.setChecked(self.model.settings.get(key,True));del blocker
   if self.ready:
@@ -1315,20 +1403,48 @@ class Console(QMainWindow):
     if not score.hasFocus():score.setValue(display_score(self.model.state,i,self.model.settings.get('riichi_payment_mode')))
   self.refresh_sidebar_presets();self.refresh_corner_panel();localize_widgets(self);self.refresh_quick_actions()
   size=int(self.model.settings.get('console_font_size',14));self.font_smaller_button.setEnabled(size>9);self.font_larger_button.setEnabled(size<24)
-  self.font_smaller_button.setToolTip('减小导播台字号 · '+str(size)+' px');self.font_larger_button.setToolTip('增大导播台字号 · '+str(size)+' px')
+  self.font_smaller_button.setToolTip(tr('缩小导播台')+' · '+str(size)+' px');self.font_larger_button.setToolTip(tr('放大导播台')+' · '+str(size)+' px')
   self.apply_typography()
   self.refresh_desk_tile_sizes()
   self.navigation_handle.fit_width()
-  self.reflow_round_controls()
+  self.reflow_live_panels()
   mode=self.model.settings.get('riichi_payment_mode','immediate')
   if self.ready and getattr(self,'_preview_riichi_mode',None)!=mode:self._preview_riichi_mode=mode;self.preview()
  def apply_typography(self):
   signature=tuple(self.model.settings.get(key) for key in ('console_theme','console_font_family','console_font_size'))
   if signature==getattr(self,'_desk_font_signature',None):return
   self._desk_font_signature=signature;apply_theme(self,self.model.settings)
-  self.reflow_round_controls()
+  self.apply_control_spacing()
+  self.reflow_programme()
   if hasattr(self,'picker_grid'):self.reflow_picker()
   if getattr(self,'broadcast_dialog',None):apply_theme(self.broadcast_dialog,self.model.settings)
+ def apply_control_spacing(self):
+  settings=self.model.settings
+  def length(value,minimum=1):return desk_length(value,settings,minimum)
+  self.header_layout.setContentsMargins(length(12),length(8),length(12),length(8))
+  self.header_layout.setSpacing(length(7))
+  self.navigation_scroll.widget().layout().setSpacing(length(7))
+  for layout in (self.presentation_layout,self.corner_layout,self.sidebar_presets_layout):
+   layout.setContentsMargins(length(4),length(10),length(4),length(7))
+   layout.setSpacing(length(6))
+  self.sidebar_preset_buttons_layout.setSpacing(length(6))
+  self.programme_scroll.widget().layout().setSpacing(length(3))
+  for group in self.programme_groups:group.layout().setSpacing(length(3))
+  for layout in (self.player_grid,self.yaku_grid,*self.player_action_rows):
+   layout.setSpacing(length(4))
+  for layout,_ in self.round_field_rows:
+   layout.setHorizontalSpacing(length(4));layout.setVerticalSpacing(length(5))
+  self.score_numbers.setSpacing(length(7));self.hand_actions.setSpacing(length(7))
+  self.wait_row.setSpacing(length(7))
+  for _,_,score,_,_ in self.player_widgets:
+   widest=score.fontMetrics().horizontalAdvance(score.textFromValue(score.minimum()))
+   score.setMinimumWidth(widest+2*length(7)+6)
+  for control in self.bonuses:
+   control.setMaximumWidth(length(108));control.setMinimumWidth(length(94))
+  for control in (self.remaining,*(control for _,control in self.player_wait_widgets)):
+   control.setFixedWidth(max(length(108),control.fontMetrics().horizontalAdvance('136'+control.suffix())+length(60)))
+  self.workspace.update_panel_metrics()
+  self.reflow_dora()
  def refresh_desk_tile_sizes(self):
   signature=tuple(self.model.settings.get(key,100) for key in TILE_SIZE_KEYS)
   if signature==getattr(self,'_desk_tile_sizes_signature',None):return
